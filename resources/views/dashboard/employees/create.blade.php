@@ -1,0 +1,361 @@
+@extends('layouts.admin_dashboard')
+@section('title')
+    {{ __($namesection) }} - {{ __('dashboard.Add_New') }}
+@endsection
+@section('css')
+    <link href="{{ URL::asset('assets/dashboard/plugins/select2/css/select2.min.css') }}" rel="stylesheet">
+
+    <!---Internal Fileupload css-->
+    <link href="{{ URL::asset('assets/dashboard/plugins/fileuploads/css/fileupload.css') }}" rel="stylesheet"
+        type="text/css" />
+    <!---Internal Fancy uploader css-->
+    <link href="{{ URL::asset('assets/dashboard/plugins/fancyuploder/fancy_fileupload.css') }}" rel="stylesheet" />
+
+    <!--- Internal Sweet-Alert css-->
+    <link href="{{ URL::asset('assets/dashboard/plugins/sweet-alert/sweetalert.css') }}" rel="stylesheet">
+    <style type="text/css">
+        .spanheight span {
+            line-height: 14px;
+
+        }
+
+        .adddd {
+            padding-top: 15px;
+        }
+
+        .evenn {
+            padding-top: 15px;
+        }
+    </style>
+@endsection
+@section('page-header')
+    <!-- breadcrumb -->
+    <div class="breadcrumb-header justify-content-between">
+        <div class="my-auto">
+            <div class="d-flex">
+                <h4 class="content-title mb-0 my-auto">{{ __($namesection) }}</h4><span
+                    class="text-muted mt-1 tx-13 mr-2 mb-0">/ {{ __('dashboard.Add_New') }}</span>
+            </div>
+        </div>
+        <div class="d-flex my-xl-auto right-content">
+            <a href="{{ route($routeName) }}" class="btn btn-info btn-icon"><i
+                    class="typcn typcn-arrow-back-outline"></i></a>
+
+        </div>
+    </div>
+    <!-- /breadcrumb -->
+@endsection
+@section('content')
+    <!-- row -->
+    <div class="row row-sm">
+
+
+
+
+        <!-- Col -->
+        <div class="col-lg-12">
+            @include('dashboard.includes.alerts.errors')
+            @include('dashboard.includes.alerts.success')
+
+
+            <div class="card">
+                <div class="card-body">
+
+
+
+
+                    <form class="form-horizontal" method="POST" data-parsley-validate="" enctype="multipart/form-data"
+                        action ="{{ route($routeName . '.store') }}">
+                        @csrf
+
+
+
+                        <div class="row row-xs formgroup-wrapper">
+                            <div class="col-md-6">
+                                <div class="form-group ">
+                                    <div class="row">
+                                        <div class="col-md-3">
+                                            <label class="form-label pd-t-10">{{ __('dashboard.Name') }} : <span
+                                                    class="tx-danger">*</span></label>
+
+                                        </div>
+                                        <div class="col-md-8">
+                                            <input class="form-control tx_R" id="name" name="name"
+                                                placeholder="{{ __('dashboard.Name') }}  " required="" type="text"
+                                                value="{{ old('name') }}">
+                                            @error('name')
+                                                <span class="tx-danger">{{ $message }} </span>
+                                            @enderror
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+
+
+                            <div class="col-md-6">
+                                <div class="form-group ">
+                                    <div class="row">
+                                        <div class="col-md-3">
+                                            <label class="form-label pd-t-10">{{ __('dashboard.Email') }} : <span
+                                                    class="tx-danger">*</span></label>
+
+                                        </div>
+                                        <div class="col-md-8">
+                                            <input class="form-control" placeholder="{{ __('dashboard.Email') }}"
+                                                type="email" name="email" id="email" value="{{ old('email') }}"
+                                                required data-parsley-type="email">
+                                            @error('email')
+                                                <span class="tx-danger">{{ $message }}</span>
+                                            @enderror
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+                        <div class="row row-xs formgroup-wrapper">
+                            <div class="col-md-6">
+                                <div class="form-group ">
+                                    <div class="row">
+                                        <div class="col-md-3">
+                                            <label class="form-label pd-t-10">{{ __('dashboard.Efficiency_Status') }}:
+                                                <span class="tx-danger">*</span></label>
+
+                                        </div>
+                                        <div class="col-md-8">
+                                            <div class="row mg-t-10">
+                                                <div class="col-lg-4">
+                                                    <label class="rdiobox"><input name="is_active" id="is_active"
+                                                            type="radio" value="1" required=""
+                                                            @if (old('is_active') == '1') checked @endif>
+                                                        <span>{{ __('dashboard.effective') }}</span></label>
+                                                </div>
+                                                <div class="col-lg-4 ">
+                                                    <label class="rdiobox"><input name="is_active" id="is_active"
+                                                            type="radio" value="0" required=""
+                                                            @if (old('is_active') == '0') checked @endif>
+                                                        <span>{{ __('dashboard.Inactive') }}</span></label>
+                                                </div>
+                                            </div>
+                                            @error('is_active')
+                                                <span class="tx-danger">{{ $message }} </span>
+                                            @enderror
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+
+
+
+
+                        </div>
+                        <hr />
+                        <br />
+                        <div class="main-content-label mg-b-5"> {{ __('dashboard.Login_information_site') }} </div>
+                        <br />
+
+                        <div class="row row-xs formgroup-wrapper">
+                            <div class="col-md-6">
+                                <div class="form-group ">
+                                    <div class="row">
+                                        <div class="col-md-3">
+                                            <label class="form-label pd-t-10">{{ __('dashboard.Mobile') }}: <span
+                                                    class="tx-danger">*</span></label>
+
+                                        </div>
+                                        <div class="col-md-8">
+                                            <input class="form-control " id="mobile" name="mobile"
+                                                placeholder="{{ __('dashboard.Mobile') }}  " required="" type="text"
+                                                value="{{ old('mobile') }}" data-parsley-type="number"
+                                                autocomplete="false" readonly onfocus="this.removeAttribute('readonly');">
+                                            @error('mobile')
+                                                <span class="tx-danger">{{ $message }} </span>
+                                            @enderror
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="col-md-6">
+                                <div class="form-group ">
+                                    <div class="row">
+                                        <div class="col-md-3">
+                                            <label class="form-label pd-t-10">{{ __('dashboard.Password') }}: <span
+                                                    class="tx-danger">*</span></label>
+
+                                        </div>
+                                        <div class="col-md-8">
+                                            <input class="form-control " id="password" name="password"
+                                                placeholder="{{ __('dashboard.Password') }}  " required=""
+                                                type="password" value="{{ old('password') }}" autocomplete="false"
+                                                readonly onfocus="this.removeAttribute('readonly');">
+                                            @error('password')
+                                                <span class="tx-danger">{{ $message }} </span>
+                                            @enderror
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                        </div>
+
+
+
+
+
+                        <hr />
+                        <div class="row row-xs formgroup-wrapper">
+                            <div class="col-md-6">
+                                <div class="form-group ">
+                                    <div class="row">
+                                        <div class="col-md-3">
+                                            <label class="form-label pd-t-10">{{ __('dashboard.Image') }}: </label>
+
+                                        </div>
+                                        <div class="col-md-8">
+                                            <input type="file" class="dropify" data-height="200" name="image"
+                                                id="image" data-max-file-size="5M"
+                                                data-parsley-errors-container="#slErrorContainerimage" />
+
+                                            <div id="slErrorContainerimage">
+                                                @error('image')
+                                                    <span class="tx-danger">{{ $message }} </span>
+                                                @enderror
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                        </div>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+                        <hr />
+                        <br />
+                        <div class="main-content-label mg-b-5"> {{ __('dashboard.Permissions') }} </div><br />
+
+                        @error('permissions')
+                            <span class="tx-danger">{{ __('dashboard.Permission_validation') }} </span>
+                        @enderror
+                        <div class="row row-xs formgroup-wrapper spanheight">
+
+                            @foreach ($permissions as $permission)
+                                <div class="col-md-12 {{ $loop->even ? 'evenn' : 'adddd' }}">
+                                    <div class="form-group ">
+                                        <div class="row">
+                                            <div class="col-md-2">
+                                                <label
+                                                    class="form-label pd-t-10">{{ __('dashboard.' . $permission->name) }}:
+                                                </label>
+
+                                            </div>
+                                            <div class="col-md-10">
+                                                <div class="row">
+                                                    <div class="col-md-2 mg-t-5 ">
+                                                        <label class="ckbox"><input type="checkbox" name="permissions[]"
+                                                                value="{{ $permission->name }}"><span></span></label>
+                                                    </div>
+
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            @endforeach
+
+
+
+
+
+
+                        </div>
+
+
+                        <div class="card-footer text-center">
+
+                            <button class="btn btn-success-gradient mg-10" type="submit">{{ __('dashboard.Save') }} <i
+                                    class="typcn typcn-clipboard"></i></button>
+                        </div>
+                    </form>
+                </div>
+
+            </div>
+        </div>
+        <!-- /Col -->
+    </div>
+    <!-- row closed -->
+    </div>
+    <!-- Container closed -->
+    </div>
+    <!-- main-content closed -->
+@endsection
+@section('js')
+    <!-- Internal Select2 js-->
+    <script src="{{ URL::asset('assets/dashboard/plugins/select2/js/select2.min.js') }}"></script>
+
+    <script src="{{ URL::asset('assets/dashboard/plugins/select2/js/i18n/' . app()->getLocale() . '.js') }}"></script>
+
+
+    <!--Internal Fileuploads js-->
+    <script src="{{ URL::asset('assets/dashboard/plugins/fileuploads/js/fileupload.js') }}"></script>
+    <script src="{{ URL::asset('assets/dashboard/plugins/fileuploads/js/' . app()->getLocale() . '/file-upload.js') }}">
+    </script>
+    <!--Internal Fancy uploader js-->
+    <script src="{{ URL::asset('assets/dashboard/plugins/fancyuploder/jquery.ui.widget.js') }}"></script>
+    <script src="{{ URL::asset('assets/dashboard/plugins/fancyuploder/jquery.fileupload.js') }}"></script>
+    <script src="{{ URL::asset('assets/dashboard/plugins/fancyuploder/jquery.iframe-transport.js') }}"></script>
+    <script src="{{ URL::asset('assets/dashboard/plugins/fancyuploder/jquery.fancy-fileupload.js') }}"></script>
+    <script src="{{ URL::asset('assets/dashboard/plugins/fancyuploder/fancy-uploader.js') }}"></script>
+    <!--Internal  Parsley.min js -->
+    <script src="{{ URL::asset('assets/dashboard/plugins/parsleyjs/parsley.min.js') }}"></script>
+    <!-- Internal Form-validation js -->
+    <script src="{{ URL::asset('assets/dashboard/plugins/parsleyjs/i18n/' . app()->getLocale() . '.js') }}"></script>
+
+
+    <!--Internal  Sweet-Alert js-->
+    <script src="{{ URL::asset('assets/dashboard/plugins/sweet-alert/sweetalert.min.js') }}"></script>
+    <script src="{{ URL::asset('assets/dashboard/plugins/sweet-alert/jquery.sweet-alert.js') }}"></script>
+
+
+    <script type="text/javascript">
+        $('.select2').select2({
+            placeholder: '{{ __('dashboard.Choose') }}',
+            searchInputPlaceholder: '{{ __('dashboard.Search') }}',
+            width: '100%'
+        });
+    </script>
+@endsection

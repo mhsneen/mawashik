@@ -1,0 +1,70 @@
+<?php
+
+namespace App\Http\Requests\Api\V1;
+
+use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Http\Exceptions\HttpResponseException;
+use Illuminate\Contracts\Validation\Validator;
+use App\Traits\ApiTrait;
+use Illuminate\Validation\Rule;
+
+class ClientRegisterRequest extends FormRequest
+{
+    use ApiTrait;
+    /**
+     * Determine if the user is authorized to make this request.
+     *
+     * @return bool
+     */
+    public function authorize()
+    {
+        return true;
+    }
+
+    /**
+     * Get the validation rules that apply to the request.
+     *
+     * @return array
+     */
+    public function rules()
+    {
+      return [
+           'name'   => 'required|max:100',
+           'mobile' => [
+               'required',
+               'numeric',
+               'digits_between:10,20',
+               Rule::unique('users', 'mobile')->whereNull('deleted_at'),
+           ],
+           'email'  => [
+               'nullable',
+               'email',
+               'max:255',
+               Rule::unique('users', 'email')->whereNull('deleted_at'),
+           ],
+           'image'  => 'nullable|image',
+       ];
+    }
+
+    public function failedValidation(Validator $validator)
+
+    {
+
+        throw new HttpResponseException(
+            $this->returnError(
+                $validator->errors()->first()
+            )
+        );
+    }
+    public function attributes()
+    {
+        return [
+            'name' => __('dashboard.Name'),
+            'mobile' => __('dashboard.Mobile'),
+            'email' => __('dashboard.Email'),
+            'image' => __('dashboard.Image'),
+
+
+        ];
+    }
+}

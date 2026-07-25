@@ -1,0 +1,307 @@
+<?php
+
+namespace App\Models;
+
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Support\Facades\Auth;
+
+class Order extends Model
+{
+    use HasFactory, SoftDeletes;
+
+    protected $fillable = [
+        'user_id',
+        'address_id',
+        'driver_id',
+        'delivery_type',
+        'payment_method',
+        'delivery_price',
+        'total_items',
+        'total_price',
+        'discount_amount',
+        'final_price',
+        'status_id',
+        'currency',
+        'note',
+        'latitude',
+        'longitude',
+        'read',
+        'address',
+        'added_tax',
+        'transaction_id',
+        'coupon_id',
+        'coupon_code',
+        'cancel_reason_id',
+        'cancel_other_reason',
+        'delivery_date',
+        'delivery_time',
+        'earned_points',
+        'redeemed_points',
+        'redeemed_points_value',
+        'points_awarded_at',
+        'prepared_at',
+        'out_for_delivery_at',
+        'delivered_at',
+        'distance',
+        'delivery_pin',
+        'payment_collected',
+        'driver_note',
+        'payment_gateway_code',
+        'payment_status',
+        'payment_reference',
+        'paid_at',
+        'payment_gateway_response',
+        'branch_id',
+    ];
+
+
+    protected $casts = [
+        'total_price' => 'float',   // أو 'decimal:2' إذا تريد دقة عشريتين
+        'final_price' => 'float',
+        'discount_amount' => 'float',
+        'added_tax' => 'float',
+        'delivery_price' => 'float',
+        'delivery_date' => 'date',
+
+    ];
+
+    // العنوان المحفوظ اللي اختاره العميل وقت الطلب (Snapshot النصي محفوظ
+    // بأعمدة address/latitude/longitude بالطلب نفسه بغض النظر عن هذي العلاقة)
+    public function address()
+    {
+        return $this->belongsTo(Address::class);
+    }
+
+    public function getPriceAfterDiscountAttribute()
+    {
+        return $this->total_price - $this->discount_amount;
+    }
+
+    // ✅ قيمة مبلغ الضريبة المضافة
+    public function getTaxAmountAttribute()
+    {
+        $tax = $this->added_tax ?? 0;
+        return $this->price_after_discount * ($tax / 100);
+    }
+
+    // ✅ السعر النهائي شامل الضريبة
+    public function getPriceAfterTaxAttribute()
+    {
+        return $this->price_after_discount + $this->tax_amount;
+    }
+
+    // العلاقة مع المستخدم صاحب الطلب
+    public function user()
+    {
+        return $this->belongsTo(User::class, 'user_id');
+    }
+
+    // العلاقة مع السائق المعيّن للطلب
+    public function driver()
+    {
+        return $this->belongsTo(User::class, 'driver_id');
+    }
+
+
+
+    // العلاقة مع حالة الطلب
+    public function status()
+    {
+        return $this->belongsTo(Orderstatus::class, 'status_id');
+    }
+
+    // العلاقة مع المنتجات في الطلب
+    public function items()
+    {
+        return $this->hasMany(OrderItem::class, 'order_id');
+    }
+
+    // إذا كان هناك كوبون
+    public function coupon()
+    {
+        return $this->belongsTo(DiscountCode::class, 'coupon_id');
+    }
+
+
+
+
+    public function scopeRead($query)
+    {
+        return $query->where('read', '0');
+    }
+    public function review()
+    {
+        return $this->hasOne(OrderReview::class);
+    }
+
+    // تقييم العميل للسائق على هذا الطلب
+    public function driverReview()
+    {
+        return $this->hasOne(DriverReview::class);
+    }
+
+    public function ScopeFilterDashbordAdmin($query, array $filters)
+    {
+
+        $query->when($filters['search_client_name'] ?? false, function ($query, $search) {
+            return   $query->whereHas('user', function ($query) use ($search) {
+                $query->where('name', 'LIKE', '%' . $search . '%');
+            });
+        });
+
+        $query->when($filters['search_client_mobile'] ?? false, function ($query, $search) {
+            return   $query->whereHas('user', function ($query) use ($search) {
+                $query->where('mobile', $search);
+            });
+        });
+
+
+        $query->when($filters['search_order_number'] ?? false, function ($query, $search) {
+
+            return  $query->where('id', $search);
+        });
+        $query->when($filters['search_status_id'] ?? false, function ($query, $search) {
+            return  $query->where('status_id', $search);
+        });
+
+
+
+        $query->when($filters['search_date_from'] ?? false, function ($query, $searchprice) {
+
+            return  $query->whereBetween('created_at', [$searchprice, request('search_date_to')]);
+        });
+    }
+
+
+    public static function unreadCount()
+    {
+
+        $query = self::Read(); // سكوب الطلبات غير المقروءة
+        return $query->count();
+    }
+
+
+    public function cancelReason()
+    {
+        return $this->belongsTo(OrderCancelReason::class, 'cancel_reason_id');
+    }
+
+
+    public function scopeStatusNew($query)
+    {
+        return $query->where('status_id', 1);
+    }
+
+
+
+
+// 1 = طلب جديد           (new)
+// 2 = قيد التجهيز          (preparing)
+// 3 = تم التجهيز           (prepared / ready)
+// 4 = قيد التوصيل          (out_for_delivery)  ← جديدة، بس لنوع delivery
+// 5 = تم التسليم           (delivered)          ← الحالة النهائية الناجحة
+// 6 = ملغي                (cancelled)
+
+
+
+public function canChangeStatusTo($newStatus)
+{
+    $allowedTransitions = [
+        1 => [2, 6],
+        2 => [3, 6],
+        3 => $this->delivery_type === 'delivery' ? [4] : [5],
+        4 => [5],
+        5 => [],
+        6 => [],
+    ];
+
+    return in_array($newStatus, $allowedTransitions[$this->status_id] ?? []);
+}
+
+
+    public function getAllowedStatuses()
+    {
+        $allowedTransitions = [
+            1 => [2, 6],
+            2 => [3, 6],
+            3 => $this->delivery_type === 'delivery' ? [4] : [5],
+            4 => [5],
+            5 => [],
+            6 => [],
+        ];
+
+        return $allowedTransitions[$this->status_id] ?? [];
+    }
+
+    public function ScopeFilterDashbordSales($query, array $filters)
+    {
+
+
+        $query->when($filters['search_date_from'] ?? false, function ($query, $searchprice) {
+
+            return  $query->whereBetween('created_at', [$searchprice, request('search_date_to')]);
+        });
+    }
+
+    // Accessor to get combined datetime
+    public function getDeliveryAtAttribute()
+    {
+        if (!$this->delivery_date || !$this->delivery_time) {
+            return null;
+        }
+
+        return \Carbon\Carbon::parse($this->delivery_date->format('Y-m-d') . ' ' . $this->delivery_time->format('H:i:s'));
+    }
+
+    // Mutator to set delivery_date and delivery_time from a single datetime
+    public function setDeliveryAtAttribute($value)
+    {
+        if (!$value) {
+            $this->attributes['delivery_date'] = null;
+            $this->attributes['delivery_time'] = null;
+            return;
+        }
+
+        $dateTime = \Carbon\Carbon::parse($value);
+
+        $this->attributes['delivery_date'] = $dateTime->format('Y-m-d');
+        $this->attributes['delivery_time'] = $dateTime->format('H:i:s');
+    }
+
+  public function scopeStatusCurrent($query)
+{
+    return $query->whereIn('status_id', [1, 2, 3, 4]); // ضفت 4 (قيد التوصيل)
+}
+
+   public function scopeStatusEnd($query)
+{
+    return $query->where('status_id', 5); // كانت 4
+}
+
+public function scopeStatusCancelled($query)
+{
+    return $query->where('status_id', 6);
+}
+
+    // طلبيات السائق: المعيّنة له حالياً (قيد التوصيل)
+    public function scopeAssignedToDriver($query, int $driverId)
+    {
+        return $query->where('driver_id', $driverId);
+    }
+
+    // طلبيات مكتملة للسائق
+    public function scopeDriverCompleted($query, int $driverId)
+    {
+        return $query->where('driver_id', $driverId)->where('status_id', 5);
+    }
+
+    // توليد كود التسليم (4 أرقام)
+    public static function generateDeliveryPin(): string
+    {
+        return str_pad(random_int(0, 9999), 4, '0', STR_PAD_LEFT);
+    }
+
+}
+
