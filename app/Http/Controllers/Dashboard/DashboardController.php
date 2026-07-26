@@ -18,7 +18,7 @@ class DashboardController extends Controller
         $month_Orders_Sales = $this->ordersSalesReport('month');
         $year_Orders_Sales = $this->ordersSalesReport('year');
         $All_Orders_Sales = $this->ordersSalesReport(null);
-        $orderstatus = Orderstatus::get();
+        $orderstatus = Orderstatus::orderBy('id', 'asc')->get();
 
         // ✅ جلب حد التنبيه من الإعدادات (قيمة موحدة)
         $expiredThreshold = Setting::getFloat('expired_quantities');

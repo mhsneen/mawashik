@@ -257,8 +257,8 @@
                         </div>
                     </div>
                     <div class="card-body">
-                        <div class="table-responsive border-top userlist-table">
-                            <table class="table card-table table-striped table-vcenter text-nowrap mb-0">
+                        <div class="table-responsive border-top ">
+                            <table class="table card-table table-striped table-vcenter  mb-0">
                                 <thead>
                                     <tr>
                                         <th><input type="checkbox" id="master"></th>

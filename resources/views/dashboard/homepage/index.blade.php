@@ -313,34 +313,29 @@
  --}}
                 </div>
                 <div class="card-body">
-                    <div class="total-revenue">
-                        <div>
-                            <h4>{{ \App\Models\Order::where('status_id', 1)->count() }}</h4>
-                            <label><span class="bg-primary"></span>{{ $orderstatus[0]->name }}</label>
-                        </div>
+                   <div class="total-revenue">
+    @php
+        // مصفوفة الألوان لكل حالة (مبنية على الترتيب 1 إلى 6)
+        $statusColors = [
+            1 => '#036fe7',   // طلب جديد - أزرق
+            2 => '#D8E311FF', // قيد التجهيز - أصفر
+            3 => '#00797DFF', // تم التجهيز - تركواز
+            4 => '#34D104FF', // قيد التوصيل - أخضر فاتح
+            5 => '#28a745',   // تم التسليم - أخضر غامق
+            6 => '#dc3545'    // ملغي - أحمر
+        ];
+    @endphp
 
-                        <div>
-                            <h4>{{ \App\Models\Order::where('status_id', 2)->count() }}</h4>
-                            <label><span style="background-color:#D8E311FF"></span>{{ $orderstatus[1]->name }}</label>
-                        </div>
-
-                        <div>
-                            <h4>{{ \App\Models\Order::where('status_id', 3)->count() }}</h4>
-                            <label><span style="background-color:#00797DFF"></span>{{ $orderstatus[2]->name }}</label>
-                        </div>
-
-                        <div>
-                            <h4>{{ \App\Models\Order::where('status_id', 4)->count() }}</h4>
-                            <label><span style="background-color:#34D104FF"></span>{{ $orderstatus[3]->name }}</label>
-                        </div>
-
-
-                        <div>
-                            <h4>{{ \App\Models\Order::where('status_id', 5)->count() }}</h4>
-                            <label><span class="bg-danger"></span>{{ $orderstatus[4]->name }}</label>
-                        </div>
-
-                    </div>
+    @foreach ($orderstatus as $status)
+        <div>
+            <h4>{{ \App\Models\Order::where('status_id', $status->id)->count() }}</h4>
+            <label>
+                <span style="background-color: {{ $statusColors[$status->id] ?? '#ccc' }}; display:inline-block; width:10px; height:10px; border-radius:50%;"></span>
+                {{ $status->name }}
+            </label>
+        </div>
+    @endforeach
+</div>
                     <div id="bar" class="sales-bar mt-4"></div>
                 </div>
             </div>
@@ -700,15 +695,13 @@
                 show: false,
             },
             fontFamily: 'Nunito, sans-serif',
-            // dropShadow: {
-            //   enabled: true,
-            //   top: 1,
-            //   left: 1,
-            //   blur: 2,
-            //   opacity: 0.2,
-            // }
         },
-        colors: ["#036fe7", '#D8E311FF', '#00797DFF', '#34D104FF', '#f93a5a'],
+        // ✅ جلب الألوان ديناميكياً
+        colors: [
+            @foreach ($orderstatus as $status)
+                "{{ $statusColors[$status->id] ?? '#cccccc' }}",
+            @endforeach
+        ],
         plotOptions: {
             bar: {
                 dataLabels: {
@@ -737,92 +730,28 @@
                     colors: ['transparent'],
                 },
             },
-
-
         }],
-        series: [{
-                name: '{{ $orderstatus[0]->name }}',
-                data: [
-                    {{ \App\Models\Order::where('status_id', 1)->whereMonth('created_at', 1)->count() }},
-                    {{ \App\Models\Order::where('status_id', 1)->whereMonth('created_at', 2)->count() }},
-                    {{ \App\Models\Order::where('status_id', 1)->whereMonth('created_at', 3)->count() }},
-                    {{ \App\Models\Order::where('status_id', 1)->whereMonth('created_at', 4)->count() }},
-                    {{ \App\Models\Order::where('status_id', 1)->whereMonth('created_at', 5)->count() }},
-                    {{ \App\Models\Order::where('status_id', 1)->whereMonth('created_at', 6)->count() }},
-                    {{ \App\Models\Order::where('status_id', 1)->whereMonth('created_at', 7)->count() }},
-                    {{ \App\Models\Order::where('status_id', 1)->whereMonth('created_at', 8)->count() }},
-                    {{ \App\Models\Order::where('status_id', 1)->whereMonth('created_at', 9)->count() }},
-                    {{ \App\Models\Order::where('status_id', 1)->whereMonth('created_at', 10)->count() }},
-                    {{ \App\Models\Order::where('status_id', 1)->whereMonth('created_at', 11)->count() }},
-                    {{ \App\Models\Order::where('status_id', 1)->whereMonth('created_at', 12)->count() }}
-                ]
-            }, {
-                name: '{{ $orderstatus[1]->name }}',
-                data: [
-                    {{ \App\Models\Order::where('status_id', 2)->whereMonth('created_at', 1)->count() }},
-                    {{ \App\Models\Order::where('status_id', 2)->whereMonth('created_at', 2)->count() }},
-                    {{ \App\Models\Order::where('status_id', 2)->whereMonth('created_at', 3)->count() }},
-                    {{ \App\Models\Order::where('status_id', 2)->whereMonth('created_at', 4)->count() }},
-                    {{ \App\Models\Order::where('status_id', 2)->whereMonth('created_at', 5)->count() }},
-                    {{ \App\Models\Order::where('status_id', 2)->whereMonth('created_at', 6)->count() }},
-                    {{ \App\Models\Order::where('status_id', 2)->whereMonth('created_at', 7)->count() }},
-                    {{ \App\Models\Order::where('status_id', 2)->whereMonth('created_at', 8)->count() }},
-                    {{ \App\Models\Order::where('status_id', 2)->whereMonth('created_at', 9)->count() }},
-                    {{ \App\Models\Order::where('status_id', 2)->whereMonth('created_at', 10)->count() }},
-                    {{ \App\Models\Order::where('status_id', 2)->whereMonth('created_at', 11)->count() }},
-                    {{ \App\Models\Order::where('status_id', 2)->whereMonth('created_at', 12)->count() }}
-                ]
-            }, {
-                name: '{{ $orderstatus[2]->name }}',
-                data: [
-                    {{ \App\Models\Order::where('status_id', 3)->whereMonth('created_at', 1)->count() }},
-                    {{ \App\Models\Order::where('status_id', 3)->whereMonth('created_at', 2)->count() }},
-                    {{ \App\Models\Order::where('status_id', 3)->whereMonth('created_at', 3)->count() }},
-                    {{ \App\Models\Order::where('status_id', 3)->whereMonth('created_at', 4)->count() }},
-                    {{ \App\Models\Order::where('status_id', 3)->whereMonth('created_at', 5)->count() }},
-                    {{ \App\Models\Order::where('status_id', 3)->whereMonth('created_at', 6)->count() }},
-                    {{ \App\Models\Order::where('status_id', 3)->whereMonth('created_at', 7)->count() }},
-                    {{ \App\Models\Order::where('status_id', 3)->whereMonth('created_at', 8)->count() }},
-                    {{ \App\Models\Order::where('status_id', 3)->whereMonth('created_at', 9)->count() }},
-                    {{ \App\Models\Order::where('status_id', 3)->whereMonth('created_at', 10)->count() }},
-                    {{ \App\Models\Order::where('status_id', 3)->whereMonth('created_at', 11)->count() }},
-                    {{ \App\Models\Order::where('status_id', 3)->whereMonth('created_at', 12)->count() }}
-                ]
-            },
+        // ✅ جلب بيانات الشارت ديناميكياً لكل الحالات
+        series: [
+            @foreach ($orderstatus as $status)
             {
-                name: '{{ $orderstatus[3]->name }}',
+                name: '{{ $status->name }}',
                 data: [
-                    {{ \App\Models\Order::where('status_id', 4)->whereMonth('created_at', 1)->count() }},
-                    {{ \App\Models\Order::where('status_id', 4)->whereMonth('created_at', 2)->count() }},
-                    {{ \App\Models\Order::where('status_id', 4)->whereMonth('created_at', 3)->count() }},
-                    {{ \App\Models\Order::where('status_id', 4)->whereMonth('created_at', 4)->count() }},
-                    {{ \App\Models\Order::where('status_id', 4)->whereMonth('created_at', 5)->count() }},
-                    {{ \App\Models\Order::where('status_id', 4)->whereMonth('created_at', 6)->count() }},
-                    {{ \App\Models\Order::where('status_id', 4)->whereMonth('created_at', 7)->count() }},
-                    {{ \App\Models\Order::where('status_id', 4)->whereMonth('created_at', 8)->count() }},
-                    {{ \App\Models\Order::where('status_id', 4)->whereMonth('created_at', 9)->count() }},
-                    {{ \App\Models\Order::where('status_id', 4)->whereMonth('created_at', 10)->count() }},
-                    {{ \App\Models\Order::where('status_id', 4)->whereMonth('created_at', 11)->count() }},
-                    {{ \App\Models\Order::where('status_id', 4)->whereMonth('created_at', 12)->count() }}
+                    {{ \App\Models\Order::where('status_id', $status->id)->whereMonth('created_at', 1)->count() }},
+                    {{ \App\Models\Order::where('status_id', $status->id)->whereMonth('created_at', 2)->count() }},
+                    {{ \App\Models\Order::where('status_id', $status->id)->whereMonth('created_at', 3)->count() }},
+                    {{ \App\Models\Order::where('status_id', $status->id)->whereMonth('created_at', 4)->count() }},
+                    {{ \App\Models\Order::where('status_id', $status->id)->whereMonth('created_at', 5)->count() }},
+                    {{ \App\Models\Order::where('status_id', $status->id)->whereMonth('created_at', 6)->count() }},
+                    {{ \App\Models\Order::where('status_id', $status->id)->whereMonth('created_at', 7)->count() }},
+                    {{ \App\Models\Order::where('status_id', $status->id)->whereMonth('created_at', 8)->count() }},
+                    {{ \App\Models\Order::where('status_id', $status->id)->whereMonth('created_at', 9)->count() }},
+                    {{ \App\Models\Order::where('status_id', $status->id)->whereMonth('created_at', 10)->count() }},
+                    {{ \App\Models\Order::where('status_id', $status->id)->whereMonth('created_at', 11)->count() }},
+                    {{ \App\Models\Order::where('status_id', $status->id)->whereMonth('created_at', 12)->count() }}
                 ]
-            },
-            {
-                name: '{{ $orderstatus[4]->name }}',
-                data: [
-                    {{ \App\Models\Order::where('status_id', 5)->whereMonth('created_at', 1)->count() }},
-                    {{ \App\Models\Order::where('status_id', 5)->whereMonth('created_at', 2)->count() }},
-                    {{ \App\Models\Order::where('status_id', 5)->whereMonth('created_at', 3)->count() }},
-                    {{ \App\Models\Order::where('status_id', 5)->whereMonth('created_at', 4)->count() }},
-                    {{ \App\Models\Order::where('status_id', 5)->whereMonth('created_at', 5)->count() }},
-                    {{ \App\Models\Order::where('status_id', 5)->whereMonth('created_at', 6)->count() }},
-                    {{ \App\Models\Order::where('status_id', 5)->whereMonth('created_at', 7)->count() }},
-                    {{ \App\Models\Order::where('status_id', 5)->whereMonth('created_at', 8)->count() }},
-                    {{ \App\Models\Order::where('status_id', 5)->whereMonth('created_at', 9)->count() }},
-                    {{ \App\Models\Order::where('status_id', 5)->whereMonth('created_at', 10)->count() }},
-                    {{ \App\Models\Order::where('status_id', 5)->whereMonth('created_at', 11)->count() }},
-                    {{ \App\Models\Order::where('status_id', 5)->whereMonth('created_at', 12)->count() }}
-                ]
-            }
+            }@if(!$loop->last),@endif
+            @endforeach
         ],
         xaxis: {
             categories: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'],
@@ -835,17 +764,10 @@
             floating: true,
             position: 'top',
             horizontalAlign: 'left',
-            // offsetY: -36
-
         },
-        // title: {
-        //   text: 'Financial Information',
-        //   align: 'left',
-        // },
         tooltip: {
             y: {
                 formatter: function(val) {
-                    //  return "$ " + val + " thousands"
                     return val
                 }
             }

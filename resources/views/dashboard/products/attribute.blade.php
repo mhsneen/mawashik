@@ -53,7 +53,22 @@
                                         <div class="row">
                                             <!-- اسم الخاصية -->
                                             <div class="col-md-2">
-                                                <label class="form-label pd-t-10">{{ $attribute->name }}: </label>
+                                                <label class="form-label pd-t-10">{{ $attribute->name }} :
+                                                    <br/>
+                                                    <small> @if ($attribute->is_variation == 1)
+            <i class="fa fa-layer-group"></i>
+            {{ __('dashboard.Variation_Usage') }}
+
+    @else
+            <i class="fa fa-plus-circle"></i>
+            {{ __('dashboard.Modifier_Usage') }}
+
+    @endif
+
+</small>
+
+
+                                                     </label>
                                             </div>
 
                                             <!-- قيم الخاصية -->
