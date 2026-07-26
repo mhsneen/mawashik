@@ -40,6 +40,8 @@ class PermissionSeeder extends Seeder
             'Delivery_Settings',
             'Payment_Methods',
             'Drivers',
+            'Verification_method_settings',
+            'Loyalty_Points_Settings',
 
 
         ];

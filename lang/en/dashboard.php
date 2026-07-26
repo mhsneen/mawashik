@@ -773,4 +773,6 @@ return array(
 'Payment_Return_Close_Hint' => 'You can close this page now.',
 'No_Modifier_Values_Selected' => 'No modifier values selected.',
 'Units'=>'Units',
+'Verification_method_settings' => 'Verification Method Settings',
+'Loyalty_Points_Settings' => 'Loyalty Points Settings',
 );

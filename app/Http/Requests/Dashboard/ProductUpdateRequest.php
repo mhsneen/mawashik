@@ -32,7 +32,8 @@ class ProductUpdateRequest extends FormRequest
             'new_arrivals' => 'required|in:0,1',
             'brand_id' => 'nullable|numeric|exists:brands,id',
             'sku' => 'nullable|max:50',
-            'quantity' => 'required|numeric|gt:0',
+           'quantity' => 'nullable|numeric|gt:0',
+'unit_id' => 'nullable|numeric|exists:units,id',
             'category_id' => 'required|numeric|exists:categories,id',
             'netPrice' => 'required|numeric|gt:0',
             'salePrice' => 'nullable|required_with:salePrice_start,salePrice_end|numeric|gt:0|between:1,100',
@@ -61,6 +62,7 @@ class ProductUpdateRequest extends FormRequest
             'salePrice_end' => __('dashboard.Offer_end_date'),
             'salePrice' => __('dashboard.Discount_percentage'),
             'calories' => __('dashboard.Calories'),
+            'unit_id' => __('dashboard.Units'),
 
 
         ];

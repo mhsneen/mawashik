@@ -308,7 +308,13 @@
 
                                             </td>
                                             <td>{{ $item->sku }} </td>
-                                            <td>{{ $item->quantity }} </td>
+                                            <td>
+                                                @if (is_null($item->quantity))
+                                                    <span class="badge bg-info">{{ __('dashboard.Unlimited') }}</span>
+                                                @else
+                                                    {{ $item->quantity }} {{ $item->unit->name ?? '' }}
+                                                @endif
+                                            </td>
 
                                             <td>
 

@@ -773,4 +773,6 @@ return [
 'Payment_Return_Close_Hint' => 'يمكنك إغلاق هذه الصفحة الآن.',
 'No_Modifier_Values_Selected' => 'لم يتم اختيار أي خيارات للمعدّل.',
 'Units'=>'وحدة بيع',
+'Verification_method_settings' => 'إعدادات طريقة التحقق',
+'Loyalty_Points_Settings' => 'إعدادات نقاط الولاء',
 ];

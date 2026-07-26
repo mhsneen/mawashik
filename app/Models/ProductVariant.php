@@ -42,8 +42,13 @@ class ProductVariant extends Model
         return $this->quantity ?? $this->product->quantity;
     }
 
+
+
     public function hasStock(int $qty = 1): bool
-    {
-        return $this->effective_quantity >= $qty;
+{
+    if (is_null($this->effective_quantity)) {
+        return true;
     }
+    return $this->effective_quantity >= $qty;
+}
 }

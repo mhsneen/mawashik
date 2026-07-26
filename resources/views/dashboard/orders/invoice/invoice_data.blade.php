@@ -67,7 +67,12 @@
 
                                 </td>
 
-                                <td class="text-center">{{ $order_item->quantity }}</td>
+                                <td class="text-center">
+                                    {{ $order_item->quantity }}
+                                    @if ($order_item->product->unit)
+                                        ({{ $order_item->product->unit->name }})
+                                    @endif
+                                </td>
                                 <td class="text-center">{{ $order_item->unit_price }} {{ $item->currency }}</td>
                                 <td class="text-center">{{ $order_item->total_price }} {{ $item->currency }}</td>
                             </tr>

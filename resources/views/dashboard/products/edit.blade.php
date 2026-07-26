@@ -238,7 +238,7 @@
                                         </div>
                                         <div class="col-md-8">
                                             <input class="form-control " id="quantity" name="quantity"
-                                                placeholder="{{ __('dashboard.Quantity') }}  " required=""
+                                                placeholder="{{ __('dashboard.Quantity') }}  "
                                                 type="text" value="{{ $item->quantity }}" data-parsley-type="digits">
                                             @error('quantity')
                                                 <span class="tx-danger">{{ $message }} </span>
@@ -247,6 +247,35 @@
                                     </div>
                                 </div>
                             </div>
+
+                            <div class="col-md-6">
+    <div class="form-group ">
+        <div class="row">
+            <div class="col-md-3">
+                <label class="form-label pd-t-10">{{ __('dashboard.Units') }}: </label>
+            </div>
+            <div class="col-md-8">
+                <div class="parsley-select" id="slWrapperunit_id">
+                    <select class="form-control select2" id="unit_id" name="unit_id"
+                        data-parsley-class-handler="#slWrapperunit_id"
+                        data-parsley-errors-container="#slErrorContainerunit_id"
+                        data-placeholder="{{ __('dashboard.Choose') }}">
+                        <option value="">{{ __('dashboard.Choose') }}</option>
+                        @foreach ($units as $unit)
+                            <option value="{{ $unit->id }}"
+                                {{ old('unit_id', $item->unit_id ?? '') == $unit->id ? 'selected' : '' }}>
+                                {{ $unit->name }}
+                            </option>
+                        @endforeach
+                    </select>
+                    <div id="slErrorContainerunit_id">
+                        @error('unit_id')<span class="tx-danger">{{ $message }}</span>@enderror
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
                         </div>
 
 

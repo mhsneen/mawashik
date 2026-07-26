@@ -13,7 +13,7 @@ class Product extends Model
 {
     use HasFactory, SoftDeletes, Translatable;
     protected $with = ['translations'];
-    protected $fillable = ['netPrice', 'salePrice', 'salePrice_start', 'salePrice_end', 'is_active', 'new_arrivals', 'brand_id', 'sku', 'quantity', 'category_id', 'image', 'calories'];
+    protected $fillable = ['netPrice', 'salePrice', 'salePrice_start', 'salePrice_end', 'is_active', 'new_arrivals', 'brand_id', 'sku', 'quantity', 'category_id', 'image', 'calories','unit_id'];
     protected $date = ['salePrice_start', 'salePrice_end', 'deleted_at'];
     protected $translatedAttributes = ['name', 'slug', 'details', 'description'];
     protected $hidden = ['translations', 'image'];
@@ -209,21 +209,23 @@ class Product extends Model
     {
         return $this->morphMany(Imagestore::class, 'imageable');
     }
-
-    public function hasStock(int $quantity = 1): bool
-    {
-        return $this->quantity >= $quantity;
+public function hasStock(int $quantity = 1): bool
+{
+    if (is_null($this->quantity)) {
+        return true; // مخزون غير محدود
     }
+    return $this->quantity >= $quantity;
+}
 
     public function inStock(): bool
     {
         return $this->hasStock();
     }
 
-    public function outOfStock(): bool
-    {
-        return ! $this->hasStock();
-    }
+   public function outOfStock(): bool
+{
+    return ! $this->hasStock();
+}
     public function attributeValues()
     {
         return $this->belongsToMany(AttributeValue::class, 'attribute_value_product')
@@ -292,4 +294,18 @@ public function getFinalPriceAttribute($variant = null)
     }
     return (float) $base;
 }
+public function unit()
+{
+    return $this->belongsTo(Unit::class);
+}
+// جاهزة للعرض في أي صفحة: "500 مل" أو "غير محدود"
+public function getQuantityWithUnitAttribute()
+{
+    if (is_null($this->quantity)) {
+        return __('dashboard.Unlimited');
+    }
+    return $this->quantity . ($this->unit ? ' ' . $this->unit->name : '');
+}
+
+
 }

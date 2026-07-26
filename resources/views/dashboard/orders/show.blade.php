@@ -374,9 +374,10 @@
                                                         </div>
                                                         <div class="media-body">
                                                             <div class="card-item-desc mt-0">
-                                                                <h6 class="font-weight-semibold mt-0 text-uppercase">
-                                                                    {{ $order_item->product->name }}
-                                                                </h6>
+                                                              <h6 class="font-weight-semibold mt-0 text-uppercase">{{ $order_item->product->name }}</h6>
+@if ($order_item->product->unit)
+    <span class="text-muted tx-12">{{ $order_item->product->quantity }} {{ $order_item->product->unit->name }}</span><br>
+@endif
                                                                 <dl class="card-item-desc-1">
                                                                     <dt>{{ __('dashboard.Product_Add_Category') }}: </dt>
                                                                     <dd>{{ $order_item->product->category->name }}</dd>

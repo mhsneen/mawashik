@@ -26,10 +26,14 @@ class SettingsController extends Controller
             ->only(['generalpolicystore', 'updategeneralpolicystore']);
 
 
-        $this->middleware('permission:Working days and times')
-            ->only(['generaltimesdayswork', 'updategeneraltimesdayswork']);
-        $this->middleware('permission:Delivery_Settings')
-            ->only(['generaldeliverysettings', 'updategeneraldeliverysettings']);
+   $this->middleware('permission:Working_days_and_times')
+    ->only(['generaltimesdayswork', 'updategeneraltimesdayswork']);
+
+    $this->middleware('permission:Verification_method_settings')
+    ->only(['generalverificationmethodsettings', 'updategeneralverificationmethodsettings']);
+
+$this->middleware('permission:Loyalty_Points_Settings')
+    ->only(['generalloyaltypointssettings', 'updateloyaltypointssettings']);
     }
 
 

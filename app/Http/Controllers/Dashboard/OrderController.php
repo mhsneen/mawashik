@@ -87,15 +87,16 @@ class OrderController extends Controller
             'review',
             'cancelReason',
             'address',
-            'items' => function ($query) {
-                $query->select('id', 'order_id', 'product_id', 'quantity', 'unit_price', 'total_price')
-                    ->with([
-                        'product:id,image,category_id',
-                        'attributes' => function ($query) {
-                            $query->select('id', 'order_item_id', 'attribute_id', 'attribute_value_id', 'attribute_name', 'value_name', 'color_code');
-                        }
-                    ]);
+         'items' => function ($query) {
+    $query->select('id', 'order_id', 'product_id', 'quantity', 'unit_price', 'total_price')
+        ->with([
+            'product:id,image,category_id,quantity,unit_id',
+            'product.unit',
+            'attributes' => function ($query) {
+                $query->select('id', 'order_item_id', 'attribute_id', 'attribute_value_id', 'attribute_name', 'value_name', 'color_code');
             }
+        ]);
+}
         ])->find($id);
 
         if (!$item)

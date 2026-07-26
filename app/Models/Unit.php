@@ -14,7 +14,10 @@ class Unit extends Model
     protected $with = ['translations'];
     protected $translatedAttributes = ['name'];
      protected $hidden=['translations'];
-
+public function products()
+{
+    return $this->hasMany(Product::class);
+}
 
 
 }

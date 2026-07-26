@@ -3,7 +3,7 @@
 namespace App\Http\Controllers\Dashboard;
 
 use App\Http\Controllers\Controller;
-use App\Models\{Brand, Product, Category, Attribute};
+use App\Models\{Brand, Product, Category, Attribute,Unit};
 use Illuminate\Http\Request;
 use App\Http\Requests\Dashboard\{ProductRequest, ProductUpdateRequest, ProductsSearchRequest, ProductDescriptionRequest, ProductAttributeRequest, ProductVariantsRequest, ProductModifiersRequest};
 use Illuminate\Support\Facades\DB;
@@ -32,17 +32,16 @@ class ProductsController  extends Controller
     public function index(ProductsSearchRequest $request)
     {
 
-        $items = Product::FilterDashbord(request(['search_name', 'search_category_id', 'search_brand_id', 'search_active', 'search_diffrnetPrice', 'search_netPrice', 'search_diffrquantity', 'search_quantity']))->with(['category' => function ($query) {
-            $query->select('id');
-        }])->select('id', 'netPrice', 'quantity', 'sku', 'category_id', 'is_active', 'image', 'salePrice', 'salePrice_start', 'salePrice_end', 'created_at')->latest('id')->paginate(PAGANATION_COUNT)->withQueryString();
+        $items = Product::FilterDashbord(request(['search_name', 'search_category_id', 'search_brand_id', 'search_active', 'search_diffrnetPrice', 'search_netPrice', 'search_diffrquantity', 'search_quantity']))->with(['category' => fn($q) => $q->select('id'), 'unit'])->select('id', 'netPrice', 'quantity', 'sku', 'category_id', 'is_active', 'image', 'salePrice', 'salePrice_start', 'salePrice_end', 'created_at')->latest('id')->paginate(PAGANATION_COUNT)->withQueryString();
         $brands = Brand::active()->select('id')->orderBy('id', 'asc')->get();
         $categories = Category::active()->parent()->select('id')->orderBy('id', 'asc')->get();
 
-
+$units = Unit::select('id')->get();
         $data = [
             'items' => $items,
             'brands' => $brands,
             'categories' => $categories,
+            'units' => $units,
             'routeName' => $this->routeName,
             'folder' => $this->folder,
             'namesection' => $this->namesection
@@ -59,11 +58,14 @@ class ProductsController  extends Controller
     {
         $brands = Brand::active()->select('id')->orderBy('id', 'asc')->get();
         $categories = Category::active()->parent()->select('id')->orderBy('id', 'asc')->get();
+        $units = Unit::select('id')->get();
+
         $data = [
             'routeName' => $this->routeName,
             'namesection' => $this->namesection,
             'brands' => $brands,
             'categories' => $categories,
+            'units' => $units,
 
         ];
         return view('dashboard.' . $this->view . '.create', $data);
@@ -93,6 +95,7 @@ class ProductsController  extends Controller
                 'salePrice_start' => $request->salePrice_start != null ? Carbon::parse($request->salePrice_start)->format('Y-m-d') : $request->salePrice_start,
                 'salePrice_end' => $request->salePrice_end != null ? Carbon::parse($request->salePrice_end)->format('Y-m-d') : $request->salePrice_end,
                 'salePrice' => $request->salePrice,
+                'unit_id' => $request->unit_id,
             ];
 
             if ($request->hasFile('image')) {
@@ -139,6 +142,7 @@ class ProductsController  extends Controller
             return redirect()->route($this->routeName)->with(['error' => __('dashboard.ID_Not_Found')]);
         $brands = Brand::active()->select('id')->orderBy('id', 'asc')->get();
         $categories = Category::active()->parent()->select('id')->orderBy('id', 'asc')->get();
+$units = Unit::select('id')->get();
 
 
         $data = [
@@ -148,6 +152,8 @@ class ProductsController  extends Controller
             'namesection' => $this->namesection,
             'brands' => $brands,
             'categories' => $categories,
+            'units' => $units,
+
         ];
         return view('dashboard.' . $this->view . '.edit', $data);
     }
@@ -180,6 +186,7 @@ class ProductsController  extends Controller
                 'salePrice_start' => $request->salePrice_start != null ? Carbon::parse($request->salePrice_start)->format('Y-m-d') : $request->salePrice_start,
                 'salePrice_end' => $request->salePrice_end != null ? Carbon::parse($request->salePrice_end)->format('Y-m-d') : $request->salePrice_end,
                 'salePrice' => $request->salePrice,
+                'unit_id' => $request->unit_id,
             ];
 
             if ($request->has('image')) {
