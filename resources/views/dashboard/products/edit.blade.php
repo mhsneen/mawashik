@@ -228,25 +228,58 @@
                                     </div>
                                 </div>
                             </div>
-                            <div class="col-md-6">
-                                <div class="form-group ">
-                                    <div class="row">
-                                        <div class="col-md-3">
-                                            <label class="form-label pd-t-10">{{ __('dashboard.Quantity') }}: <span
-                                                    class="tx-danger">*</span></label>
+                          {{-- تتبع المخزون --}}
+<div class="col-md-6">
+    <div class="form-group">
+        <div class="row">
+            <div class="col-md-3">
+                <label class="form-label pd-t-10">{{ __('dashboard.Track_Quantity') }}:</label>
+            </div>
+            <div class="col-md-8">
+                <div class="row mg-t-10">
+                    <div class="col-lg-4">
+                        <label class="rdiobox">
+                            <input name="track_quantity" id="track_quantity_yes" type="radio" value="1"
+                                {{ old('track_quantity', $item->track_quantity ?? true) == '1' ? 'checked' : '' }}>
+                            <span>{{ __('dashboard.Yes') }}</span>
+                        </label>
+                    </div>
+                    <div class="col-lg-4">
+                        <label class="rdiobox">
+                            <input name="track_quantity" id="track_quantity_no" type="radio" value="0"
+                                {{ old('track_quantity', $item->track_quantity ?? true) == '0' ? 'checked' : '' }}>
+                            <span>{{ __('dashboard.No') }}</span>
+                        </label>
+                    </div>
+                </div>
+                <small class="text-muted">{{ __('dashboard.Track_Quantity_Help') }}</small>
+                @error('track_quantity')
+                    <span class="tx-danger">{{ $message }}</span>
+                @enderror
+            </div>
+        </div>
+    </div>
+</div>
 
-                                        </div>
-                                        <div class="col-md-8">
-                                            <input class="form-control " id="quantity" name="quantity"
-                                                placeholder="{{ __('dashboard.Quantity') }}  "
-                                                type="text" value="{{ $item->quantity }}" data-parsley-type="digits">
-                                            @error('quantity')
-                                                <span class="tx-danger">{{ $message }} </span>
-                                            @enderror
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
+{{-- الكمية (تظهر فقط لو تتبع المخزون = نعم) --}}
+<div class="col-md-6" id="quantity_section">
+    <div class="form-group">
+        <div class="row">
+            <div class="col-md-3">
+                <label class="form-label pd-t-10">{{ __('dashboard.Quantity') }}:</label>
+            </div>
+            <div class="col-md-8">
+                <input class="form-control" id="quantity" name="quantity"
+                    placeholder="{{ __('dashboard.Quantity') }}"
+                    type="text" value="{{ old('quantity', $item->quantity) }}"
+                    data-parsley-type="number" step="0.01" min="0">
+                @error('quantity')
+                    <span class="tx-danger">{{ $message }}</span>
+                @enderror
+            </div>
+        </div>
+    </div>
+</div>
 
                             <div class="col-md-6">
     <div class="form-group ">
@@ -593,5 +626,30 @@
             searchInputPlaceholder: '{{ __('dashboard.Search') }}',
             width: '100%'
         });
+
+            // Toggle quantity field based on track_quantity
+    function toggleQuantityField() {
+        const trackYes = document.getElementById('track_quantity_yes');
+        const qtySection = document.getElementById('quantity_section');
+        const qtyInput = document.getElementById('quantity');
+
+        if (trackYes.checked) {
+            qtySection.style.display = 'block';
+            qtyInput.setAttribute('required', '');
+            qtyInput.setAttribute('data-parsley-required', 'true');
+        } else {
+            qtySection.style.display = 'none';
+            qtyInput.removeAttribute('required');
+            qtyInput.removeAttribute('data-parsley-required');
+            qtyInput.value = ''; // امسح القيمة
+        }
+    }
+
+    // Run on page load
+    toggleQuantityField();
+
+    // Run on change
+    document.getElementById('track_quantity_yes').addEventListener('change', toggleQuantityField);
+    document.getElementById('track_quantity_no').addEventListener('change', toggleQuantityField);
     </script>
 @endsection

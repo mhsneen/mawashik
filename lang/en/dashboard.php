@@ -775,4 +775,13 @@ return array(
 'Units'=>'Units',
 'Verification_method_settings' => 'Verification Method Settings',
 'Loyalty_Points_Settings' => 'Loyalty Points Settings',
+'track_quantity' => 'Track Quantity',
+'Track_Quantity' => 'Track Inventory',
+'Track_Quantity_Help' => 'Enable inventory tracking for this product to manage stock availability.',
+'Out_Of_Stock_Products' => 'Out of Stock Products',
+'Products_Near_Expiry' => 'Products Near Expiry',
+'No_products_near_expiry' => 'No products are near expiry',
+'Expired' => 'Expired',
+'Expiring_Soon' => 'Expiring Soon',
+'Limit' => 'Limit',
 );

@@ -3,6 +3,7 @@
 namespace App\Http\Requests\Dashboard;
 
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
 
 class ProductRequest extends FormRequest
 {
@@ -32,7 +33,16 @@ class ProductRequest extends FormRequest
             'new_arrivals' => 'required|in:0,1',
             'brand_id' => 'nullable|numeric|exists:brands,id',
             'sku' => 'nullable|max:50',
-          'quantity' => 'nullable|numeric|gt:0',
+
+           'track_quantity' => 'required|boolean',
+        'quantity' => [
+            'nullable',
+            'numeric',
+            'min:0',
+            Rule::requiredIf(fn() => $this->boolean('track_quantity')),
+        ],
+
+
 'unit_id' => 'nullable|numeric|exists:units,id',
             'category_id' => 'required|numeric|exists:categories,id',
             'netPrice' => 'required|numeric|gt:0',
@@ -64,6 +74,7 @@ class ProductRequest extends FormRequest
             'salePrice' => __('dashboard.Discount_percentage'),
             'calories' => __('dashboard.Calories'),
 'unit_id' => __('dashboard.Units'),
+'track_quantity' => __('dashboard.track_quantity'),
 
         ];
     }

@@ -137,21 +137,33 @@ if (!$storeStatus->isOpenNow($requestedDateTime->toDateTimeString())) {
                 }
 
                 // ✅ تخفيض المخزون
-                if ($calc['variant']) {
-                    if (!is_null($calc['variant']->quantity)) {
-                        $calc['variant']->decrement('quantity', $item['quantity']);
-                    }
-                } elseif (!is_null($product->quantity)) {
-                    $product->decrement('quantity', $item['quantity']);
-                }
+              // تخفيض المخزون - استخدم float
+    // ✅ تخفيض المخزون (فقط لو المنتج يتبع المخزون)
+    if ($product->track_quantity) {
+        if ($calc['variant'] && $calc['variant']->track_quantity) {
+            if (!is_null($calc['variant']->quantity)) {
+                $calc['variant']->decrement('quantity', (float) $item['quantity']);
+            }
+        } elseif (!is_null($product->quantity)) {
+            $product->decrement('quantity', (float) $item['quantity']);
+        }
+    }
 
-                foreach ($calc['modifier_lines'] as $line) {
-                    DB::table('attribute_value_product')
-                        ->where('product_id', $product->id)
-                        ->where('attribute_value_id', $line['attribute_value_id'])
-                        ->whereNotNull('quantity')
-                        ->decrement('quantity', $item['quantity']);
-                }
+    // ✅ تخفيض مخزون الإضافات (Modifiers)
+    foreach ($calc['modifier_lines'] as $line) {
+        $pivot = DB::table('attribute_value_product')
+            ->where('product_id', $product->id)
+            ->where('attribute_value_id', $line['attribute_value_id'])
+            ->first();
+
+        // ننقص فقط لو الإضافة لها مخزون محدد (quantity ليس null)
+        if ($pivot && !is_null($pivot->quantity)) {
+            DB::table('attribute_value_product')
+                ->where('product_id', $product->id)
+                ->where('attribute_value_id', $line['attribute_value_id'])
+                ->decrement('quantity', (float) $item['quantity']);
+        }
+    }
 
                 $totalItems += $item['quantity'];
                 $totalPrice += $itemTotal;

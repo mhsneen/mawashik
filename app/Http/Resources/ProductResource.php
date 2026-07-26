@@ -27,9 +27,13 @@ class ProductResource extends JsonResource
             'final_price' => (float) $this->final_price,
             'is_on_sale' => (bool) $this->is_on_sale,
             'has_variants' => $this->variants->isNotEmpty(),
-            'in_stock' => $this->variants->isEmpty()
-                ? $this->hasStock()
-                : $this->variants->contains(fn ($v) => $v->is_active && $v->hasStock()),
+
+
+                  // ← معلومات المخزون
+        'track_quantity' => $this->track_quantity,
+        'quantity' => $this->when($this->track_quantity, $this->quantity),
+        'in_stock' => $this->inStock(),
+
 
             // خصائص تحدد الفيرنت (مقاس/لون/وزن..) — تُستخدم لبناء واجهة الاختيار
             'variation_groups' => $this->attributeValues

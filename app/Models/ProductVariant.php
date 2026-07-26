@@ -11,8 +11,12 @@ class ProductVariant extends Model
 {
     use HasFactory;
     use SoftDeletes;
-    protected $fillable = ['product_id', 'combination_key', 'sku', 'price', 'quantity', 'image', 'is_active'];
-
+    protected $fillable = ['product_id', 'combination_key', 'sku', 'price', 'quantity', 'image', 'is_active' ,'track_quantity'];
+    protected $casts = [
+        'quantity' => 'decimal:2',
+        'track_quantity' => 'boolean',
+        'is_active' => 'boolean',
+    ];
     public function product()
     {
         return $this->belongsTo(Product::class);
@@ -44,11 +48,16 @@ class ProductVariant extends Model
 
 
 
-    public function hasStock(int $qty = 1): bool
+public function hasStock(float $quantity = 1.00): bool
 {
-    if (is_null($this->effective_quantity)) {
+    if (!$this->track_quantity) {
         return true;
     }
-    return $this->effective_quantity >= $qty;
+
+    if (is_null($this->quantity)) {
+        return true;
+    }
+
+    return (float) $this->quantity >= (float) $quantity;
 }
 }

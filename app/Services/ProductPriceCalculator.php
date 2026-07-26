@@ -52,34 +52,36 @@ class ProductPriceCalculator
      * يتحقق من اختيار الفيرنت (لو المنتج أصلاً عنده فيرنتس، يصير اختياره إجباري)
      * ومن توفره بالمخزون.
      */
-    protected function resolveVariant(Product $product, ?int $variantId)
-    {
-        $hasVariants = $product->variants->isNotEmpty();
+   protected function resolveVariant(Product $product, ?int $variantId)
+{
+    $hasVariants = $product->variants->isNotEmpty();
 
-        if (! $variantId) {
-            if ($hasVariants) {
-                throw new InvalidArgumentException(__('api.Please_Select_Variant'));
-            }
-
-            if ($product->outOfStock()) {
-                throw new InvalidArgumentException(__('api.Product_Out_Of_Stock'));
-            }
-
-            return null;
+    if (! $variantId) {
+        if ($hasVariants) {
+            throw new InvalidArgumentException(__('api.Please_Select_Variant'));
         }
 
-        $variant = $product->variants->firstWhere('id', $variantId);
-
-        if (! $variant || ! $variant->is_active) {
-            throw new InvalidArgumentException(__('api.Invalid_Variant_Selected'));
+        // ← تحقق من المخزون فقط لو يتبع المخزون
+        if ($product->track_quantity && $product->outOfStock()) {
+            throw new InvalidArgumentException(__('api.Product_Out_Of_Stock'));
         }
 
-        if (! $variant->hasStock()) {
-            throw new InvalidArgumentException(__('api.Variant_Out_Of_Stock'));
-        }
-
-        return $variant;
+        return null;
     }
+
+    $variant = $product->variants->firstWhere('id', $variantId);
+
+    if (! $variant || ! $variant->is_active) {
+        throw new InvalidArgumentException(__('api.Invalid_Variant_Selected'));
+    }
+
+    // ← تحقق من المخزون فقط لو يتبع المخزون
+    if ($variant->track_quantity && ! $variant->hasStock($item['quantity'] ?? 1)) {
+        throw new InvalidArgumentException(__('api.Variant_Out_Of_Stock'));
+    }
+
+    return $variant;
+}
 
     /**
      * يتحقق إن كل قيمة إضافة مطلوبة تابعة فعلاً لهذا المنتج ونوعها modifier
@@ -108,11 +110,11 @@ class ProductPriceCalculator
 
             $pivotQuantity = $value->pivot->quantity;
 
-            if (! is_null($pivotQuantity) && $pivotQuantity <= 0) {
-                throw new InvalidArgumentException(
-                    __('api.Modifier_Out_Of_Stock', ['name' => $value->value])
-                );
-            }
+          if (! is_null($pivotQuantity) && (float) $pivotQuantity < (float) ($item['quantity'] ?? 1)) {
+    throw new InvalidArgumentException(
+        __('api.Modifier_Out_Of_Stock', ['name' => $value->value])
+    );
+}
 
             $lines->push([
                 'attribute_id' => $value->attribute_id,

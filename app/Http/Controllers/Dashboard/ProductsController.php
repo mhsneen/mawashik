@@ -90,12 +90,14 @@ $units = Unit::select('id')->get();
                 'category_id' => $request->category_id,
                 'brand_id' => $request->brand_id,
                 'sku' => $request->sku,
-                'quantity' => $request->quantity,
+                 'track_quantity' => $request->boolean('track_quantity'),
+    'quantity' => $request->boolean('track_quantity') ? $request->quantity : null,
                 'netPrice' => $request->netPrice,
                 'salePrice_start' => $request->salePrice_start != null ? Carbon::parse($request->salePrice_start)->format('Y-m-d') : $request->salePrice_start,
                 'salePrice_end' => $request->salePrice_end != null ? Carbon::parse($request->salePrice_end)->format('Y-m-d') : $request->salePrice_end,
                 'salePrice' => $request->salePrice,
                 'unit_id' => $request->unit_id,
+
             ];
 
             if ($request->hasFile('image')) {
@@ -181,12 +183,14 @@ $units = Unit::select('id')->get();
                 'category_id' => $request->category_id,
                 'brand_id' => $request->brand_id,
                 'sku' => $request->sku,
-                'quantity' => $request->quantity,
-                'netPrice' => $request->netPrice,
+  'track_quantity' => $request->boolean('track_quantity'),
+    // ✅ الكمية: null لو ما يتبع المخزون
+    'quantity' => $request->boolean('track_quantity') ? $request->quantity : null,                'netPrice' => $request->netPrice,
                 'salePrice_start' => $request->salePrice_start != null ? Carbon::parse($request->salePrice_start)->format('Y-m-d') : $request->salePrice_start,
                 'salePrice_end' => $request->salePrice_end != null ? Carbon::parse($request->salePrice_end)->format('Y-m-d') : $request->salePrice_end,
                 'salePrice' => $request->salePrice,
                 'unit_id' => $request->unit_id,
+
             ];
 
             if ($request->has('image')) {

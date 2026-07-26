@@ -248,6 +248,52 @@
 
             </div>
         </div>
+
+
+        {{-- ✅ كارد المنتجات اللي شارفت على الانتهاء --}}
+        <div class="col-xl-3 col-lg-6 col-md-6 col-xm-12">
+            <div class="card overflow-hidden sales-card bg-warning-gradient">
+                <div class="pl-3 pt-3 pr-3 pb-2 pt-0">
+                    <div class="">
+                        <h6 class="mb-3 tx-15 text-white">
+                            {{ __('dashboard.Products_Near_Expiry') }}
+                            <small>(≤ {{ $expired_threshold }})</small>
+                        </h6>
+                    </div>
+                    <div class="pb-0 mt-0">
+                        <div class="d-flex">
+                            <div class="">
+                                <h4 class="tx-20 font-weight-bold mb-1 text-white">{{ $low_stock_count }}</h4>
+                            </div>
+                            <span class="float-right my-auto mr-auto">
+                                <i class="fas fa-exclamation-triangle text-white"></i>
+                            </span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        {{-- ✅ كارد المنتجات اللي نفذت --}}
+        <div class="col-xl-3 col-lg-6 col-md-6 col-xm-12">
+            <div class="card overflow-hidden sales-card bg-dark">
+                <div class="pl-3 pt-3 pr-3 pb-2 pt-0">
+                    <div class="">
+                        <h6 class="mb-3 tx-15 text-white">{{ __('dashboard.Out_Of_Stock_Products') }}</h6>
+                    </div>
+                    <div class="pb-0 mt-0">
+                        <div class="d-flex">
+                            <div class="">
+                                <h4 class="tx-20 font-weight-bold mb-1 text-white">{{ $out_of_stock_count }}</h4>
+                            </div>
+                            <span class="float-right my-auto mr-auto">
+                                <i class="fas fa-times-circle text-white"></i>
+                            </span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
 
     <!-- row closed -->
@@ -548,11 +594,13 @@
         </div>
 
 
-        <div class="col-md-12 col-lg-5 col-xl-5">
+            <div class="col-md-12 col-lg-5 col-xl-5">
             <div class="card card-table-two">
                 <div class="d-flex justify-content-between">
                     <h4 class="card-title mb-1" style="font-size:16px">
-                        {{ __('dashboard.Products_that_are_about_to_expire') }}</h4>
+                        {{ __('dashboard.Products_that_are_about_to_expire') }}
+                        <small class="text-muted">(  {{ __('dashboard.Limit') }}: {{ $expired_threshold }})</small>
+                    </h4>
                     <i class="mdi mdi-dots-horizontal text-gray"></i>
                 </div>
                 <span class="tx-12 tx-muted mb-3 "></span>
@@ -560,44 +608,52 @@
                     <table class="table table-striped table-bordered mb-0 text-sm-nowrap text-lg-nowrap text-xl-nowrap">
                         <thead>
                             <tr>
-                                <th class="wd-lg-75p tx-center">{{ __('dashboard.Product') }}</th>
-                                <th class="wd-lg-15p tx-center">{{ __('dashboard.Quantity') }}</th>
-
-
+                                <th class="wd-lg-60p tx-center">{{ __('dashboard.Product') }}</th>
+                                <th class="wd-lg-20p tx-center">{{ __('dashboard.Quantity') }}</th>
+                                <th class="wd-lg-20p tx-center">{{ __('dashboard.Status') }}</th>
                             </tr>
                         </thead>
                         <tbody>
-                            @foreach ($expire_products_quantity as $epq)
+                            @forelse ($expire_products_quantity as $epq)
                                 <tr>
-
                                     <td class="tx-center tx-medium tx-inverse">
                                         <div class="media mt-0">
-                                            <a href="{{ route('products.edit', $epq->id) }}"> <img
-                                                    class="avatar-lg rounded-circle ml-3 my-auto"
+                                            <a href="{{ route('products.edit', $epq->id) }}">
+                                                <img class="avatar-lg rounded-circle ml-3 my-auto"
                                                     src="{{ $epq->image_url }}" alt="Image description">
                                             </a>
                                             <div class="media-body">
                                                 <div class="d-flex align-items-center">
                                                     <div class="mt-1">
-                                                        <a href="{{ route('products.edit', $epq->id) }}"
-                                                            class="tx-inverse">
+                                                        <a href="{{ route('products.edit', $epq->id) }}" class="tx-inverse">
                                                             <h5 class="mb-1 tx-15" style="padding-top:12px">
                                                                 {{ $epq->name }}</h5>
                                                         </a>
                                                     </div>
-
                                                 </div>
                                             </div>
                                         </div>
-
                                     </td>
-                                    <td class="tx-center tx-medium tx-inverse"> {{ $epq->quantity }}</td>
-
-
-
+                                    <td class="tx-center tx-medium tx-inverse">
+                                        <span class="badge {{ $epq->quantity <= 0 ? 'bg-dark' : 'bg-warning' }}">
+                                            {{ $epq->quantity }}
+                                        </span>
+                                    </td>
+                                    <td class="tx-center tx-medium tx-inverse">
+                                        @if($epq->quantity <= 0)
+                                            <span class="badge bg-dark">{{ __('dashboard.Expired') }}</span>
+                                        @else
+                                            <span class="badge bg-warning">{{ __('dashboard.Expiring_Soon') }}</span>
+                                        @endif
+                                    </td>
                                 </tr>
-                            @endforeach
-
+                            @empty
+                                <tr>
+                                    <td colspan="3" class="text-center text-muted">
+{{ __('dashboard.No_products_near_expiry') }}
+                                    </td>
+                                </tr>
+                            @endforelse
                         </tbody>
                     </table>
                 </div>

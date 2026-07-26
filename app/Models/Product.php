@@ -13,7 +13,7 @@ class Product extends Model
 {
     use HasFactory, SoftDeletes, Translatable;
     protected $with = ['translations'];
-    protected $fillable = ['netPrice', 'salePrice', 'salePrice_start', 'salePrice_end', 'is_active', 'new_arrivals', 'brand_id', 'sku', 'quantity', 'category_id', 'image', 'calories','unit_id'];
+    protected $fillable = ['netPrice', 'salePrice', 'salePrice_start', 'salePrice_end', 'is_active', 'new_arrivals', 'brand_id', 'sku', 'quantity', 'category_id', 'image', 'calories','unit_id' ,'track_quantity'];
     protected $date = ['salePrice_start', 'salePrice_end', 'deleted_at'];
     protected $translatedAttributes = ['name', 'slug', 'details', 'description'];
     protected $hidden = ['translations', 'image'];
@@ -24,6 +24,8 @@ class Product extends Model
         'netPrice' => 'float',   // أو 'decimal:2' إذا تريد دقة عشريتين
         'salePrice' => 'float',
         'final_price' => 'float',
+        'track_quantity' => 'boolean',
+        'quantity' => 'decimal:2', // ← أضف هذا
     ];
 
     // السعر النهائي بعد الخصم
@@ -209,22 +211,33 @@ class Product extends Model
     {
         return $this->morphMany(Imagestore::class, 'imageable');
     }
-public function hasStock(int $quantity = 1): bool
+
+public function hasStock(float $quantity = 1.00): bool
 {
-    if (is_null($this->quantity)) {
-        return true; // مخزون غير محدود
+    if (!$this->track_quantity) {
+        return true;
     }
-    return $this->quantity >= $quantity;
+
+    if (is_null($this->quantity)) {
+        return true;
+    }
+
+    return (float) $this->quantity >= (float) $quantity;
+}
+// Scope: فقط المنتجات التي تتبع المخزون
+public function scopeTracksQuantity($query)
+{
+    return $query->where('track_quantity', true);
 }
 
-    public function inStock(): bool
-    {
-        return $this->hasStock();
-    }
-
-   public function outOfStock(): bool
+public function inStock(): bool
 {
-    return ! $this->hasStock();
+    return $this->hasStock(0.01); // أي كمية صغيرة
+}
+
+public function outOfStock(): bool
+{
+    return !$this->inStock();
 }
     public function attributeValues()
     {
@@ -305,6 +318,23 @@ public function getQuantityWithUnitAttribute()
         return __('dashboard.Unlimited');
     }
     return $this->quantity . ($this->unit ? ' ' . $this->unit->name : '');
+}
+
+
+public function scopeLowStock($query)
+{
+    $threshold = Setting::getFloat('expired_quantities');
+
+    return $query->where('track_quantity', true)
+        ->whereNotNull('quantity')
+        ->where('quantity', '<=', $threshold);
+}
+
+public function scopeOutOfStock($query)
+{
+    return $query->where('track_quantity', true)
+        ->whereNotNull('quantity')
+        ->where('quantity', '<=', 0);
 }
 
 

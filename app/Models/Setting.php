@@ -83,4 +83,19 @@ class Setting extends Model
         json_decode($string);
         return json_last_error() === JSON_ERROR_NONE;
     }
+
+    public static function getFloat(string $key, float $default = 0.0): float
+{
+    $value = self::where('key', $key)->value('plain_value');
+    return is_numeric(trim($value)) ? (float) $value : $default;
+}
+
+/**
+ * تجيب قيمة نصية من الإعدادات
+ */
+public static function getString(string $key, string $default = ''): string
+{
+    $value = self::where('key', $key)->value('plain_value');
+    return $value !== null ? trim($value) : $default;
+}
 }

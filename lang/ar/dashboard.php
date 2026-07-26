@@ -775,4 +775,13 @@ return [
 'Units'=>'وحدة بيع',
 'Verification_method_settings' => 'إعدادات طريقة التحقق',
 'Loyalty_Points_Settings' => 'إعدادات نقاط الولاء',
+'track_quantity' => 'تتبع الكمية',
+'Track_Quantity' => 'تتبع المخزون',
+'Track_Quantity_Help' => 'تفعيل تتبع مخزون هذا المنتج لإدارة توفر الكمية.',
+'Out_Of_Stock_Products' => 'المنتجات المنتهية من المخزون',
+'Products_Near_Expiry' => 'المنتجات التي شارفت على الانتهاء',
+'No_products_near_expiry' => 'لا توجد منتجات شارفت على الانتهاء',
+'Expired' => 'منتهية',
+'Expiring_Soon' => 'شارفت على الانتهاء',
+'Limit' => 'الحد',
 ];
