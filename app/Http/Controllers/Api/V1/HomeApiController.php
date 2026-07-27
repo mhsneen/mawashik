@@ -11,6 +11,8 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 use App\Http\Requests\Api\V1\{ProductsByCategoryRequest, ProductDetailsRequest};
 use App\Http\Resources\ProductResource;
+use App\Http\Resources\Api\V1\ProductCardResource; // أضف هذا في أعلى الملف
+use App\Http\Resources\Api\V1\ProductDetailsResource; // بدل ProductResource
 
 class HomeApiController extends Controller
 {
@@ -21,153 +23,104 @@ class HomeApiController extends Controller
      * ومجموعات الإضافات (Modifiers) — تُستخدم لبناء شاشة اختيار
      * المنتج قبل الإضافة للسلة.
      */
-    public function getProductDetails(ProductDetailsRequest $request)
-    {
-        try {
-            $product = Product::Active()
-                ->with([
-                    'category:id,parent_id,image',
-                    'brand:id,image',
-                    'productimages',
-                    'variants' => fn($q) => $q->where('is_active', true)->with('attributeValues'),
-                    'attributeValues.attribute',
-                ])
-                ->find($request->product_id);
+ public function getProductDetails(ProductDetailsRequest $request)
+{
+    try {
+        $product = Product::Active()
+            ->with([
+                'category:id,parent_id,image',
+                'brand:id,image',
+                'productimages',
+                'variants' => fn($q) => $q->where('is_active', true)->with('attributeValues'),
+                'attributeValues.attribute',
+                'unit'
+            ])
+            ->find($request->product_id);
 
-            if (!$product) {
-                return $this->returnError(__('dashboard.ID_Not_Found'));
-            }
-
-            return $this->returnData('data', new ProductResource($product), __('api.Api_Return_Data'));
-        } catch (Exception $ex) {
-            Log::error('getProductDetails: ' . $ex->getMessage(), [
-                'trace' => $ex->getTraceAsString(),
-            ]);
-            return $this->returnError(__('api.Api_Error_Contact_Programmer'));
+        if (!$product) {
+            return $this->returnError(__('dashboard.ID_Not_Found'));
         }
+
+        // فقط تغيير هنا 👇
+        return $this->returnData('data', new ProductDetailsResource($product), __('api.Api_Return_Data'));
+
+    } catch (Exception $ex) {
+        Log::error('getProductDetails: ' . $ex->getMessage(), [
+            'trace' => $ex->getTraceAsString(),
+        ]);
+        return $this->returnError(__('api.Api_Error_Contact_Programmer'));
     }
+}
 
 
 
 
-    public function get_search_products(Request $request)
-    {
-        try {
-            $items = Product::Active()
-                ->FilterApi(request(['search_name']))
-                ->select('id', 'image', 'netPrice', 'salePrice', 'salePrice_start', 'salePrice_end', 'category_id', 'brand_id', 'sku', 'quantity', 'calories')
-                ->with([
-                    'category:id,parent_id,image',
-                    'brand:id,image',
-                    'productimages',
-                    'attributeValues.attribute'   // مهم
-                ])
+ public function get_search_products(Request $request)
+{
+    try {
+       $items = Product::Active()
+            ->FilterApi(request(['search_name']))
+            // 1. أضف الحقول الجديدة هنا في الـ select
+            ->select(
+                'id', 'image',
+                'netPrice', 'salePrice', 'salePrice_start', 'salePrice_end',
+                'category_id', 'calories', 'sku'
+            )
+            ->with(['category:id'])
+               ->latest()
+            ->paginate(API_PAGANATION_COUNT)
+            ->withQueryString();
+        $data = [
+            // نمرر الكولكشن فقط للـ Resource عشان ما يتكررش الـ data
+            'items' => ProductCardResource::collection($items->getCollection()),
+            'meta'  => [
+                'current_page' => $items->currentPage(),
+                'total_pages'  => $items->lastPage(),
+                'total_items'  => $items->total(),
+                'per_page'     => $items->perPage(),
+            ],
+            'links' => [
+                'self' => $items->url($items->currentPage()),
+                'next' => $items->nextPageUrl(),
+                'prev' => $items->previousPageUrl(),
+            ]
+        ];
 
-                ->paginate(API_PAGANATION_COUNT)
-                ->withQueryString();
+        return $this->returnData('data', $data, __('api.Api_Return_Data'));
 
-            $items->getCollection()->transform(function ($product) {
-
-                $attributes = $product->attributeValues
-                    ->groupBy('attribute_id')
-                    ->map(function ($values, $attribute_id) {
-                        return [
-                            'attribute_id' => $attribute_id,
-                            'attribute_name' => $values->first()->attribute->name,
-                            'values' => $values->map(function ($value) {
-                                return [
-                                    'id' => $value->id,
-                                    'value' => $value->value,
-                                    'color_code' => $value->color_code,
-                                ];
-                            })->values(),
-                        ];
-                    })->values();
-
-                // ضع الـ attributes المنظمة داخل المنتج
-                $product->attributes = $attributes;
-
-                // امسح attributeValues القديمة (اختياري)
-                unset($product->attributeValues);
-
-                return $product;
-            });
-
-
-
-            $data = [
-                'items' => $items->items(),
-                'meta' => [
-                    'current_page' => $items->currentPage(),
-                    'total_pages' => $items->lastPage(),
-                    'total_items' => $items->total(),
-                    'per_page' => $items->perPage(),
-                ],
-                'links' => [
-                    'self' => $items->url($items->currentPage()),
-                    'next' => $items->nextPageUrl(),
-                    'prev' => $items->previousPageUrl(),
-                ]
-            ];
-            return $this->returnData('data', $data, __('api.Api_Return_Data'));
-        } catch (Exception $ex) {
-            DB::rollback();
-            Log::error('get_All_restaurants: ' . $ex->getMessage(), [
-                'trace' => $ex->getTraceAsString(),
-                'input' => $request->all()
-            ]);
-            return $this->returnError(__('api.Api_Error_Contact_Programmer'));
-        }
+    } catch (Exception $ex) {
+        Log::error('get_search_products: ' . $ex->getMessage(), [
+            'trace' => $ex->getTraceAsString(),
+            'input' => $request->all()
+        ]);
+        return $this->returnError(__('api.Api_Error_Contact_Programmer'));
     }
+}
 
 
 
     public function getHomeProduct()
     {
         try {
-            $items = Product::HomeApi()->Active()
-                ->FilterApi(request(['search_name']))
-                ->select('id', 'image', 'netPrice', 'salePrice', 'salePrice_start', 'salePrice_end', 'category_id', 'brand_id', 'sku', 'quantity', 'calories')
-                ->with([
-                    'category:id,parent_id,image',
-                    'brand:id,image',
-                    'productimages',
-                    'attributeValues.attribute'   // مهم
-                ])
 
-                ->paginate(API_PAGANATION_COUNT)
-                ->withQueryString();
 
-            $items->getCollection()->transform(function ($product) {
+                $items = Product::HomeApi()->Active()
+            ->FilterApi(request(['search_name']))
+            // 1. أضف الحقول الجديدة هنا في الـ select
+            ->select(
+                'id', 'image',
+                'netPrice', 'salePrice', 'salePrice_start', 'salePrice_end',
+                'category_id', 'calories', 'sku'
+            )
+            ->with(['category:id'])
+              ->latest()
+            ->paginate(API_PAGANATION_COUNT)
+            ->withQueryString();
 
-                $attributes = $product->attributeValues
-                    ->groupBy('attribute_id')
-                    ->map(function ($values, $attribute_id) {
-                        return [
-                            'attribute_id' => $attribute_id,
-                            'attribute_name' => $values->first()->attribute->name,
-                            'values' => $values->map(function ($value) {
-                                return [
-                                    'id' => $value->id,
-                                    'value' => $value->value,
-                                    'color_code' => $value->color_code,
-                                ];
-                            })->values(),
-                        ];
-                    })->values();
-
-                // ضع الـ attributes المنظمة داخل المنتج
-                $product->attributes = $attributes;
-
-                // امسح attributeValues القديمة (اختياري)
-                unset($product->attributeValues);
-
-                return $product;
-            });
 
 
             $data = [
-                'items' => $items->items(),
+            'items' => ProductCardResource::collection($items->getCollection()),
                 'meta' => [
                     'current_page' => $items->currentPage(),
                     'total_pages' => $items->lastPage(),

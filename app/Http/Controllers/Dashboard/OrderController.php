@@ -229,7 +229,7 @@ class OrderController extends Controller
     {
         $rules = [
             'id' => 'required|numeric|exists:orders,id',
-            'payment_status' => 'required|numeric|exists:paymentmethods,id',
+            'payment_status' => 'required|string|in:pending,paid,failed,cancelled,refunded',
         ];
         $messages = [];
         $attributes = [
@@ -244,7 +244,8 @@ class OrderController extends Controller
 
         DB::beginTransaction();
         $item_data = [
-            'payment_status' => $request->payment_status
+            'payment_status' => $request->payment_status,
+            'paid_at' => $request->payment_status === 'paid' ? now() : null,
         ];
         $item->update($item_data);
         DB::commit();

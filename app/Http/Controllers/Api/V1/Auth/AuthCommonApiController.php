@@ -115,9 +115,6 @@ class AuthCommonApiController extends Controller
 // ← حذف جميع التوكنات القديمة للمستخدم
 $user->tokens()->delete();
             $token = $user->createToken($user->name . 'Auth-Token')->plainTextToken;
-
-
-
                       $data = [
     'token'           => $token,
     'userId'          => $user->id,

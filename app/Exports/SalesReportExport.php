@@ -24,7 +24,7 @@ class SalesReportExport implements FromView, WithEvents
         $request = $this->request;
 
         $query = Order::FilterDashbordSales(request(['search_date_from', 'search_date_to']))
-            ->where('status_id', 4); // استثناء الملغاة
+            ->where('status_id', 5); // فقط الطلبات المسلمة فعليًا
 
         // الإحصائيات قبل عملية الـ paginate
         $summary = [

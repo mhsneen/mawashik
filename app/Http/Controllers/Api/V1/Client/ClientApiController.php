@@ -199,6 +199,7 @@ class ClientApiController extends Controller
             'image',
 
         ]);
+        $user->branch_id = $user->branch_id ?? 0;
 
         return $this->returnData('data', $user, __('api.Api_Return_Data'));
     }

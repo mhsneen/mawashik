@@ -32,8 +32,8 @@ class ClientRegisterRequest extends FormRequest
            'name'   => 'required|max:100',
            'mobile' => [
                'required',
-               'numeric',
-               'digits_between:10,20',
+
+               'regex:/^\+?[0-9]{8,20}$/',
                Rule::unique('users', 'mobile')->whereNull('deleted_at'),
            ],
            'email'  => [

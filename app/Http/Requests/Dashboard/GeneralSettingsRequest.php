@@ -28,7 +28,7 @@ class GeneralSettingsRequest extends FormRequest
 
             'store_name_ar' => 'required|max:100',
             'store_name_en' => 'required|max:100',
-            'store_logo' => 'required|image',
+            'store_logo' => 'nullable|image',
             'store_email' => 'required|email|max:100',
             'store_mobile' => 'required|numeric|digits_between:10,15',
             'store_whatsapp' => 'required|numeric|digits_between:10,15',

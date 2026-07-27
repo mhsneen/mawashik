@@ -107,7 +107,7 @@
                                     <div class="col-md-6">
                                         <input type="file" class="dropify"  name="store_logo"
                                             id="store_logo" data-max-file-size="5M"
-                                            data-parsley-errors-container="#slErrorContainerimagestore_logo" required=""
+                                            data-parsley-errors-container="#slErrorContainerimagestore_logo"
                                             data-default-file="{{ URL::asset('uploads/settings/thumbnail/' . $setting['store_logo']->plain_value . '') }}" />
 
                                         <div id="slErrorContainerimagestore_logo">
@@ -153,7 +153,7 @@
 						</div>
 					</div>
 
-                  
+
                     <div class="col-md-12">
 						<div class="form-group ">
 							<div class="row">

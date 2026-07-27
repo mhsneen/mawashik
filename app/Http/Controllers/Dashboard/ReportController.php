@@ -30,7 +30,7 @@ class ReportController extends Controller
 
         // نبدأ بكويري الفلترة بدون paginate
         $query = Order::FilterDashbordSales(request(['search_date_from', 'search_date_to']))
-            ->where('status_id', 4); // استثناء الملغاة
+            ->where('status_id', 5); // فقط الطلبات المسلمة فعليًا
 
 
 
@@ -73,7 +73,7 @@ class ReportController extends Controller
                 'order_items.created_at'
             )
             ->whereHas('order', function ($q) {
-                $q->where('status_id', 4);
+                $q->where('status_id', 5);
             })
             ->FilterDashbordReport(
                 request(['search_date_from', 'search_date_to'])

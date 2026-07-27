@@ -13,8 +13,6 @@ use App\Http\Controllers\Api\V1\Auth\AuthCommonApiController;
 use App\Http\Controllers\Api\V1\CategoriesApiController;
 use App\Http\Controllers\Api\V1\HomeApiController;
 use App\Http\Controllers\Api\V1\NotificationApiController;
-
-
 use App\Http\Controllers\Api\V1\Client\WishlistApiController;
 use App\Http\Controllers\Api\V1\Client\CartApiController;
 use App\Http\Controllers\Api\V1\Client\OrderreviewsApiController;
@@ -24,6 +22,7 @@ use App\Http\Controllers\Api\V1\Client\OrdersClientApiController;
 use App\Http\Controllers\Api\V1\Client\AddressApiController;
 use App\Http\Controllers\Api\V1\Client\LoyaltyPointsApiController;
 use App\Http\Controllers\Api\V1\Client\PaymentApiController;
+use App\Http\Controllers\Api\V1\BrandsApiController;
 
 
 
@@ -79,6 +78,10 @@ Route::group(['middleware' => ['guest:sanctum', 'api', 'apiChangeLanguage', 'api
         ->middleware('throttle:5,1');
 
     Route::post('get_Categories', [CategoriesApiController::class, 'index']);
+    Route::post('get_CategoryDetails', [CategoriesApiController::class, 'show']); // <-- الجديد
+   // العلامات التجارية 👇
+    Route::post('get_Brands', [BrandsApiController::class, 'index']);
+    Route::post('get_BrandDetails', [BrandsApiController::class, 'show']);
     Route::post('get_search_products', [HomeApiController::class, 'get_search_products']);
     Route::post('getHomeProduct', [HomeApiController::class, 'getHomeProduct']);
     Route::post('getProductsByCategory', [HomeApiController::class, 'getProductsByCategory']);
@@ -153,7 +156,7 @@ Route::group(['middleware' => ['auth:sanctum', 'api', 'apiCheckUse', 'apiChangeL
 
 
     Route::post('getLoyaltyPointsBalance', [LoyaltyPointsApiController::class, 'getBalance']);
-Route::post('getLoyaltyPointsHistory', [LoyaltyPointsApiController::class, 'getHistory']);
+    Route::post('getLoyaltyPointsHistory', [LoyaltyPointsApiController::class, 'getHistory']);
 
     #################################################### Start Payments   ####################################################
     Route::post('get_payment_methods', [PaymentApiController::class, 'get_payment_methods']);
