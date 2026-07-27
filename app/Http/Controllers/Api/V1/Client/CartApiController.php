@@ -147,16 +147,15 @@ if (!$storeStatus->isOpenNow($requestedDateTime->toDateTimeString())) {
 
             if (!is_null($stockHolder->quantity)) {
                 // قفل الصف في قاعدة البيانات لمنع الطلبات المتزامنة
-                $lockedHolder = clone $stockHolder;
-                $lockedHolder->lockForUpdate()->findOrFail($stockHolder->id);
+$lockedHolder = $stockHolder->newQuery()->lockForUpdate()->findOrFail($stockHolder->id);
 
                 // التحقق من توفر الكمية المطلوبة
-                if ($lockedHolder->quantity < $item['quantity']) {
+             if ($lockedHolder->quantity < $item['quantity']) {
                     throw new InvalidArgumentException(__('api.Insufficient_stock_for_product', ['name' => $product->name]));
                 }
 
                 // خصم المخزون
-                $stockHolder->decrement('quantity', (float) $item['quantity']);
+$stockHolder->decrement('quantity', (float) $item['quantity']);
             }
         }
 

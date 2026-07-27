@@ -21,11 +21,7 @@ class OrderObserver
             );
         }
 
-        // ✅ تعيين سائق متاح فور وصول الطلب (إذا كان توصيل)
-        // السائق المتاح = نشط وليس لديه طلب آخر قيد التوصيل حالياً
-        if ($order->delivery_type === 'delivery') {
-            (new DriverAssignmentService())->assignAvailableDriver($order);
-        }
+        // ❌ تم حذف تعيين السائق من هنا
     }
 
     public function updated(Order $order): void
@@ -43,6 +39,12 @@ class OrderObserver
             if ($timestampColumn) {
                 $order->{$timestampColumn} = now();
                 $order->saveQuietly();
+            }
+
+            // ✅ تعيين سائق متاح فور جهوزية الطلب (الحالة 3 = جاهز للاستلام)
+            // نتحقق أنه لم يتم تعيين سائق مسبقاً يدوياً
+            if ($newStatus === 3 && $order->delivery_type === 'delivery' && is_null($order->driver_id)) {
+                (new DriverAssignmentService())->assignAvailableDriver($order);
             }
 
             // ✅ إضافة نقاط الولاء عند التسليم — مع حماية من الإضافة المكررة
@@ -69,7 +71,7 @@ class OrderObserver
             }
 
             // ✅ استرداد المبلغ للمحفظة عند الإلغاء
-            if ($newStatus == 6) {
+            if ($newStatus == 6 && $order->payment_status === 'paid') {
                 $user = $order->user;
                 if ($user) {
                     $wallet = $user->wallet;

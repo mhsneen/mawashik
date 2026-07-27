@@ -45,7 +45,6 @@ class GeneralDeliverySettingsRequest extends FormRequest
             'longitude' => __('dashboard.longitude'),
             'Latitude' => __('dashboard.Latitude'),
             'delivery_max_distance' => __('dashboard.delivery_max_distance'),
-            'open_distance' => __('dashboard.Adherence to the stores location'),
             'delivery_price' => __('dashboard.Delivery price per kilo'),
             'free_delivery_enabled' => __('dashboard.free_delivery_enabled'),
             'free_delivery_distance' => __('dashboard.free_delivery_distance'),

@@ -281,12 +281,20 @@
                                                     <option value="  ">
                                                         {{ __('dashboard.Choose') }}
                                                     </option>
-                                                    <option value="1" {{$item->is_active == '1' ? 'selected' : '' }}>
+
+
+
+
+                                                        <option value="1" {{$item->is_active == '1' ? 'selected' : '' }}>
                                                         {{ __('dashboard.Yes') }}
                                                     </option>
-                                                    <option value="0" {{$item->is_active == '0' ? 'selected' : '' }}>
+                                                    <!-- ✅ القيمة 0 تعني متوقف (No) -->
+                                                      <option value="0" {{$item->is_active == '0' ? 'selected' : '' }}>
                                                         {{ __('dashboard.No') }}
                                                     </option>
+
+
+
 
                                                 </select>
                                                 <div id="slErrorContaineris_active">

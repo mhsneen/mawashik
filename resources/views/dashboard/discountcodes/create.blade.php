@@ -5,8 +5,6 @@
 @section('css')
     <link href="{{ URL::asset('assets/dashboard/plugins/select2/css/select2.min.css') }}" rel="stylesheet">
 
-
-
     <!--Internal  Datetimepicker-slider css -->
     <link href="{{ URL::asset('assets/dashboard/plugins/amazeui-datetimepicker/css/amazeui.datetimepicker.css') }}"
         rel="stylesheet">
@@ -221,7 +219,8 @@
                                 <div class="form-group ">
                                     <div class="row">
                                         <div class="col-md-3">
-                                            <label class="form-label">{{ __('dashboard.Stopped') }} : <span
+                                            <!-- ✅ تم تغيير الكلمة من Stopped إلى Active -->
+                                            <label class="form-label">{{ __('dashboard.Active') }} : <span
                                                     class="tx-danger">*</span></label>
 
                                         </div>
@@ -237,10 +236,12 @@
                                                     <option value="  ">
                                                         {{ __('dashboard.Choose') }}
                                                     </option>
+                                                    <!-- ✅ القيمة 1 تعني مفعّل (Yes) -->
                                                     <option value="1"
                                                         {{ old('is_active') == '1' ? 'selected' : '' }}>
                                                         {{ __('dashboard.Yes') }}
                                                     </option>
+                                                    <!-- ✅ القيمة 0 تعني متوقف (No) -->
                                                     <option value="0"
                                                         {{ old('is_active') == '0' ? 'selected' : '' }}>
                                                         {{ __('dashboard.No') }}

@@ -299,14 +299,31 @@ public function outOfStock(): bool
     return $this->hasMany(ProductVariant::class);
 }
 
-public function getFinalPriceAttribute($variant = null)
-{
-    $base = $variant?->price ?? $this->netPrice;
-    if ($this->isOnSale()) {
-        $base -= ($base * $this->salePrice) / 100;
+  // ✅ Accessor نظيف بدون باراميترات، يحسب سعر المنتج الأساسي فقط
+    public function getFinalPriceAttribute(): float
+    {
+        $base = (float) $this->netPrice;
+
+        if ($this->isOnSale()) {
+            $base -= ($base * $this->salePrice) / 100;
+        }
+
+        return (float) $base;
     }
-    return (float) $base;
-}
+
+    // ✅ دالة عادية (Method) للمنطق المعقد (لو فيه فيرنت)
+    public function calculateFinalPrice($variant = null): float
+    {
+        // لو فيه فيرنت، نستخدم سعره، وإلا نستخدم السعر الأساسي للمنتج
+        $base = $variant ? (float) $variant->price : (float) $this->netPrice;
+
+        // نطبق الخصم (لو المنتج عليه عرض)
+        if ($this->isOnSale()) {
+            $base -= ($base * $this->salePrice) / 100;
+        }
+
+        return (float) $base;
+    }
 public function unit()
 {
     return $this->belongsTo(Unit::class);

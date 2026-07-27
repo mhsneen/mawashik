@@ -28,12 +28,12 @@ class DiscountCode extends Model
         'is_active' => 'boolean',
     ];
 
-
     public function getStatusAttribute()
     {
         $today = Carbon::today();
 
-        if ($this->is_active == 1) {
+        // ✅ المنطق الصحيح: إذا كان معطلاً (0) يعرض "متوقف"
+        if (! $this->is_active) {
             return '<span class="label text-info d-flex">
                 <div class="dot-label bg-info ml-1"></div>' . __('dashboard.Stopped') . '</span>';
         }
@@ -68,15 +68,18 @@ class DiscountCode extends Model
 
             switch ($search) {
                 case 'Stopped':
-                    $query->where('is_active', 1);
+                    // ✅ متوقف = 0
+                    $query->where('is_active', 0);
                     break;
 
                 case 'Pending':
-                    $query->whereDate('start_date', '>', $today)->where('is_active', '!=', 1);
+                    // ✅ مفعّل = 1 ولم يبدأ
+                    $query->whereDate('start_date', '>', $today)->where('is_active', 1);
                     break;
 
                 case 'Finished':
-                    $query->where(function ($q) use ($today) {
+                    // ✅ مفعّل = 1 وانتهى أو استنفد
+                    $query->where('is_active', 1)->where(function ($q) use ($today) {
                         $q->whereDate('end_date', '<', $today)
                             ->orWhere(function ($sub) {
                                 $sub->whereIn('usage_type', ['limited', 'once'])
@@ -87,13 +90,14 @@ class DiscountCode extends Model
                     break;
 
                 case 'Active':
-                    $query->whereDate('start_date', '<=', $today)
+                    // ✅ مفعّل = 1 وصالح
+                    $query->where('is_active', 1)
+                        ->whereDate('start_date', '<=', $today)
                         ->whereDate('end_date', '>=', $today)
                         ->where(function ($q) {
                             $q->whereNotIn('usage_type', ['limited', 'once'])
                                 ->orWhereColumn('usage_count', '<', 'max_usage');
-                        })
-                        ->where('is_active', '!=', 1);
+                        });
                     break;
             }
         });
@@ -110,8 +114,9 @@ class DiscountCode extends Model
     {
         $now = Carbon::now();
 
+        // ✅ المنطق الصحيح: إذا كان معطلاً (0) يرجع false
+        if (! $this->is_active) return false;
 
-        if ($this->is_active == 1) return false;
         if (($this->usage_type === 'limited' || $this->usage_type === 'once') && $this->max_usage !== null) {
             if ($this->usage_count >= $this->max_usage) {
                 return false;

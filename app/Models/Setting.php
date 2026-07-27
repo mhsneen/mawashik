@@ -84,11 +84,16 @@ class Setting extends Model
         return json_last_error() === JSON_ERROR_NONE;
     }
 
-    public static function getFloat(string $key, float $default = 0.0): float
+public static function getFloat(string $key, float $default = 0.0): float
 {
     $value = self::where('key', $key)->value('plain_value');
-    return is_numeric(trim($value)) ? (float) $value : $default;
+    $value = trim($value ?? ''); // إذا كان null يحوله لنص فارغ
+
+    return is_numeric($value) ? (float) $value : $default;
 }
+
+
+
 
 /**
  * تجيب قيمة نصية من الإعدادات

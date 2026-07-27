@@ -9,21 +9,24 @@ use Illuminate\Support\Facades\DB;
 class DriverAssignmentService
 {
     /**
-     * إيجاد أول سائق متاح وتعيينه للطلب
-     * السائق المتاح: is_active=1 وليس لديه طلب بحالة 4 (قيد التوصيل)
+     * إيجاد سائق متاح وتعيينه للطلب
+     * السائق المتاح: is_active=1 ونختار الأقل ازدحاماً بالطلبات النشطة (1,2,3,4)
      */
     public function assignAvailableDriver(Order $order): ?User
     {
-        // نستخدم transaction + lockForUpdate على صفوف السائقين المرشّحين
-        // حتى لا يحصل تعيين نفس السائق لطلبين مختلفين في نفس اللحظة
-        // (مثلاً لو عدة طلبات وصلت لحالة "تم التجهيز" في نفس الوقت).
-        $driver = DB::transaction(function () use ($order) {
+        // قائمة الحالات التي تعتبر الطلب فيها "نشطاً" ولم يكتمل بعد
+        $activeStatuses = [1, 2, 3, 4];
+
+        $driver = DB::transaction(function () use ($order, $activeStatuses) {
+            // نستخدم withCount لحساب الطلبات النشطة للسائق
             $driver = User::Drivers()
                 ->where('is_active', 1)
-                ->whereDoesntHave('driverOrders', function ($q) {
-                    $q->where('status_id', 4); // قيد التوصيل فعلاً
-                })
-                ->orderBy('id')
+                ->withCount(['driverOrders' => function ($q) use ($activeStatuses) {
+                    $q->whereIn('status_id', $activeStatuses);
+                }])
+                // نختار السائق الأقل ازدحاماً، وفي حال التساوي نختار الأقدم (أقل ID) كـ Round-Robin
+                ->orderBy('driver_orders_count', 'asc')
+                ->orderBy('id', 'asc')
                 ->lockForUpdate()
                 ->first();
 
@@ -43,12 +46,15 @@ class DriverAssignmentService
 
     /**
      * هل السائق متاح لطلب جديد؟
+     * (يمكن تعديل الحد الأقصى للطلبات النشطة حسب الحاجة، هنا نفترض أنه متاح إذا لم يكن قيد التوصيل)
      */
     public function isDriverAvailable(User $driver): bool
     {
+        $activeStatuses = [1, 2, 3, 4];
+
         return $driver->is_active == 1
             && !$driver->driverOrders()
-                ->where('status_id', 4)
+                ->whereIn('status_id', $activeStatuses)
                 ->exists();
     }
 

@@ -5,37 +5,37 @@ namespace App\Services;
 use App\Models\Product;
 use InvalidArgumentException;
 
-/**
- * الحساب دائماً من بيانات السيرفر (المنتج/الفيرنت/الإضافات) وليس مما يرسله العميل،
- * لمنع أي محاولة تلاعب بالسعر من الفرونت إند.
- *
- * الاستخدام:
- *   $result = $calculator->calculate($product, $variantId, $modifierValueIds);
- *   $result['unit_price']      => سعر الوحدة النهائي (فيرنت أو أساسي + الإضافات)
- *   $result['variant']         => ProductVariant|null المختار
- *   $result['modifier_lines']  => تفاصيل كل إضافة (للحفظ Snapshot أو للعرض)
- */
 class ProductPriceCalculator
 {
     /**
      * @param  Product  $product  لازم يكون محمّل مسبقاً بـ: variants.attributeValues, attributeValues.attribute
      * @param  int|null  $variantId
      * @param  array  $modifierValueIds
+     * @param  int  $quantity  الكمية المطلوبة (للفحص المخزون)
      * @return array{variant: \App\Models\ProductVariant|null, unit_price: float, modifier_lines: \Illuminate\Support\Collection}
      *
-     * @throws InvalidArgumentException  لو الاختيار غير صالح أو غير متوفر بالمخزون
+     * @throws InvalidArgumentException
      */
-    public function calculate(Product $product, ?int $variantId, array $modifierValueIds = []): array
-    {
+    public function calculate(
+        Product $product,
+        ?int $variantId,
+        array $modifierValueIds = [],
+        int $quantity = 1
+    ): array {
         if (! $product->is_active) {
             throw new InvalidArgumentException(__('api.Product_Not_Available'));
         }
 
-        $variant = $this->resolveVariant($product, $variantId);
+        if ($quantity < 1) {
+            throw new InvalidArgumentException(__('api.Invalid_Quantity'));
+        }
 
-        $unitPrice = (float) ($variant?->price ?? $product->final_price);
+        $variant = $this->resolveVariant($product, $variantId, $quantity);
 
-        $modifierLines = $this->resolveModifiers($product, $modifierValueIds);
+        // ✅ استخدام الدالة العادية لضمان تطبيق الخصم على سعر الفيرنت أو المنتج
+ $unitPrice = $product->calculateFinalPrice($variant);
+
+        $modifierLines = $this->resolveModifiers($product, $modifierValueIds, $quantity);
 
         foreach ($modifierLines as $line) {
             $unitPrice += $line['price'];
@@ -48,46 +48,37 @@ class ProductPriceCalculator
         ];
     }
 
-    /**
-     * يتحقق من اختيار الفيرنت (لو المنتج أصلاً عنده فيرنتس، يصير اختياره إجباري)
-     * ومن توفره بالمخزون.
-     */
-   protected function resolveVariant(Product $product, ?int $variantId)
-{
-    $hasVariants = $product->variants->isNotEmpty();
+    protected function resolveVariant(Product $product, ?int $variantId, int $quantity)
+    {
+        $hasVariants = $product->variants->isNotEmpty();
 
-    if (! $variantId) {
-        if ($hasVariants) {
-            throw new InvalidArgumentException(__('api.Please_Select_Variant'));
+        if (! $variantId) {
+            if ($hasVariants) {
+                throw new InvalidArgumentException(__('api.Please_Select_Variant'));
+            }
+
+            if ($product->track_quantity && ! $product->hasStock($quantity)) {
+                throw new InvalidArgumentException(__('api.Product_Out_Of_Stock'));
+            }
+
+            return null;
         }
 
-        // ← تحقق من المخزون فقط لو يتبع المخزون
-        if ($product->track_quantity && $product->outOfStock()) {
-            throw new InvalidArgumentException(__('api.Product_Out_Of_Stock'));
+        $variant = $product->variants->firstWhere('id', $variantId);
+
+        if (! $variant || ! $variant->is_active) {
+            throw new InvalidArgumentException(__('api.Invalid_Variant_Selected'));
         }
 
-        return null;
+        // ✅ استخدام $quantity بدل $item['quantity'] ?? 1
+        if ($variant->track_quantity && ! $variant->hasStock($quantity)) {
+            throw new InvalidArgumentException(__('api.Variant_Out_Of_Stock'));
+        }
+
+        return $variant;
     }
 
-    $variant = $product->variants->firstWhere('id', $variantId);
-
-    if (! $variant || ! $variant->is_active) {
-        throw new InvalidArgumentException(__('api.Invalid_Variant_Selected'));
-    }
-
-    // ← تحقق من المخزون فقط لو يتبع المخزون
-    if ($variant->track_quantity && ! $variant->hasStock($item['quantity'] ?? 1)) {
-        throw new InvalidArgumentException(__('api.Variant_Out_Of_Stock'));
-    }
-
-    return $variant;
-}
-
-    /**
-     * يتحقق إن كل قيمة إضافة مطلوبة تابعة فعلاً لهذا المنتج ونوعها modifier
-     * (مو variation)، ومتوفرة بالمخزون لو كان لها مخزون محدد.
-     */
-    protected function resolveModifiers(Product $product, array $modifierValueIds)
+    protected function resolveModifiers(Product $product, array $modifierValueIds, int $quantity)
     {
         $modifierValueIds = array_values(array_unique(array_map('intval', $modifierValueIds)));
 
@@ -110,11 +101,12 @@ class ProductPriceCalculator
 
             $pivotQuantity = $value->pivot->quantity;
 
-          if (! is_null($pivotQuantity) && (float) $pivotQuantity < (float) ($item['quantity'] ?? 1)) {
-    throw new InvalidArgumentException(
-        __('api.Modifier_Out_Of_Stock', ['name' => $value->value])
-    );
-}
+            // ✅ استخدام $quantity بدل $item['quantity'] ?? 1
+            if (! is_null($pivotQuantity) && (float) $pivotQuantity < (float) $quantity) {
+                throw new InvalidArgumentException(
+                    __('api.Modifier_Out_Of_Stock', ['name' => $value->value])
+                );
+            }
 
             $lines->push([
                 'attribute_id' => $value->attribute_id,

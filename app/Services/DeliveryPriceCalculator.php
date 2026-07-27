@@ -9,7 +9,6 @@ use InvalidArgumentException;
  * تحسب سعر التوصيل ومسافته اعتماداً على إعدادات لوحة التحكم
  * (نفس الإعدادات المستخدمة بصفحة "إعدادات التوصيل"):
  * - delivery_price_type: 1 = سعر ثابت، 2 = حسب المسافة (شرائح)
- * - open_distance: هل نطاق التوصيل مفعّل (لو مفعّل ونطاق المستخدم أبعد
  *   من delivery_max_distance، يرفض الطلب)
  */
 class DeliveryPriceCalculator
@@ -25,7 +24,6 @@ class DeliveryPriceCalculator
             'longitude',
             'Latitude',
             'delivery_max_distance',
-            'open_distance',
             'delivery_price_type',
             'fixed_delivery_price',
             'dynamic_delivery_pricing',
@@ -33,12 +31,11 @@ class DeliveryPriceCalculator
 
         $storeLat = (float) ($settings['Latitude'] ?? 0);
         $storeLng = (float) ($settings['longitude'] ?? 0);
-        $openDistance = $settings['open_distance'] ?? 0;
         $maxDistance = (float) ($settings['delivery_max_distance'] ?? 0);
 
         $distance = $this->distanceInKm($storeLat, $storeLng, $userLat, $userLng);
 
-        if ($openDistance == 1 && $distance > $maxDistance) {
+        if ( $distance > $maxDistance) {
             throw new InvalidArgumentException(__('api.Sorry your location is outside our delivery range'));
         }
 
