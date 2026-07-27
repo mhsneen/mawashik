@@ -192,6 +192,7 @@ class OrdersClientApiController extends Controller
 
             // جلب الطلب مع التأكد من أنه يخص نفس العميل
             $order = Order::where('id', $request->order_id)
+            ->with('items.product', 'items.attributes')
                 ->where('user_id', $user->id)
                 ->first();
 
@@ -211,6 +212,36 @@ class OrdersClientApiController extends Controller
                 'cancel_reason_id' => $request->cancel_reason_id,
                 'cancel_other_reason' => $request->cancel_other_reason,
             ]);
+
+
+             // ✅ إرجاع الكميات إلى المخزون
+    foreach ($order->items as $item) {
+        $product = $item->product;
+        if ($product && $product->track_quantity) {
+            $variant = $item->product_variant_id ? $product->variants()->find($item->product_variant_id) : null;
+
+            if ($variant && $variant->track_quantity && !is_null($variant->quantity)) {
+                $variant->increment('quantity', (float) $item->quantity);
+            } elseif (!is_null($product->quantity)) {
+                $product->increment('quantity', (float) $item->quantity);
+            }
+        }
+
+        // ✅ إرجاع مخزون الإضافات (Modifiers) إن وجدت
+        foreach ($item->attributes as $attr) {
+            $pivot = DB::table('attribute_value_product')
+                ->where('product_id', $product->id)
+                ->where('attribute_value_id', $attr->attribute_value_id)
+                ->first();
+            if ($pivot && !is_null($pivot->quantity)) {
+                DB::table('attribute_value_product')
+                    ->where('product_id', $product->id)
+                    ->where('attribute_value_id', $attr->attribute_value_id)
+                    ->increment('quantity', (float) $item->quantity);
+            }
+        }
+    }
+
             DB::commit();
 
             return $this->returnSuccessMessage(__('api.The order was cancelled'));

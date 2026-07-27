@@ -107,12 +107,15 @@ class PaymentApiController extends Controller
      */
     public function payment_return(Request $request, string $gateway)
     {
-        $orderId = $request->query('order_id');
-        $order = Order::find($orderId);
+         $orderId = $request->query('order_id');
+    // التأكد من أن الطلب موجود ولم يتم دفعه بعد
+    $order = Order::where('id', $orderId)
+        ->where('payment_status', '!=', 'paid') // نتحقق فقط للطلبات غير المدفوعة
+        ->first();
 
-        if (!$order || $order->payment_gateway_code !== $gateway || !$order->payment_reference) {
-            return view('site.payment.result', ['success' => false, 'message' => __('api.Order_Not_Found')]);
-        }
+    if (!$order || $order->payment_gateway_code !== $gateway || !$order->payment_reference) {
+        return view('site.payment.result', ['success' => false, 'message' => __('api.Order_Not_Found')]);
+    }
 
         if ($order->payment_status === 'paid') {
             return view('site.payment.result', ['success' => true, 'message' => __('api.Payment_Success')]);
