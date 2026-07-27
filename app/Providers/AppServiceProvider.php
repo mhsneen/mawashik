@@ -11,6 +11,7 @@ use App\Models\User;
 use App\Observers\OrderObserver;
 use App\Observers\UserObserver;
 use Illuminate\Support\Facades\Gate;
+use Illuminate\Support\Facades\Schema;
 use App\Services\Payments\PaymentGatewayManager;
 
 class AppServiceProvider extends ServiceProvider
@@ -38,12 +39,33 @@ class AppServiceProvider extends ServiceProvider
 
         Paginator::useBootstrap();
         view()->composer('*', function ($view) {
-            $view->with('store_logo', Setting::where('key', 'store_logo')->first());
+            $storeLogo = null;
+
+            if (Schema::hasTable('settings')) {
+                try {
+                    $storeLogo = Setting::where('key', 'store_logo')->first();
+                } catch (\Throwable $e) {
+                    $storeLogo = null;
+                }
+            }
+
+            $view->with('store_logo', $storeLogo);
         });
+
         view()->composer(
             'layouts.admin_dashboard',
             function ($view) {
-                $view->with('menu_textpages', Textpage::all());
+                $menuTextpages = collect();
+
+                if (Schema::hasTable('textpages')) {
+                    try {
+                        $menuTextpages = Textpage::all();
+                    } catch (\Throwable $e) {
+                        $menuTextpages = collect();
+                    }
+                }
+
+                $view->with('menu_textpages', $menuTextpages);
             }
         );
     }

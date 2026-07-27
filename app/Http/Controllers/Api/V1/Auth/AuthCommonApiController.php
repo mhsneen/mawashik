@@ -42,9 +42,9 @@ class AuthCommonApiController extends Controller
             return $this->returnError(__('dashboard.error_login'));
         }
 
-        // if ($user->is_active != 1) {
-        //     return $this->returnError(__('dashboard.The_account_is_not_activated'));
-        // }
+         if ($user->is_active != 1) {
+             return $this->returnError(__('dashboard.The_account_is_not_activated'));
+         }
 
         // بوضع "مباشر": تسجيل دخول فوري بدون أي كود
         if ($otpService->isDirectMode()) {

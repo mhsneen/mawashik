@@ -91,7 +91,7 @@ if (!$storeStatus->isOpenNow($requestedDateTime->toDateTimeString())) {
                 'address' => $address['address'] ?? null,
                 'latitude' => $address['latitude'] ?? null,
                 'longitude' => $address['longitude'] ?? null,
-                'added_tax' => $request->added_tax,
+               'added_tax' => (float) Setting::where('key', 'added_tax')->value('plain_value') ?? 0,
                 // كود التسليم (4 أرقام) — يُنشأ فقط للطلبات التي تحتاج توصيل
                 'delivery_pin' => $deliveryType === 'delivery' ? Order::generateDeliveryPin() : null,
             ]);
@@ -139,15 +139,26 @@ if (!$storeStatus->isOpenNow($requestedDateTime->toDateTimeString())) {
                 // ✅ تخفيض المخزون
               // تخفيض المخزون - استخدم float
     // ✅ تخفيض المخزون (فقط لو المنتج يتبع المخزون)
-    if ($product->track_quantity) {
-        if ($calc['variant'] && $calc['variant']->track_quantity) {
-            if (!is_null($calc['variant']->quantity)) {
-                $calc['variant']->decrement('quantity', (float) $item['quantity']);
+           if ($product->track_quantity) {
+            // تحديد من يمتلك المخزون (المنتج نفسه أم الفيرنت variant)
+            $stockHolder = ($calc['variant'] && $calc['variant']->track_quantity)
+                ? $calc['variant']
+                : $product;
+
+            if (!is_null($stockHolder->quantity)) {
+                // قفل الصف في قاعدة البيانات لمنع الطلبات المتزامنة
+                $lockedHolder = clone $stockHolder;
+                $lockedHolder->lockForUpdate()->findOrFail($stockHolder->id);
+
+                // التحقق من توفر الكمية المطلوبة
+                if ($lockedHolder->quantity < $item['quantity']) {
+                    throw new InvalidArgumentException(__('api.Insufficient_stock_for_product', ['name' => $product->name]));
+                }
+
+                // خصم المخزون
+                $stockHolder->decrement('quantity', (float) $item['quantity']);
             }
-        } elseif (!is_null($product->quantity)) {
-            $product->decrement('quantity', (float) $item['quantity']);
         }
-    }
 
     // ✅ تخفيض مخزون الإضافات (Modifiers)
     foreach ($calc['modifier_lines'] as $line) {

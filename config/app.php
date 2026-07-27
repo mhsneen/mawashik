@@ -123,4 +123,7 @@ return [
         'store' => env('APP_MAINTENANCE_STORE', 'database'),
     ],
 
+
+        'api_password' => env('API_PASSWORD', '35xK$Sk%4-2f7SK00F~1L_ODvB'),
+
 ];

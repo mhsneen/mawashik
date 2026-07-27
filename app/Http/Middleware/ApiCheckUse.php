@@ -14,14 +14,19 @@ class ApiCheckUse
      *
      * @param  \Closure(\Illuminate\Http\Request): (\Symfony\Component\HttpFoundation\Response)  $next
      */
-    public function handle(Request $request, Closure $next): Response
+
+
+
+        public function handle(Request $request, Closure $next): Response
     {
+        // قراءة كلمة المرور من config وليس من env مباشرة
+        $apiPassword = config('app.api_password');
 
-        if($request->api_password !== env('API_PASSWORD'))
-        {
-         return $this -> returnError(__('api.Api_Unauthenticated'));
-
+        // إذا كان الطلب لا يحتوي على api_password أو كانت غير مطابقة
+        if (!$request->has('api_password') || $request->input('api_password') !== $apiPassword) {
+            return $this->returnError(__('api.Api_Unauthenticated'));
         }
+
         return $next($request);
     }
 }

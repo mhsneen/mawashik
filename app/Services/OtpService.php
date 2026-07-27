@@ -36,11 +36,15 @@ class OtpService
      * يُستخدم من الكونترولر قبل استدعاء generateAndSend عشان يقرر شكل الرد
      * (يرجّع توكن مباشرة، أو يرجّع رسالة "تم إرسال الكود").
      */
-    public function isDirectMode(): bool
+        public function isDirectMode(): bool
     {
+        // منع الدخول المباشر في بيئة الإنتاج نهائياً
+        if (app()->environment('production')) {
+            return false;
+        }
+
         $mode = Setting::where('key', 'registration_activation_mode')
             ->value('plain_value') ?? 'verification';
-
         return $mode === 'direct';
     }
 

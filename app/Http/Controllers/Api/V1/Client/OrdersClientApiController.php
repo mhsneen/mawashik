@@ -185,29 +185,38 @@ class OrdersClientApiController extends Controller
 
 
 
-    public function client_Cancell_Order(ClientCancellOrderRequest $request)
+       public function client_Cancell_Order(ClientCancellOrderRequest $request)
     {
-
         try {
-            DB::beginTransaction();
-            $order = order::find($request->order_id);
+            $user = $request->user();
 
-            if (!$order->canChangeStatusTo(5)) {
+            // جلب الطلب مع التأكد من أنه يخص نفس العميل
+            $order = Order::where('id', $request->order_id)
+                ->where('user_id', $user->id)
+                ->first();
 
-                return $this->returnError(__('dashboard.The order status cannot be changed to this state'));
+            // التحقق من وجود الطلب
+            if (!$order) {
+                return $this->returnError(__('api.ID_Not_Found'));
             }
 
+            // التحقق من إمكانية تغيير الحالة إلى "ملغي" (6)
+            if (!$order->canChangeStatusTo(6)) {
+                return $this->returnError(__('dashboard.The order_status_cannot_be_changed_to_this_state'));
+            }
 
+            DB::beginTransaction();
             $order->update([
-                'status_id' => 5,
+                'status_id' => 6, // 6 = ملغي
                 'cancel_reason_id' => $request->cancel_reason_id,
                 'cancel_other_reason' => $request->cancel_other_reason,
             ]);
             DB::commit();
+
             return $this->returnSuccessMessage(__('api.The order was cancelled'));
         } catch (Exception $ex) {
             DB::rollback();
-            Log::error('client_Cancell_Order' . $ex->getMessage(), [
+            Log::error('client_Cancell_Order: ' . $ex->getMessage(), [
                 'trace' => $ex->getTraceAsString(),
                 'input' => $request->all()
             ]);

@@ -10,7 +10,7 @@ return new class extends Migration
     {
         Schema::table('orders', function (Blueprint $table) {
             // كود التسليم (4 أرقام) يُنشأ مع الطلب ويستخدمه السائق للتأكيد مع العميل
-            $table->string('delivery_pin', 6)->nullable()->after('driver_id');
+            $table->string('delivery_pin', 4)->nullable()->after('driver_id');
             // هل دفع العميل للسائق (تسجّل عند تأكيد التسليم)
             $table->boolean('payment_collected')->default(false)->after('delivery_pin');
             // ملاحظة إضافية من السائق

@@ -42,7 +42,7 @@ class AddCartRequest extends FormRequest
 
             'coupon_code' => 'nullable|string|max:10',
             'transaction_id' => 'required|max:30',
-            'added_tax' => 'nullable|numeric',
+
             'delivery_date' => 'nullable|date',
             'delivery_time' => 'nullable|date_format:H:i:s',
             'cart' => 'required|array|min:1',
@@ -53,7 +53,7 @@ class AddCartRequest extends FormRequest
             'cart.*.variant_id' => 'nullable|integer|exists:product_variants,id',
             'cart.*.modifier_value_ids' => 'nullable|array',
             'cart.*.modifier_value_ids.*' => 'integer|exists:attribute_values,id',
-            'cart.*.quantity' => 'required|integer|min:1',
+             'cart.*.quantity' => 'required|numeric|min:0.01', // بدل integer|min:1 لدعم الأوزان (بقالة)
             'redeem_points' => 'nullable|integer|min:0',
 
         ];
@@ -109,7 +109,6 @@ class AddCartRequest extends FormRequest
             'payment_method' => __('dashboard.payment_method'),
             'coupon_code' => __('dashboard.Code'),
             'transaction_id' => __('dashboard.Transaction_Number'),
-            'added_tax' => __('dashboard.added_tax'),
             'cart' => __('dashboard.Cart'),
             'delivery_date' => __('dashboard.Delivery time'),
             'delivery_time' => __('dashboard.Delivery date'),
