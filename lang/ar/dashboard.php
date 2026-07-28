@@ -784,4 +784,5 @@ return [
 'Expired' => 'منتهية',
 'Expiring_Soon' => 'شارفت على الانتهاء',
 'Limit' => 'الحد',
+'allow_pickup_orders' => 'السماح بطلبات الاستلام من المتجر',
 ];

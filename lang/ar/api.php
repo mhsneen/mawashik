@@ -123,5 +123,6 @@ return [
 'Payment_Failed' => 'فشلت عملية الدفع',
 'Payment_Already_Paid' => 'تم دفع هذا الطلب مسبقاً',
 'Payment_Success' => 'تمت عملية الدفع بنجاح',
-
+'Invalid_or_expired_coupon' => 'قسيمة الخصم غير صالحة أو منتهية الصلاحية.',
+'Insufficient_stock_for_modifier' => 'الكمية المتوفرة غير كافية للخيار الإضافي المحدد.',
 ];

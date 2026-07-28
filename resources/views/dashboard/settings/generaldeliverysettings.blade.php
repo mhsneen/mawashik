@@ -107,6 +107,49 @@
 
 
 
+
+
+                               <div class="col-md-12 ">
+                                <div class="form-group ">
+                                    <div class="row">
+                                        <div class="col-md-4">
+                                            <label class="form-label">{{ __('dashboard.allow_pickup_orders') }}:
+                                                <span class="tx-danger">*</span></label>
+
+                                        </div>
+                                        <div class="col-md-6">
+                                            <div class="parsley-select " id="slWrapperopen_pickup">
+                                                <select class="form-control select2 "
+                                                    data-parsley-class-handler="#slWrapperopen_pickup"
+                                                    data-parsley-errors-container="#slErrorContaineropen_pickup"
+                                                    data-placeholder="{{ __('dashboard.Choose') }}"
+                                                    id="open_pickup" name="open_pickup" required="">
+                                                    <option value="  ">
+                                                        {{ __('dashboard.Choose') }}
+                                                    </option>
+                                                    <option value="1"
+                                                        {{ $setting['open_pickup']->plain_value == 1 ? 'selected' : '' }}>
+                                                        {{ __('dashboard.Yes') }}
+                                                    </option>
+                                                    <option value="0"
+                                                        {{ $setting['open_pickup']->plain_value == 0 ? 'selected' : '' }}>
+                                                        {{ __('dashboard.No') }}
+                                                    </option>
+
+                                                </select>
+                                                <div id="slErrorContaineropen_pickup">
+                                                    @error('open_pickup')
+                                                        <span class="tx-danger">{{ $message }} </span>
+                                                    @enderror
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+
+
                             <div class="col-md-12">
                                 <div class="form-group ">
                                     <div class="row">

@@ -34,6 +34,7 @@ class GeneralDeliverySettingsRequest extends FormRequest
             'dynamic_pricing.*.from' => 'required|numeric|min:0',
             'dynamic_pricing.*.to' => 'required|numeric|min:0|gt:dynamic_pricing.*.from',
             'dynamic_pricing.*.price' => 'required|numeric|min:0',
+            'open_pickup'=>'required|in:1,0',
         ];
     }
 
@@ -50,6 +51,7 @@ class GeneralDeliverySettingsRequest extends FormRequest
             'free_delivery_distance' => __('dashboard.free_delivery_distance'),
             'delivery_price_type' => __('dashboard.delivery_price_type'),
             'fixed_delivery_price' => __('dashboard.fixed_delivery_price'),
+            'open_pickup' => __('dashboard.allow_pickup_orders'),
         ];
     }
 }

@@ -157,7 +157,10 @@ class AttributeValueController  extends Controller
         }
     }
 
-    /**
+
+
+
+        /**
      * Remove the specified resource from storage.
      *
      * @param  int  $id
@@ -166,10 +169,17 @@ class AttributeValueController  extends Controller
     public function destroy($id, Attribute $attribute)
     {
         $item = AttributeValue::find($id);
+
+        // ✅ التحقق من وجود العنصر أولاً قبل محاولة الوصول لخصائصه
+        if (!$item) {
+            return redirect()->route($this->routeName, $attribute->id)->with(['error' => __('dashboard.ID_Not_Found')]);
+        }
+
+        // ✅ الآن يمكننا جلب الـ attribute_id بأمان
         $attribute_id = $item->attribute_id;
-        if (!$item)
-            return redirect()->route($this->routeName, $attribute_id)->with(['error' => __('dashboard.ID_Not_Found')]);
+
         $item->delete();
+
         return redirect()->route($this->routeName, $attribute_id)->with(['success' => __('dashboard.Delete_success')]);
     }
 

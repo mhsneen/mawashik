@@ -167,7 +167,7 @@ class CategorySlidersController  extends Controller
         }
     }
 
-    /**
+        /**
      * Remove the specified resource from storage.
      *
      * @param  int  $id
@@ -176,25 +176,36 @@ class CategorySlidersController  extends Controller
     public function destroy($id, Category $category)
     {
         $item = CategorySlider::find($id);
+
+        // ✅ التحقق من وجود العنصر أولاً قبل محاولة الوصول لخصائصه
+        if (!$item) {
+            return redirect()->route($this->routeName, $category->id)->with(['error' => __('dashboard.ID_Not_Found')]);
+        }
+
+        // ✅ الآن يمكننا جلب الـ category_id بأمان
         $category_id = $item->category_id;
-        if (!$item)
-            return redirect()->route($this->routeName, $category_id)->with(['error' => __('dashboard.ID_Not_Found')]);
+
         $item->delete();
+
         return redirect()->route($this->routeName, $category_id)->with(['success' => __('dashboard.Delete_success')]);
     }
 
-    public function deleteAll(Request $request)
+       public function deleteAll(Request $request)
     {
+        // ✅ إضافة beginTransaction لأن هناك rollback في الـ catch
+        DB::beginTransaction();
         try {
             $ids = array_map('intval', explode(",", $request->ids));
 
             if (empty($ids)) {
+                DB::commit();
                 return response()->json(['success' => __('dashboard.Delete_success')]);
             }
 
             $sliders = CategorySlider::whereIn('id', $ids)->get();
 
             if ($sliders->isEmpty()) {
+                DB::commit();
                 return response()->json(['error' => __('dashboard.You do not have permission to delete')]);
             }
 
@@ -202,6 +213,7 @@ class CategorySlidersController  extends Controller
                 $slider->delete(); // سيتم حذف الصورة هنا
             }
 
+            DB::commit();
             return response()->json(['success' => __('dashboard.Delete_success')]);
         } catch (\Exception $ex) {
             DB::rollback();

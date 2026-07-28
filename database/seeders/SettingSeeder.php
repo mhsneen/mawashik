@@ -34,7 +34,7 @@ class SettingSeeder extends Seeder
             'longitude' => '30.000000',
             'Latitude' => '30.000000',
             'delivery_max_distance' => '10',
-
+'open_pickup'=>'0',
             'open_work' => '1',
             'expired_quantities' => 5,
             'translatable' => [

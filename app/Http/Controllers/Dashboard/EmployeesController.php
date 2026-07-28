@@ -22,6 +22,7 @@ use Spatie\Permission\Models\Role;
 use Spatie\Permission\PermissionRegistrar;
 use App\Services\ImageUploadService;
 use Spatie\Permission\Models\Permission;
+use Illuminate\Support\Facades\Log;
 
 class EmployeesController extends Controller
 {
@@ -72,47 +73,48 @@ class EmployeesController extends Controller
         return view('dashboard.' . $this->view . '.create', $data);
     }
 
-    /**
+  /**
      * Store a newly created resource in storage.
      *
-     * @param  \Illuminate\Http\Request  $request
+     * @param  \App\Http\Requests\Dashboard\EmployeeRequest  $request
      * @return \Illuminate\Http\Response
      */
     public function store(EmployeeRequest $request, ImageUploadService $imageService)
     {
+        try {
+            DB::beginTransaction();
 
+            $item_data = [
+                'name' => $request->name,
+                'email' => $request->email,
+                'is_active' => $request->is_active,
+                'mobile' => $request->mobile,
+                'password' => Hash::make($request->password),
+            ];
 
-        DB::beginTransaction();
+            if ($request->hasFile('image')) {
+                $imagename = $imageService->uploadAndProcess(
+                    image: $request->file('image'),
+                    folder: $this->folder,
+                    thumbnailWidth: 128,
+                    thumbnailHeight: 128
+                );
+                $item_data['image'] = $imagename;
+            }
 
-        $item_data = [
-            'name' => $request->name,
-            'email' => $request->email,
-            'is_active' => $request->is_active,
-            'mobile' => $request->mobile,
-            'password' => Hash::make($request->password),
-        ];
+            // ✅ create تقوم بالحفظ مباشرة، لا حاجة لاستدعاء save() مرة أخرى
+            $item = User::create($item_data);
 
-        if ($request->hasFile('image')) {
-            $imagename = $imageService->uploadAndProcess(
-                image: $request->file('image'),
-                folder: $this->folder,
-                thumbnailWidth: 128,
-                thumbnailHeight: 128
-            );
-            $item_data['image'] = $imagename;
+            $item->assignRole('employee');
+            $item->syncPermissions($request->permissions);
+
+            DB::commit();
+            return redirect()->route($this->routeName)->with(['success' => __('dashboard.Add_success')]);
+        } catch (Exception $ex) {
+            DB::rollback();
+            Log::error('EmployeesController store: ' . $ex->getMessage());
+            return redirect()->back()->with(['error' => __('dashboard.Error_DB')]);
         }
-
-        $item = User::create($item_data);
-        $item->save();
-
-        $item->assignRole('employee');
-
-        $item->syncPermissions($request->permissions);
-
-
-
-        DB::commit();
-        return redirect()->route($this->routeName)->with(['success' => __('dashboard.Add_success')]);
     }
     /**
      * Display the specified resource.
@@ -147,45 +149,49 @@ class EmployeesController extends Controller
     /**
      * Update the specified resource in storage.
      *
-     * @param  \Illuminate\Http\Request  $request
+     * @param  \App\Http\Requests\Dashboard\EmployeeRequest  $request
      * @param  int  $id
      * @return \Illuminate\Http\Response
      */
     public function update(EmployeeRequest $request, $id, ImageUploadService $imageService)
     {
+        try {
+            $item = User::find($id);
+            if (!$item) {
+                return redirect()->route($this->routeName)->with(['error' => __('dashboard.ID_Not_Found')]);
+            }
 
-        $item = User::find($id);
-        if (!$item)
-            return redirect()->route($this->routeName)->with(['error' => __('dashboard.ID_Not_Found')]);
+            DB::beginTransaction();
 
-        DB::beginTransaction();
+            $item_data = [
+                'name' => $request->name,
+                'email' => $request->email,
+                'is_active' => $request->is_active,
+                'mobile' => $request->mobile
+            ];
 
+            if ($request->has('image')) {
+                $imagename = $imageService->uploadAndProcess(
+                    image: $request->file('image'),
+                    folder: $this->folder,
+                    thumbnailWidth: 128,
+                    thumbnailHeight: 128,
+                    oldFilename: $item->image
+                );
+                $item_data['image'] =  $imagename;
+            }
 
-        $item_data = [
-            'name' => $request->name,
-            'email' => $request->email,
-            'is_active' => $request->is_active,
-            'mobile' => $request->mobile
-        ];
+            $item->update($item_data);
+            $item->syncPermissions($request->permissions);
 
-        if ($request->has('image')) {
-            $imagename = $imageService->uploadAndProcess(
-                image: $request->file('image'),
-                folder: $this->folder,
-                thumbnailWidth: 128,
-                thumbnailHeight: 128,
-                oldFilename: $item->image
-            );
-            $item_data['image'] =  $imagename;
+            DB::commit();
+            return redirect()->route($this->routeName . '.edit', $id)->with(['success' => __('dashboard.Edit_success')]);
+        } catch (Exception $ex) {
+            DB::rollback();
+            Log::error('EmployeesController update: ' . $ex->getMessage());
+            return redirect()->back()->with(['error' => __('dashboard.Error_DB')]);
         }
-
-
-        $item->update($item_data);
-        $item->syncPermissions($request->permissions);
-        DB::commit();
-        return redirect()->route($this->routeName . '.edit', $id)->with(['success' => __('dashboard.Edit_success')]);
     }
-
 
     public function changepassword(Request $request, $id)
     {

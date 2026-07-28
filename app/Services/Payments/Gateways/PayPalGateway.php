@@ -100,9 +100,34 @@ class PayPalGateway extends AbstractPaymentGateway
         return GatewayVerifyResult::notPaid($reference, $status, $data ?? []);
     }
 
-    public function handleWebhook(Request $request): GatewayVerifyResult
+       public function handleWebhook(Request $request): GatewayVerifyResult
     {
-        // يوصى بالتحقق من التوقيع عبر PayPal /v1/notifications/verify-webhook-signature
+        $token = $this->accessToken();
+        $webhookId = $this->config('webhook_id');
+
+        // ✅ رفض الطلب إذا لم يتم إعداد الـ Webhook ID
+        if (!$token || !$webhookId) {
+            return GatewayVerifyResult::fail('PayPal webhook not configured properly.');
+        }
+
+        // ✅ التحقق من التوقيع عبر سيرفرات بايبال
+        $verifyResponse = Http::withToken($token)->post($this->baseUrl() . '/v1/notifications/verify-webhook-signature', [
+            'auth_algo'         => $request->header('PAYPAL-AUTH-ALGO'),
+            'cert_url'          => $request->header('PAYPAL-CERT-URL'),
+            'transmission_id'   => $request->header('PAYPAL-TRANSMISSION-ID'),
+            'transmission_sig'  => $request->header('PAYPAL-TRANSMISSION-SIG'),
+            'transmission_time' => $request->header('PAYPAL-TRANSMISSION-TIME'),
+            'webhook_id'        => $webhookId,
+            'webhook_event'     => $request->all(),
+        ]);
+
+        $verificationStatus = $verifyResponse->json('verification_status');
+
+        // ✅ إذا لم يكن التوقيع صحيحاً، ارفض الطلب فوراً
+        if (!$verifyResponse->successful() || $verificationStatus !== 'SUCCESS') {
+            return GatewayVerifyResult::fail('Invalid PayPal webhook signature.');
+        }
+
         $payload = $request->json()->all();
         $eventType = $payload['event_type'] ?? null;
         $resource  = $payload['resource'] ?? [];

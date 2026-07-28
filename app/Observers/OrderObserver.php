@@ -4,6 +4,8 @@ namespace App\Observers;
 
 use App\Models\{Order, WalletTransaction};
 use App\Services\{FCMServices, LoyaltyPointsService, DriverAssignmentService};
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 
 class OrderObserver
 {
@@ -20,8 +22,6 @@ class OrderObserver
                 __('notifications.order_received_message', ['order_id' => $order->id])
             );
         }
-
-        // ❌ تم حذف تعيين السائق من هنا
     }
 
     public function updated(Order $order): void
@@ -42,7 +42,6 @@ class OrderObserver
             }
 
             // ✅ تعيين سائق متاح فور جهوزية الطلب (الحالة 3 = جاهز للاستلام)
-            // نتحقق أنه لم يتم تعيين سائق مسبقاً يدوياً
             if ($newStatus === 3 && $order->delivery_type === 'delivery' && is_null($order->driver_id)) {
                 (new DriverAssignmentService())->assignAvailableDriver($order);
             }
@@ -70,23 +69,34 @@ class OrderObserver
                 }
             }
 
-            // ✅ استرداد المبلغ للمحفظة عند الإلغاء
+            // ✅ استرداد المبلغ للمحفظة عند الإلغاء (بأمان تام)
             if ($newStatus == 6 && $order->payment_status === 'paid') {
                 $user = $order->user;
                 if ($user) {
-                    $wallet = $user->wallet;
                     $amount = $order->final_price;
 
-                    $wallet->balance += $amount;
-                    $wallet->save();
+                    // ✅ استخدام DB::transaction لضمان نجاح العمليتين معاً
+                    DB::transaction(function () use ($user, $order, $amount) {
+                        // ✅ قفل المحفظة لمنع Race Condition لو المستخدم يصرف رصيده بنفس اللحظة
+                        $wallet = $user->wallet()->lockForUpdate()->first();
 
-                    WalletTransaction::create([
-                        'wallet_id' => $wallet->id,
-                        'order_id' => $order->id,
-                        'type' => 'credit',
-                        'amount' => $amount,
-                        'description' => 'استرداد مبلغ الطلب #' . $order->id,
-                    ]);
+                        // ✅ التحقق من وجود المحفظة لمنع Fatal Error
+                        if (!$wallet) {
+                            Log::error("Wallet not found for user ID: {$user->id} while refunding order ID: {$order->id}");
+                            return; // يخرج من المعاملة بأمان
+                        }
+
+                        $wallet->balance += $amount;
+                        $wallet->save();
+
+                        WalletTransaction::create([
+                            'wallet_id' => $wallet->id,
+                            'order_id' => $order->id,
+                            'type' => 'credit',
+                            'amount' => $amount,
+                            'description' => 'استرداد مبلغ الطلب #' . $order->id,
+                        ]);
+                    });
                 }
             }
 

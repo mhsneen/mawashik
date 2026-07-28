@@ -119,17 +119,26 @@ class NotificationApiController extends Controller
      * @param string $productId
      * @return void
      */
-    public function destroy(NotificationsRequest $request)
+       public function destroy(NotificationsRequest $request)
     {
-
         try {
-            DB::beginTransaction();
-            $notification = Notification::find($request->notification_id);
+            $user = $request->user();
+
+            // ✅ سد ثغرة IDOR: جلب الإشعار بشرط أن يخص المستخدم الحالي فقط
+            $notification = Notification::where('id', $request->notification_id)
+                ->where('user_id', $user->id)
+                ->first();
+
+            // ✅ منع Fatal Error: التحقق من وجود الإشعار قبل استدعاء delete()
+            if (!$notification) {
+                return $this->returnError(__('api.Notification_Not_Found'));
+            }
+
             $notification->delete();
-            DB::commit();
+
+            // ملاحظة: DB::beginTransaction لم تعد ضرورية هنا لأنها عملية حذف واحدة
             return $this->returnSuccessMessage(__('api.Delete_success'));
         } catch (Exception $ex) {
-            DB::rollback();
             Log::error('Notification destroy: ' . $ex->getMessage(), [
                 'trace' => $ex->getTraceAsString(),
                 'input' => $request->all()

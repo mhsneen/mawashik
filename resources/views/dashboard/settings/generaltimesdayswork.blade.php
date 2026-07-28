@@ -6,7 +6,7 @@
 
 @section('css')
     <link href="{{ URL::asset('assets/dashboard/plugins/select2/css/select2.min.css') }}" rel="stylesheet">
-    <link href="{{ URL::asset('assets/dashboard/plugins/TimePicki-master/css/timepicki.css') }}" rel="stylesheet">
+    {{-- تم حذف TimePicki CSS لأننا سنستخدم HTML5 Time Picker --}}
     <style>
         .custom-card-header {
             background-color: #f8f9fa;
@@ -102,11 +102,12 @@
                                                 </label>
                                             </td>
                                             <td class="align-middle font-weight-bold text-primary">{{ $label }}</td>
+
                                             <td>
-                                                <input type="text" class="form-control timepicker start_work_{{ $key }}" name="start_work[{{ $key }}]" value="{{ $startWork[$key] ?? '' }}" {{ !in_array($key, $selectedDays) ? 'disabled' : '' }} placeholder="00:00">
+                                                <input type="time" class="form-control start_work_{{ $key }}" name="start_work[{{ $key }}]" value="{{ $startWork[$key] ?? '' }}" {{ !in_array($key, $selectedDays) ? 'disabled' : '' }}>
                                             </td>
                                             <td>
-                                                <input type="text" class="form-control timepicker end_work_{{ $key }}" name="end_work[{{ $key }}]" value="{{ $endWork[$key] ?? '' }}" {{ !in_array($key, $selectedDays) ? 'disabled' : '' }} placeholder="00:00">
+                                                <input type="time" class="form-control end_work_{{ $key }}" name="end_work[{{ $key }}]" value="{{ $endWork[$key] ?? '' }}" {{ !in_array($key, $selectedDays) ? 'disabled' : '' }}>
                                             </td>
                                         </tr>
                                     @endforeach
@@ -164,8 +165,7 @@
     <script src="{{ URL::asset('assets/dashboard/plugins/parsleyjs/i18n/' . app()->getLocale() . '.js') }}"></script>
     <!-- Internal Select2 js -->
     <script src="{{ URL::asset('assets/dashboard/plugins/select2/js/select2.min.js') }}"></script>
-    <!-- Internal TimePicki js -->
-    <script src="{{ URL::asset('assets/dashboard/plugins/TimePicki-master/js/timepicki.js') }}"></script>
+    {{-- تم حذف TimePicki JS --}}
     <!-- CKEditor -->
     <script src="{{ asset('ckeditor/ckeditor.js') }}"></script>
 
@@ -178,10 +178,6 @@
                 width: '100%'
             });
 
-            // Timepicker Init
-            $('.timepicker').timepicki({
-            });
-
             // Toggle Input States via Checkbox
             $('.day-checkbox').on('change', function() {
                 let day = $(this).data('day');
@@ -190,6 +186,7 @@
                 if (isChecked) {
                     $('.start_work_' + day + ', .end_work_' + day).prop('disabled', false);
                 } else {
+                    // تنظيف الحقل وإفراغه عند إلغاء تفعيل اليوم
                     $('.start_work_' + day + ', .end_work_' + day).prop('disabled', true).val('');
                 }
             });

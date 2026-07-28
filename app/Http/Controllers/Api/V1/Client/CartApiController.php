@@ -39,8 +39,12 @@ class CartApiController extends Controller
 
                 $delivery = $deliveryCalculator->calculate((float) $address['latitude'], (float) $address['longitude']);
                 $deliveryPrice = $delivery['price'];
-            } elseif ($deliveryType === 'pickup') {
-                if (Setting::where('key', 'open_pickup')->value('plain_value') == '0') {
+                        } elseif ($deliveryType === 'pickup') {
+                // ✅ جلب قيمة الإعداد
+                $openPickup = Setting::where('key', 'open_pickup')->value('plain_value');
+
+                // ✅ التحقق الصارم: لو القيمة '0' صراحةً، نرفض الطلب
+                if ($openPickup === '0') {
                     throw new InvalidArgumentException(__('api.Pickup_Not_Available'));
                 }
             }
@@ -48,20 +52,20 @@ class CartApiController extends Controller
             // ✅ فحص أيام/ساعات العمل — لكل يوم جدوله الخاص (start_work/end_work
             // مخزّنين الآن كـ JSON لكل يوم على حدة، مو وقت واحد لكل الأسبوع).
             // نتحقق من وقت التوصيل/الاستلام المطلوب نفسه، مو الوقت الحالي.
-         $hasScheduledDelivery = $deliveryDate && $deliveryTime;
+            $hasScheduledDelivery = $deliveryDate && $deliveryTime;
 
-$requestedDateTime = $hasScheduledDelivery
-    ? Carbon::parse($deliveryDate . ' ' . $deliveryTime)
-    : now();
+            $requestedDateTime = $hasScheduledDelivery
+                ? Carbon::parse($deliveryDate . ' ' . $deliveryTime)
+                : now();
 
-// 🔹 منع اختيار وقت في الماضي (فقط لو محدد فعلياً)
-if ($hasScheduledDelivery && $requestedDateTime->isPast()) {
-    throw new InvalidArgumentException(__('api.No time in the past can be chosen'));
-}
+            // 🔹 منع اختيار وقت في الماضي (فقط لو محدد فعلياً)
+            if ($hasScheduledDelivery && $requestedDateTime->isPast()) {
+                throw new InvalidArgumentException(__('api.No time in the past can be chosen'));
+            }
 
-if (!$storeStatus->isOpenNow($requestedDateTime->toDateTimeString())) {
-    throw new InvalidArgumentException($storeStatus->closingMessage());
-}
+            if (!$storeStatus->isOpenNow($requestedDateTime->toDateTimeString())) {
+                throw new InvalidArgumentException($storeStatus->closingMessage());
+            }
 
             $totalItems = 0;
             $totalPrice = 0;
@@ -136,89 +140,97 @@ if (!$storeStatus->isOpenNow($requestedDateTime->toDateTimeString())) {
                     $orderItem->attributes()->create($line);
                 }
 
-                // ✅ تخفيض المخزون
-              // تخفيض المخزون - استخدم float
-    // ✅ تخفيض المخزون (فقط لو المنتج يتبع المخزون)
-           if ($product->track_quantity) {
-            // تحديد من يمتلك المخزون (المنتج نفسه أم الفيرنت variant)
-            $stockHolder = ($calc['variant'] && $calc['variant']->track_quantity)
-                ? $calc['variant']
-                : $product;
+                // ✅ تخفيض المخزون (فقط لو المنتج يتبع المخزون)
+                if ($product->track_quantity) {
+                    // تحديد من يمتلك المخزون (المنتج نفسه أم الفيرنت variant)
+                    $stockHolder = ($calc['variant'] && $calc['variant']->track_quantity)
+                        ? $calc['variant']
+                        : $product;
 
-            if (!is_null($stockHolder->quantity)) {
-                // قفل الصف في قاعدة البيانات لمنع الطلبات المتزامنة
-$lockedHolder = $stockHolder->newQuery()->lockForUpdate()->findOrFail($stockHolder->id);
+                    if (!is_null($stockHolder->quantity)) {
+                        // قفل الصف في قاعدة البيانات لمنع الطلبات المتزامنة
+                        $lockedHolder = $stockHolder->newQuery()->lockForUpdate()->findOrFail($stockHolder->id);
 
-                // التحقق من توفر الكمية المطلوبة
-             if ($lockedHolder->quantity < $item['quantity']) {
-                    throw new InvalidArgumentException(__('api.Insufficient_stock_for_product', ['name' => $product->name]));
+                        // التحقق من توفر الكمية المطلوبة
+                        if ($lockedHolder->quantity < $item['quantity']) {
+                            throw new InvalidArgumentException(__('api.Insufficient_stock_for_product', ['name' => $product->name]));
+                        }
+
+                        // خصم المخزون
+                        $stockHolder->decrement('quantity', (float) $item['quantity']);
+                    }
                 }
 
-                // خصم المخزون
-$stockHolder->decrement('quantity', (float) $item['quantity']);
-            }
-        }
+                // ✅ تخفيض مخزون الإضافات (Modifiers) مع حماية و فحص الكمية
+                foreach ($calc['modifier_lines'] as $line) {
+                    // 1. قفل صف الإضافة في الجدول الوسيط لمنع Race Condition
+                    $pivotRow = DB::table('attribute_value_product')
+                        ->where('product_id', $product->id)
+                        ->where('attribute_value_id', $line['attribute_value_id'])
+                        ->lockForUpdate()
+                        ->first();
 
-    // ✅ تخفيض مخزون الإضافات (Modifiers)
-    foreach ($calc['modifier_lines'] as $line) {
-        $pivot = DB::table('attribute_value_product')
-            ->where('product_id', $product->id)
-            ->where('attribute_value_id', $line['attribute_value_id'])
-            ->first();
+                    // 2. ننقص فقط لو الإضافة لها مخزون محدد (quantity ليس null)
+                    if ($pivotRow && !is_null($pivotRow->quantity)) {
 
-        // ننقص فقط لو الإضافة لها مخزون محدد (quantity ليس null)
-        if ($pivot && !is_null($pivot->quantity)) {
-            DB::table('attribute_value_product')
-                ->where('product_id', $product->id)
-                ->where('attribute_value_id', $line['attribute_value_id'])
-                ->decrement('quantity', (float) $item['quantity']);
-        }
-    }
+                        // 3. فحص توفر الكمية المطلوبة قبل الخصم
+                        if ($pivotRow->quantity < $item['quantity']) {
+                            throw new InvalidArgumentException(__('api.Insufficient_stock_for_modifier', ['name' => $line['value_name']]));
+                        }
+
+                        // 4. خصم المخزون بأمان
+                        DB::table('attribute_value_product')
+                            ->where('product_id', $product->id)
+                            ->where('attribute_value_id', $line['attribute_value_id'])
+                            ->decrement('quantity', (float) $item['quantity']);
+                    }
+                }
 
                 $totalItems += $item['quantity'];
                 $totalPrice += $itemTotal;
             }
 
             // ✅ تطبيق الكوبون (إذا موجود)
-          if ($request->coupon_code) {
-            [$discountAmount, $couponId] = $this->applyDiscount($order, $request->coupon_code, $totalPrice, $user);
-        }
+            if ($request->coupon_code) {
+                [$discountAmount, $couponId] = $this->applyDiscount($order, $request->coupon_code, $totalPrice, $user);
+            }
 
-        $tax = $order->added_tax ?? 0;
-        $added_taxAmount = ($totalPrice - $discountAmount) * ($tax / 100);
-        $subtotalBeforePoints = ($totalPrice - $discountAmount) + $added_taxAmount + $deliveryPrice;
+            $tax = $order->added_tax ?? 0;
+            $added_taxAmount = ($totalPrice - $discountAmount) * ($tax / 100);
+            $subtotalBeforePoints = ($totalPrice - $discountAmount) + $added_taxAmount + $deliveryPrice;
 
-        // ✅ استبدال نقاط الولاء
-        $redeemedPoints = (int) ($request->redeem_points ?? 0);
-        $pointsDiscountValue = 0;
+            // ✅ استبدال نقاط الولاء
+            $redeemedPoints = (int) ($request->redeem_points ?? 0);
+            $pointsDiscountValue = 0;
 
-        if ($redeemedPoints > 0) {
-            $pointsDiscountValue = $loyaltyService->validateAndCalculateRedeemDiscount(
-                $user,
-                $redeemedPoints,
-                $subtotalBeforePoints
-            );
+            if ($redeemedPoints > 0) {
+                $pointsDiscountValue = $loyaltyService->validateAndCalculateRedeemDiscount(
+                    $user,
+                    $redeemedPoints,
+                    $subtotalBeforePoints
+                );
 
-            $loyaltyService->redeemPoints(
-                $user,
-                $redeemedPoints,
-                $order,
-                'استبدال نقاط بالطلب #' . $order->id
-            );
-        }
+                $loyaltyService->redeemPoints(
+                    $user,
+                    $redeemedPoints,
+                    $order,
+                    'استبدال نقاط بالطلب #' . $order->id
+                );
+            }
 
-        $finalPrice = $subtotalBeforePoints - $pointsDiscountValue;
+            $finalPrice = $subtotalBeforePoints - $pointsDiscountValue;
 
-        $order->update([
-            'total_items' => $totalItems,
-            'total_price' => $totalPrice,
-            'discount_amount' => $discountAmount,
-            'final_price' => $finalPrice,
-            'coupon_id' => $discountAmount > 0 ? $couponId : null,
-             'coupon_code' => $discountAmount > 0 ? $request->coupon_code : null, // ✅ أضف هذا
-            'redeemed_points' => $redeemedPoints,
-            'redeemed_points_value' => $pointsDiscountValue,
-        ]);
+            $order->update([
+                'total_items' => $totalItems,
+                'total_price' => $totalPrice,
+                'discount_amount' => $discountAmount,
+                'final_price' => $finalPrice,
+                'coupon_id' => $discountAmount > 0 ? $couponId : null,
+                 'coupon_code' => $discountAmount > 0 ? $request->coupon_code : null, // ✅ أضف هذا
+                'redeemed_points' => $redeemedPoints,
+                'redeemed_points_value' => $pointsDiscountValue,
+            ]);
+
             return $this->returnSuccessMessage(__('api.order_received_success', ['order_id' => $order->id]));
         } catch (InvalidArgumentException $ex) {
             // أخطاء تحقق متوقعة (فيرنت غير صالح، عنوان خارج نطاق التوصيل،
@@ -275,13 +287,20 @@ $stockHolder->decrement('quantity', (float) $item['quantity']);
     {
         if (!$code) return [0, null];
 
-        $discount = DiscountCode::where('code', $code)->first();
+        // ✅ استخدام lockForUpdate لمنع Race Condition
+        // هذا سيقفل صف الكوبون في قاعدة البيانات حتى ينتهي الطلب الحالي (commit أو rollback)
+        $discount = DiscountCode::where('code', $code)->lockForUpdate()->first();
 
+        // ✅ إضافة رسالة خطأ واضحة بدلاً من التجاهل الصامت
         if (!$discount || !$discount->isValid()) {
-            return [0, null];
+            throw new InvalidArgumentException(__('api.Invalid_or_expired_coupon'));
         }
+
         $discountAmount = ($totalPrice * $discount->discount_percentage) / 100;
+
+        // increment آمن الآن لأن الصف مقفل
         $discount->increment('usage_count');
+
         // تسجيل استخدام الخصم
         $discount->usages()->create([
             'order_id' => $order->id,
@@ -374,40 +393,40 @@ $stockHolder->decrement('quantity', (float) $item['quantity']);
 
            $subtotalBeforePoints = round($totalPrice + $deliveryPrice, 2);
 
-        $pointsData = null;
-        $user = $request->user();
+            $pointsData = null;
+            $user = $request->user();
 
-        if ($user) {
-            $maxRedeemable = $loyaltyService->maxRedeemablePoints($user, $subtotalBeforePoints);
+            if ($user) {
+                $maxRedeemable = $loyaltyService->maxRedeemablePoints($user, $subtotalBeforePoints);
 
-            $requestedPoints = (int) ($request->redeem_points ?? 0);
-            $pointsDiscountValue = 0;
+                $requestedPoints = (int) ($request->redeem_points ?? 0);
+                $pointsDiscountValue = 0;
 
-            if ($requestedPoints > 0) {
-                $pointsDiscountValue = $loyaltyService->validateAndCalculateRedeemDiscount(
-                    $user,
-                    $requestedPoints,
-                    $subtotalBeforePoints
-                );
+                if ($requestedPoints > 0) {
+                    $pointsDiscountValue = $loyaltyService->validateAndCalculateRedeemDiscount(
+                        $user,
+                        $requestedPoints,
+                        $subtotalBeforePoints
+                    );
+                }
+
+                $pointsData = [
+                    'available_balance' => $user->loyalty_points_balance,
+                    'max_redeemable_for_this_order' => $maxRedeemable,
+                    'requested_points' => $requestedPoints,
+                    'discount_value' => $pointsDiscountValue,
+                ];
             }
 
-            $pointsData = [
-                'available_balance' => $user->loyalty_points_balance,
-                'max_redeemable_for_this_order' => $maxRedeemable,
-                'requested_points' => $requestedPoints,
-                'discount_value' => $pointsDiscountValue,
-            ];
-        }
-
-        return $this->returnData('data', [
-            'items' => $lines,
-            'total_items' => $totalItems,
-            'total_price' => round($totalPrice, 2),
-            'delivery_distance_km' => $distance,
-            'delivery_price' => $deliveryPrice,
-            'loyalty_points' => $pointsData,
-            'grand_total' => round($subtotalBeforePoints - ($pointsData['discount_value'] ?? 0), 2),
-        ], __('api.Api_Return_Data'));
+            return $this->returnData('data', [
+                'items' => $lines,
+                'total_items' => $totalItems,
+                'total_price' => round($totalPrice, 2),
+                'delivery_distance_km' => $distance,
+                'delivery_price' => $deliveryPrice,
+                'loyalty_points' => $pointsData,
+                'grand_total' => round($subtotalBeforePoints - ($pointsData['discount_value'] ?? 0), 2),
+            ], __('api.Api_Return_Data'));
 
         } catch (InvalidArgumentException $ex) {
             return $this->returnError($ex->getMessage());

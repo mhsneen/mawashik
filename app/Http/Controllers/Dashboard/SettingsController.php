@@ -255,11 +255,23 @@ public function updategeneraltimesdayswork(GeneralTimesDaysWorkRequest $request)
     try {
         DB::beginTransaction();
 
-        // حفظ البيانات كـ JSON لأنها الآن مصفوفات لكل يوم
+        $daysWork = $request->days_work ?? [];
+        $startWork = $request->start_work ?? [];
+        $endWork = $request->end_work ?? [];
+
+        // تنظيف البيانات: التأكد من عدم وجود أوقات لأيام لم يتم تفعيلها
+        foreach ($startWork as $day => $time) {
+            if (!in_array($day, $daysWork)) {
+                $startWork[$day] = null;
+                $endWork[$day] = null;
+            }
+        }
+
+        // حفظ البيانات
         Setting::set('open_work', $request->open_work);
-        Setting::set('start_work', $request->start_work ?? []);
-        Setting::set('end_work', $request->end_work ?? []);
-        Setting::set('days_work', $request->days_work ?? []);
+        Setting::set('start_work', $startWork);
+        Setting::set('end_work', $endWork);
+        Setting::set('days_work', $daysWork);
 
         $out_of_working_hours_message = Setting::where('key', 'out_of_working_hours_message')->first();
         $out_of_working_hours_message_data = [
@@ -296,6 +308,7 @@ public function updategeneraltimesdayswork(GeneralTimesDaysWorkRequest $request)
             Setting::set('delivery_max_distance', $request->delivery_max_distance);
             Setting::set('delivery_price_type', $request->delivery_price_type);
             Setting::set('fixed_delivery_price', $request->fixed_delivery_price ?? 0);
+            Setting::set('open_pickup', $request->open_pickup);
 
             if ($request->has('dynamic_pricing')) {
                 Setting::set('dynamic_delivery_pricing', json_encode(array_values($request->dynamic_pricing)));

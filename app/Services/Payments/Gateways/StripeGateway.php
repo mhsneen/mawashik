@@ -62,13 +62,19 @@ class StripeGateway extends AbstractPaymentGateway
         return GatewayVerifyResult::notPaid($reference, $data['payment_status'] ?? null, $data);
     }
 
-    public function handleWebhook(Request $request): GatewayVerifyResult
+        public function handleWebhook(Request $request): GatewayVerifyResult
     {
         $payload   = $request->getContent();
         $sigHeader = $request->header('Stripe-Signature');
         $secret    = $this->config('webhook_secret');
 
-        if ($secret && $sigHeader && !$this->verifySignature($payload, $sigHeader, $secret)) {
+        // ✅ التحقق الإلزامي: لو السر أو التوقيع غير موجود، ارفض الطلب (Fail-Closed)
+        if (!$secret || !$sigHeader) {
+            return GatewayVerifyResult::fail('Stripe webhook secret or signature missing.');
+        }
+
+        // ✅ التحقق من تطابق التوقيع
+        if (!$this->verifySignature($payload, $sigHeader, $secret)) {
             return GatewayVerifyResult::fail('Invalid Stripe webhook signature.');
         }
 

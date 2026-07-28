@@ -784,4 +784,6 @@ return array(
 'Expired' => 'Expired',
 'Expiring_Soon' => 'Expiring Soon',
 'Limit' => 'Limit',
+'allow_pickup_orders' => 'Allow Pickup Orders from Store',
+
 );

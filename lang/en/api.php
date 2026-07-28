@@ -123,4 +123,6 @@ return [
 'Payment_Failed' => 'Payment failed',
 'Payment_Already_Paid' => 'This order has already been paid',
 'Payment_Success' => 'Payment completed successfully',
+'Invalid_or_expired_coupon' => 'The coupon is invalid or has expired.',
+'Insufficient_stock_for_modifier' => 'Insufficient stock for the selected modifier.',
 ];

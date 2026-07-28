@@ -12,7 +12,7 @@ class GeneralTimesDaysWorkRequest extends FormRequest
         return true;
     }
 
-    public function rules()
+        public function rules()
     {
         return [
             'open_work' => 'required|in:0,1',
@@ -24,10 +24,14 @@ class GeneralTimesDaysWorkRequest extends FormRequest
                     'saturday', 'sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday',
                 ]),
             ],
+
+            // التعديل هنا: إجبار الصيغة على 24 ساعة (ساعات:دقائق)
             'start_work' => ['nullable', 'array'],
-            'start_work.*' => ['nullable', 'string'],
+            'start_work.*' => ['nullable', 'string', 'date_format:H:i'],
+
             'end_work' => ['nullable', 'array'],
-            'end_work.*' => ['nullable', 'string'],
+            'end_work.*' => ['nullable', 'string', 'date_format:H:i'],
+
             'out_of_working_hours_message_ar' => 'nullable|max:800',
             'out_of_working_hours_message_en' => 'nullable|max:800',
         ];

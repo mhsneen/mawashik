@@ -16,9 +16,11 @@ class CustomCKFinderAuth
      */
     public function handle(Request $request, Closure $next): Response
     {
+        // ✅ تحديد الـ guard الخاص بلوحة التحكم بدلاً من الـ guard الافتراضي
         config(['ckfinder.authentication' => function() {
-            return Auth::check();
+            return Auth::guard('admin')->check();
         }]);
+
         return $next($request);
     }
 }

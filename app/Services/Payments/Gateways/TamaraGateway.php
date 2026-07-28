@@ -99,13 +99,14 @@ class TamaraGateway extends AbstractPaymentGateway
         return GatewayVerifyResult::notPaid($reference, $status, $data);
     }
 
-    public function handleWebhook(Request $request): GatewayVerifyResult
+       public function handleWebhook(Request $request): GatewayVerifyResult
     {
         $token = $request->header('X-Notification-Token') ?? $request->input('notification_token');
         $expected = $this->config('notification_token');
 
-        if ($expected && $token !== $expected) {
-            return GatewayVerifyResult::fail('Invalid Tamara notification token.', $request->all());
+        // ✅ التحقق الإلزامي: لو التوكن غير موجود أو غير مضبوط، ارفض الطلب
+        if (!$expected || !$token || $token !== $expected) {
+            return GatewayVerifyResult::fail('Invalid or missing Tamara notification token.', $request->all());
         }
 
         $orderId = $request->input('order_id');
