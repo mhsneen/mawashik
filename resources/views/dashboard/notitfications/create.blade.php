@@ -65,11 +65,19 @@
 
 
 
-                                                    <option value="-1" {{ old('recivers') == '-1' ? 'selected' : '' }}>
+                                                    <option value="all" {{ old('recivers') == 'all' ? 'selected' : '' }}>
                                                         {{ __('dashboard.All') }}
                                                     </option>
 
+                                                    <option value="all_clients"
+                                                        {{ old('recivers') == 'all_clients' ? 'selected' : '' }}>
+                                                        {{ __('dashboard.All_clients') }}
+                                                    </option>
 
+                                                    <option value="all_drivers"
+                                                        {{ old('recivers') == 'all_drivers' ? 'selected' : '' }}>
+                                                        {{ __('dashboard.All_drivers') }}
+                                                    </option>
 
 
 
@@ -80,6 +88,12 @@
                                                         </option>
                                                     @endforeach
 
+                                                        @foreach ($drivers as $driver)
+                                                        <option value="{{ $driver->id }}"
+                                                            {{ old('recivers') == $driver->id ? 'selected' : '' }}>
+                                                            {{ $driver->name }}
+                                                        </option>
+                                                    @endforeach
 
                                                 </select>
                                                 <div id="slErrorContaineris_recivers">

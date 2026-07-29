@@ -12,13 +12,12 @@ use App\Models\WalletTransaction;
 Artisan::command('inspire', function () {
     $this->comment(Inspiring::quote());
 })->purpose('Display an inspiring quote');
-
-// تنظيف الطلبات المعلّقة (status_id = 1) الأقدم من ساعة
-// مع إرجاع المخزون واسترداد المبلغ قبل الحذف لمنع تسريب المخزون
+// تنظيف الطلبات المعلّقة (بانتظار الدفع الإلكتروني status_id = 7) الأقدم من ساعة
+// مع إرجاع المخزون واسترداد المبلغ قبل الإلغاء لمنع تسريب المخزون
 Schedule::call(function () {
-    // نجلب الطلبات مع عناصرها لتقليل الاستعلامات
+    // ✅ التعديل هنا: نجلب الطلبات التي حالتها 7 (بانتظار الدفع) فقط
     $orders = Order::with('items')
-        ->where('status_id', 1)
+        ->where('status_id', 7)
         ->where('created_at', '<', now()->subHour())
         ->get();
 
@@ -37,9 +36,13 @@ Schedule::call(function () {
                         $product->increment('quantity', $item->quantity);
                     }
                 }
+
+                // ✅ ملاحظة برمجية: إذا كنت تخصم مخزون "الإضافات" (Modifiers) في AddCart
+                // يجب عليك إرجاعها هنا أيضاً بنفس الطريقة التي شرحناها سابقاً.
             }
 
-            // 2. استرداد المبلغ للمحفظة إذا كان الطلب مدفوعاً مسبقاً
+            // 2. استرداد المبلغ للمحفظة
+            // (هذا يفيد لو كان الدفع عبر المحفظة الداخلية للمتجر وتعطل شيء ما)
             if ($order->payment_status === 'paid') {
                 $user = $order->user;
                 if ($user) {
@@ -54,16 +57,19 @@ Schedule::call(function () {
                         'order_id' => $order->id,
                         'type' => 'credit',
                         'amount' => $amount,
-                        'description' => 'استرداد مبلغ الطلب #' . $order->id . ' (إلغاء تلقائي لعدم إكمال الطلب)',
+                        'description' => 'استرداد مبلغ الطلب #' . $order->id . ' (إلغاء تلقائي لعدم إكمال الدفع الإلكتروني)',
                     ]);
                 }
             }
 
-            // 3. تحديث الحالة إلى ملغي (6) وحفظ بهدوء لتفادي تكرار إشعارات Observer
+            // 3. تحديث الحالة إلى ملغي (6)
+            // استخدمنا saveQuietly لتفادي تكرار إشعارات Observer (مثل إرسال إشعار إلغاء للمستخدم)
             $order->status_id = 6;
+            $order->payment_status = 'failed'; // ✅ تحديث حالة الدفع فشل
             $order->saveQuietly();
 
             // 4. حذف الطلب ناعياً (Soft Delete)
+            // (ملاحظة: قد تفضل عدم حذفه تماماً لترك سجل للطلبات المرفوضة، لكن إذا كانت سياستك الحذف فلا بأس)
             $order->delete();
         });
     }

@@ -25,7 +25,7 @@ return [
     'Api_You_have_successfully_logged_out' => 'تم تسجيل الخروج بنجاح',
     'Api_Unauthorized' => 'غير مرخص',
     'Api_Data_has_been_modified_successfully' => ' تم تعديل البيانات بنجاح',
-    'Api_Services_exist' => ' المطعم مضاف مسبقا',
+    'Api_Services_exist' => ' المنتج مضاف مسبقا',
     'Add_success' => 'تمت عملية  الاضافة بنجاح',
     'Delete_success' => 'تم الحذف بنجاح',
     'Service' => 'الخدمة',
@@ -125,4 +125,6 @@ return [
 'Payment_Success' => 'تمت عملية الدفع بنجاح',
 'Invalid_or_expired_coupon' => 'قسيمة الخصم غير صالحة أو منتهية الصلاحية.',
 'Insufficient_stock_for_modifier' => 'الكمية المتوفرة غير كافية للخيار الإضافي المحدد.',
+'location_outside_delivery_range' => 'عذرًا، موقعك خارج نطاق التوصيل لدينا.',
+'Notification_Not_Found' => 'الإشعار غير موجود.',
 ];

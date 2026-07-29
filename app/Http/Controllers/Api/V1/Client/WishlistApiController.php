@@ -11,90 +11,54 @@ use Exception;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use App\Http\Resources\Api\V1\ProductCardResource;
 
 class WishlistApiController extends Controller
 {
     use ApiTrait;
-    public function index(Request $request)
-    {
-        try {
-            $user = $request->user();
+   public function index(Request $request)
+{
+    try {
+        $user = $request->user();
 
-            $items = $user->favoriteProducts()
-                ->Active()
+        $items = $user->favoriteProducts()
+            ->Active()
+            ->select(
+                'products.id',
+                'products.image',
+                'products.netPrice',
+                'products.salePrice',
+                'products.salePrice_start',
+                'products.salePrice_end',
+                'products.category_id',
+                'products.sku',
+                'products.quantity',
+                'products.calories'
+            )
+            ->with([
+                'category:id', // <-- أضفنا name
+            ])
+            ->latest('wish_lists.created_at')
+            ->paginate(API_PAGANATION_COUNT);
 
-                ->select(
-                    'products.id',
-                    'products.image',
-                    'products.netPrice',
-                    'products.salePrice',
-                    'products.salePrice_start',
-                    'products.salePrice_end',
-                    'products.category_id',
-                    'products.brand_id',
-                    'products.sku',
-                    'products.quantity',
-                    'products.calories'
-                )
-                ->with([
-                    'category:id,parent_id,image',
-                    'brand:id,image',
-                    'productimages',
-                    'attributeValues.attribute'
-                ])
-                ->latest('wish_lists.created_at')
-                ->paginate(API_PAGANATION_COUNT);
+        // تمرير البيانات مباشرة للريسورس المعتمد
+        $data = ProductCardResource::collection($items->getCollection());
 
-            $items->getCollection()->transform(function ($product) {
+        return $this->returnData('data', [
+            'items' => $data,
+            'meta' => [
+                'current_page' => $items->currentPage(),
+                'total_pages' => $items->lastPage(),
+                'total_items' => $items->total(),
+                'per_page' => $items->perPage(),
+            ],
+        ], __('api.Api_Return_Data'));
 
-                // تنظيم الخصائص
-                $attributes = $product->attributeValues
-                    ->groupBy('attribute_id')
-                    ->map(function ($values, $attribute_id) {
-                        return [
-                            'attribute_id' => $attribute_id,
-                            'attribute_name' => $values->first()->attribute->name,
-                            'values' => $values->map(function ($value) {
-                                return [
-                                    'id' => $value->id,
-                                    'value' => $value->value,
-                                    'color_code' => $value->color_code,
-                                ];
-                            })->values(),
-                        ];
-                    })->values();
-
-                $product->attributes = $attributes;
-                unset($product->attributeValues);
-
-                // نفس Home
-                $product->is_favorited = true;
-                $product->makeHidden([
-                    'pivot',
-                    'is_active',
-                    'new_arrivals',
-                    'deleted_at',
-                    'created_at',
-                    'updated_at',
-                ]);
-
-                return $product;
-            });
-
-            return $this->returnData('data', [
-                'items' => $items->items(),
-                'meta' => [
-                    'current_page' => $items->currentPage(),
-                    'total_pages' => $items->lastPage(),
-                    'total_items' => $items->total(),
-                    'per_page' => $items->perPage(),
-                ],
-            ], __('api.Api_Return_Data'));
-        } catch (\Exception $ex) {
-            Log::error('WishlistApi index: ' . $ex->getMessage());
-            return $this->returnError(__('api.Api_Error_Contact_Programmer'));
-        }
+    } catch (\Exception $ex) {
+        Log::error('WishlistApi index: ' . $ex->getMessage());
+        return $this->returnError(__('api.Api_Error_Contact_Programmer'));
     }
+}
 
 
 

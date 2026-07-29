@@ -167,16 +167,30 @@ class PaymentApiController extends Controller
         return response()->json(['status' => 'ok']);
     }
 
-    protected function applyVerifyResult(Order $order, $result): void
+       protected function applyVerifyResult(Order $order, $result): void
     {
         if ($order->payment_status === 'paid') {
             return; // لا نكرر إضافة نقاط الولاء أو أي منطق مرتبط بالدفع
         }
 
-        $order->update([
-            'payment_status'            => $result->paid ? 'paid' : 'failed',
-            'paid_at'                   => $result->paid ? now() : null,
-            'payment_gateway_response'  => json_encode($result->raw),
-        ]);
+        if ($result->paid) {
+            // ✅ نجح الدفع
+            $order->update([
+                'payment_status'            => 'paid',
+                'paid_at'                   => now(),
+                'status_id'                 => 1, // ← (مهم جداً) تحويل الطلب لـ "جديد/قيد التجهيز" لتراه الإدارة
+                'payment_gateway_response'  => json_encode($result->raw),
+            ]);
+
+
+        } else {
+            // ❌ فشل الدفع
+            $order->update([
+                'payment_status'            => 'failed',
+                'paid_at'                   => null,
+                'status_id'                 => 6, // ← (مهم جداً) تحويل الطلب إلى "ملغي/فشل الدفع"
+                'payment_gateway_response'  => json_encode($result->raw),
+            ]);
+        }
     }
 }

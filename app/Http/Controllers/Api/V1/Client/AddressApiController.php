@@ -12,6 +12,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Exception;
 use InvalidArgumentException;
+use App\Http\Resources\Api\V1\AddressResource;
 
 class AddressApiController extends Controller
 {
@@ -20,87 +21,92 @@ class AddressApiController extends Controller
     /**
      * كل عناوين المستخدم الحالي، الافتراضي أولاً.
      */
-    public function index(Request $request)
-    {
-        $addresses = $request->user()->addresses()
-            ->orderByDesc('is_default')
-            ->orderByDesc('id')
-            ->get();
+   public function index(Request $request)
+{
+    $addresses = $request->user()->addresses()
+        ->orderByDesc('is_default')
+        ->orderByDesc('id')
+        ->get();
 
-        return $this->returnData('data', $addresses, __('api.Api_Return_Data'));
-    }
+    // نمرر القائمة للـ Resource باستخدام ::collection
+    return $this->returnData('data', AddressResource::collection($addresses), __('api.Api_Return_Data'));
+}
 
     /**
      * إضافة عنوان جديد لحساب العميل.
      */
-    public function store(AddressRequest $request)
-    {
-        try {
-            $address = DB::transaction(function () use ($request) {
-                // أول عنوان للمستخدم يصير افتراضي تلقائياً حتى لو ما حدد ذلك
-                $isFirstAddress = ! $request->user()->addresses()->exists();
-                $makeDefault = $request->boolean('is_default') || $isFirstAddress;
+   public function store(AddressRequest $request)
+{
+    try {
+        $address = DB::transaction(function () use ($request) {
+            // أول عنوان للمستخدم يصير افتراضي تلقائياً حتى لو ما حدد ذلك
+            $isFirstAddress = ! $request->user()->addresses()->exists();
+            $makeDefault = $request->boolean('is_default') || $isFirstAddress;
 
-                if ($makeDefault) {
-                    $request->user()->addresses()->update(['is_default' => false]);
-                }
+            if ($makeDefault) {
+                $request->user()->addresses()->update(['is_default' => false]);
+            }
 
-                return $request->user()->addresses()->create([
-                    'title' => $request->title,
-                    'address' => $request->address,
-                    'latitude' => $request->latitude,
-                    'longitude' => $request->longitude,
-                    'building_number' => $request->building_number,
-                    'floor' => $request->floor,
-                    'apartment_number' => $request->apartment_number,
-                    'note' => $request->note,
-                    'is_default' => $makeDefault,
-                ]);
-            });
+            return $request->user()->addresses()->create([
+                'title' => $request->title,
+                'address' => $request->address,
+                'latitude' => $request->latitude,
+                'longitude' => $request->longitude,
+                'building_number' => $request->building_number,
+                'floor' => $request->floor,
+                'apartment_number' => $request->apartment_number,
+                'note' => $request->note,
+                'is_default' => $makeDefault,
+            ]);
+        });
 
-            return $this->returnData('data', $address, __('api.Address_Added_Success'));
-        } catch (Exception $ex) {
-            Log::error('AddressApiController@store: ' . $ex->getMessage());
-            return $this->returnError(__('api.Api_Error_Contact_Programmer'));
-        }
+        // نقوم بتغليف العنوان بالـ Resource قبل إرجاعه
+        return $this->returnData('data', new AddressResource($address), __('api.Address_Added_Success'));
+
+    } catch (Exception $ex) {
+        Log::error('AddressApiController@store: ' . $ex->getMessage());
+        return $this->returnError(__('api.Api_Error_Contact_Programmer'));
     }
+}
 
     /**
      * تعديل عنوان موجود (بعد التحقق إنه يخص المستخدم الحالي).
      */
-    public function update(AddressRequest $request, $id)
-    {
-        try {
-            $address = Address::ownedBy($request->user()->id)->find($id);
+   public function update(AddressRequest $request, $id)
+{
+    try {
+        $address = Address::ownedBy($request->user()->id)->find($id);
 
-            if (!$address) {
-                return $this->returnError(__('api.Invalid_Address_Selected'));
+        if (!$address) {
+            return $this->returnError(__('api.Invalid_Address_Selected'));
+        }
+
+        DB::transaction(function () use ($request, $address) {
+            if ($request->boolean('is_default')) {
+                $request->user()->addresses()->where('id', '!=', $address->id)->update(['is_default' => false]);
             }
 
-            DB::transaction(function () use ($request, $address) {
-                if ($request->boolean('is_default')) {
-                    $request->user()->addresses()->where('id', '!=', $address->id)->update(['is_default' => false]);
-                }
+            $address->update([
+                'title' => $request->title,
+                'address' => $request->address,
+                'latitude' => $request->latitude,
+                'longitude' => $request->longitude,
+                'building_number' => $request->building_number,
+                'floor' => $request->floor,
+                'apartment_number' => $request->apartment_number,
+                'note' => $request->note,
+                'is_default' => $request->boolean('is_default') ?: $address->is_default,
+            ]);
+        });
 
-                $address->update([
-                    'title' => $request->title,
-                    'address' => $request->address,
-                    'latitude' => $request->latitude,
-                    'longitude' => $request->longitude,
-                    'building_number' => $request->building_number,
-                    'floor' => $request->floor,
-                    'apartment_number' => $request->apartment_number,
-                    'note' => $request->note,
-                    'is_default' => $request->boolean('is_default') ?: $address->is_default,
-                ]);
-            });
+        // 👇 التعديل هنا فقط: تغليف العنوان المحدث بالـ Resource
+        return $this->returnData('data', new AddressResource($address->fresh()), __('api.Edit_success'));
 
-            return $this->returnData('data', $address->fresh(), __('api.Edit_success'));
-        } catch (Exception $ex) {
-            Log::error('AddressApiController@update: ' . $ex->getMessage());
-            return $this->returnError(__('api.Api_Error_Contact_Programmer'));
-        }
+    } catch (Exception $ex) {
+        Log::error('AddressApiController@update: ' . $ex->getMessage());
+        return $this->returnError(__('api.Api_Error_Contact_Programmer'));
     }
+}
 
     /**
      * حذف عنوان (Soft Delete) — الطلبات القديمة اللي استخدمته ما بتتأثر
@@ -128,21 +134,22 @@ class AddressApiController extends Controller
     /**
      * تحديد عنوان معيّن كافتراضي.
      */
-    public function setDefault(Request $request, $id)
-    {
-        $address = Address::ownedBy($request->user()->id)->find($id);
+   public function setDefault(Request $request, $id)
+{
+    $address = Address::ownedBy($request->user()->id)->find($id);
 
-        if (!$address) {
-            return $this->returnError(__('api.Invalid_Address_Selected'));
-        }
-
-        DB::transaction(function () use ($request, $address) {
-            $request->user()->addresses()->update(['is_default' => false]);
-            $address->update(['is_default' => true]);
-        });
-
-        return $this->returnData('data', $address->fresh(), __('api.Edit_success'));
+    if (!$address) {
+        return $this->returnError(__('api.Invalid_Address_Selected'));
     }
+
+    DB::transaction(function () use ($request, $address) {
+        $request->user()->addresses()->update(['is_default' => false]);
+        $address->update(['is_default' => true]);
+    });
+
+    // 👇 التعديل هنا فقط: تغليف العنوان بالـ Resource
+    return $this->returnData('data', new AddressResource($address->fresh()), __('api.Edit_success'));
+}
 
     /**
      * حساب سعر التوصيل ومسافته لعنوان معيّن (محفوظ أو lat/lng مباشرة)

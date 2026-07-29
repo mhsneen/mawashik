@@ -46,7 +46,7 @@ class NotificationsRequest extends FormRequest
     public function attributes()
     {
         return [
-            'notification_id' => __('api.Notification'),
+            'notification_id' => __('api.Notifications'),
 
 
         ];

@@ -26,7 +26,7 @@ class ProductModifiersRequest extends FormRequest
         return [
             'modifiers' => 'required|array|min:1',
             'modifiers.*.price' => 'nullable|numeric|min:0',
-            'modifiers.*.quantity' => 'nullable|integer|min:0',
+            'modifiers.*.quantity' => 'nullable|numeric|min:0',
             'modifiers.*.is_default' => 'nullable|boolean',
         ];
     }

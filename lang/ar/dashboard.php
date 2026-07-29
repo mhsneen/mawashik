@@ -785,4 +785,6 @@ return [
 'Expiring_Soon' => 'شارفت على الانتهاء',
 'Limit' => 'الحد',
 'allow_pickup_orders' => 'السماح بطلبات الاستلام من المتجر',
+'All_drivers' => 'جميع السائقين',
+'All_clients' => 'جميع العملاء',
 ];

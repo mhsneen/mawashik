@@ -203,25 +203,11 @@ class Order extends Model
 // 4 = قيد التوصيل          (out_for_delivery)  ← جديدة، بس لنوع delivery
 // 5 = تم التسليم           (delivered)          ← الحالة النهائية الناجحة
 // 6 = ملغي                (cancelled)
+// 7 = بإنتظار الدفع                 (Payment pending)
 
 
 
 public function canChangeStatusTo($newStatus)
-{
-    $allowedTransitions = [
-        1 => [2, 6],
-        2 => [3, 6],
-        3 => $this->delivery_type === 'delivery' ? [4] : [5],
-        4 => [5],
-        5 => [],
-        6 => [],
-    ];
-
-    return in_array($newStatus, $allowedTransitions[$this->status_id] ?? []);
-}
-
-
-    public function getAllowedStatuses()
     {
         $allowedTransitions = [
             1 => [2, 6],
@@ -230,6 +216,22 @@ public function canChangeStatusTo($newStatus)
             4 => [5],
             5 => [],
             6 => [],
+            7 => [1, 6], // ✅ التعديل هنا: الطلب المعلق يمكن أن يصبح مدفوعاً (1) أو ملغياً (6)
+        ];
+
+        return in_array($newStatus, $allowedTransitions[$this->status_id] ?? []);
+    }
+
+public function getAllowedStatuses()
+    {
+        $allowedTransitions = [
+            1 => [2, 6],
+            2 => [3, 6],
+            3 => $this->delivery_type === 'delivery' ? [4] : [5],
+            4 => [5],
+            5 => [],
+            6 => [],
+            7 => [1, 6], // ✅ التعديل هنا أيضاً
         ];
 
         return $allowedTransitions[$this->status_id] ?? [];

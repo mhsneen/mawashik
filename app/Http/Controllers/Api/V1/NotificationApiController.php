@@ -10,49 +10,45 @@ use App\Traits\ApiTrait;
 use Exception;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use App\Http\Resources\Api\V1\NotificationResource;
 
 class NotificationApiController extends Controller
 {
     use ApiTrait;
-    public function index(Request $request)
-    {
+  public function index(Request $request)
+{
+    try {
+        $user = $request->user();
 
-        try {
-            DB::beginTransaction();
-            $user = $request->user();
-            $items =  Notification::where('user_id', $user->id)->latest()->paginate(API_PAGANATION_COUNT);
-            $items->makeHidden(['created_at', 'updated_at']);
-            $items->transform(function ($item) {
-                $item->created_at_human = $item->created_at->diffForHumans();
-                return $item;
-            });
+        // جلب الإشعارات
+        $items = Notification::where('user_id', $user->id)->latest()->paginate(API_PAGANATION_COUNT);
 
-            $data = [
-                'items' => $items->items(),
-                'meta' => [
-                    'current_page' => $items->currentPage(),
-                    'total_pages' => $items->lastPage(),
-                    'total_items' => $items->total(),
-                    'per_page' => $items->perPage(),
-                ],
-                'links' => [
-                    'self' => $items->url($items->currentPage()),
-                    'next' => $items->nextPageUrl(),
-                    'prev' => $items->previousPageUrl(),
-                ]
-            ];
+        // تمرير العناصر للريسورس ليقوم بتنسيقها
+        $data = [
+            'items' => NotificationResource::collection($items->getCollection()),
+            'meta' => [
+                'current_page' => $items->currentPage(),
+                'total_pages' => $items->lastPage(),
+                'total_items' => $items->total(),
+                'per_page' => $items->perPage(),
+            ],
+            'links' => [
+                'self' => $items->url($items->currentPage()),
+                'next' => $items->nextPageUrl(),
+                'prev' => $items->previousPageUrl(),
+            ]
+        ];
 
-            DB::commit();
-            return $this->returnData('data', $data, __('api.Api_Return_Data'));
-        } catch (Exception $ex) {
-            DB::rollback();
-            Log::error('Notification index: ' . $ex->getMessage(), [
-                'trace' => $ex->getTraceAsString(),
-                'input' => $request->all()
-            ]);
-            return $this->returnError(__('api.Api_Error_Contact_Programmer'));
-        }
+        return $this->returnData('data', $data, __('api.Api_Return_Data'));
+
+    } catch (Exception $ex) {
+        Log::error('Notification index: ' . $ex->getMessage(), [
+            'trace' => $ex->getTraceAsString(),
+            'input' => $request->all()
+        ]);
+        return $this->returnError(__('api.Api_Error_Contact_Programmer'));
     }
+}
 
 
 

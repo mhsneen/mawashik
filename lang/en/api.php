@@ -26,7 +26,7 @@ return [
     'Api_You_have_successfully_logged_out' => 'You have successfully logged out',
     'Api_Unauthorized' => 'Unauthorized',
     'Api_Data_has_been_modified_successfully' => 'Data has been modified successfully',
-    'Api_Services_exist' => '  Restaurant is exists ',
+    'Api_Services_exist' => '  product is exists ',
     'Add_success' => 'Added successfully',
     'Delete_success' => 'Deleted successfully',
     'Service' => 'Service',
@@ -125,4 +125,6 @@ return [
 'Payment_Success' => 'Payment completed successfully',
 'Invalid_or_expired_coupon' => 'The coupon is invalid or has expired.',
 'Insufficient_stock_for_modifier' => 'Insufficient stock for the selected modifier.',
+'location_outside_delivery_range' => 'Sorry, your location is outside our delivery range.',
+'Notification_Not_Found' => 'Notification not found.',
 ];

@@ -36,7 +36,7 @@ class DeliveryPriceCalculator
         $distance = $this->distanceInKm($storeLat, $storeLng, $userLat, $userLng);
 
         if ( $distance > $maxDistance) {
-            throw new InvalidArgumentException(__('api.Sorry your location is outside our delivery range'));
+            throw new InvalidArgumentException(__('api.location_outside_delivery_range'));
         }
 
         $priceType = $settings['delivery_price_type'] ?? 1; // 1 = ثابت، 2 = حسب المسافة

@@ -28,7 +28,7 @@ class ProductVariantsRequest extends FormRequest
             'variants.*.value_ids' => 'required|string',
             'variants.*.sku' => 'nullable|string|max:100',
             'variants.*.price' => 'nullable|numeric|min:0',
-            'variants.*.quantity' => 'nullable|integer|min:0',
+            'variants.*.quantity' => 'nullable|numeric|min:0',
         ];
     }
 
