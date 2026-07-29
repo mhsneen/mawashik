@@ -787,4 +787,9 @@ return [
 'allow_pickup_orders' => 'السماح بطلبات الاستلام من المتجر',
 'All_drivers' => 'جميع السائقين',
 'All_clients' => 'جميع العملاء',
+'new_order_notification_title' => 'طلب جديد',
+'new_order_notification_body' => 'تم استلام طلب جديد برقم #:order_id.',
+
+'order_paid_notification_title' => 'تم دفع الطلب',
+'order_paid_notification_body' => 'تم دفع الطلب رقم #:order_id بنجاح.',
 ];

@@ -787,4 +787,10 @@ return array(
 'allow_pickup_orders' => 'Allow Pickup Orders from Store',
 'All_drivers' => 'All Drivers',
 'All_clients' => 'All Clients',
+
+'new_order_notification_title' => 'New Order',
+'new_order_notification_body' => 'A new order (#:order_id) has been placed.',
+
+'order_paid_notification_title' => 'Order Paid',
+'order_paid_notification_body' => 'Order #:order_id has been paid successfully.',
 );

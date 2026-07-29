@@ -31,3 +31,79 @@
 <!-- custom js -->
 <script src="{{URL::asset('assets/dashboard/js/custom.js')}}"></script><!-- Left-menu js-->
 <script src="{{URL::asset('assets/dashboard/plugins/side-menu/sidemenu.js')}}"></script>
+
+
+<script>
+    // نولّد الرابط الأساسي من Laravel مع تمرير قيمة فارغة مؤقتاً لنأخذ بادئة الرابط الصحيحة (مع دعم اللغة)
+    const orderShowBaseUrl = "{{ route('orders.show', ['id' => '']) }}";
+
+    // ✅ إعداد ملف الصوت (تأكد من وضع ملف صوتي في المسار public/sounds/notification.mp3)
+    const notifSound = new Audio('/sounds/notification.mp3');
+    let lastNotifId = 0;
+    let isFirstLoad = true;
+
+    // دالة تشغيل الصوت
+    function playNotificationSound() {
+        notifSound.currentTime = 0; // إعادة التشغيل من البداية إذا تم تشغيله مؤخراً
+        notifSound.play().catch(e => {
+            console.log("المتصفح منع تشغيل الصوت تلقائياً. يجب أن يتفاعل المستخدم مع الصفحة أولاً.");
+        });
+    }
+
+    function loadNotifications() {
+        $.get("{{ route('admin.notifications.fetch') }}", function (data) {
+            $('#notifPulse').toggleClass('d-none', data.unread_count === 0);
+
+            let html = '';
+            let currentMaxId = lastNotifId;
+
+            data.items.forEach(item => {
+                // ✅ تحديث أعلى رقم إشعار وصلنا
+                if (item.id > currentMaxId) {
+                    currentMaxId = item.id;
+                }
+
+                // دمج الرابط الأساسي مع رقم الطلب
+                let orderUrl = orderShowBaseUrl + item.order_id;
+
+                html += `<a class="d-flex p-3 border-bottom ${item.is_read ? '' : 'bg-light'}" href="${orderUrl}">
+                    <div class="mr-3"><h6 class="mb-1">${item.title}</h6>
+                    <div class="notification-subtext">${item.time}</div></div>
+                </a>`;
+            });
+
+            $('#notifList').html(html || '<p class="p-3 text-muted">{{ __('dashboard.No_Data_in_this_category') }}</p>');
+
+            // ✅ تشغيل الصوت فقط إذا وجدنا إشعار جديد ولم يكن هذا أول تحميل للصفحة
+            if (currentMaxId > lastNotifId && !isFirstLoad) {
+                playNotificationSound();
+            }
+
+            // ✅ تحديث آخر إشعار وصلنا
+            lastNotifId = currentMaxId;
+
+            if (isFirstLoad) {
+                isFirstLoad = false;
+            }
+        });
+    }
+
+    // ✅ فك حظر الصوت في المتصفحات (Chrome يتطلب تفاعل من المستخدم أولاً)
+    // هذه الدالة ستشغل الصوت بصمت 0 عند أول نقرة بالماوس لتسمح بتشغيله لاحقاً تلقائياً
+    $(document).one('click', function() {
+        notifSound.volume = 0;
+        notifSound.play().then(() => {
+            notifSound.pause();
+            notifSound.currentTime = 0;
+            notifSound.volume = 1;
+        }).catch(() => {});
+    });
+
+    loadNotifications();
+    setInterval(loadNotifications, 20000); // كل 20 ثانية
+
+    $('#notifBell').on('click', function () {
+        $.post("{{ route('admin.notifications.markRead') }}", { _token: "{{ csrf_token() }}" }, loadNotifications);
+    });
+</script>
+

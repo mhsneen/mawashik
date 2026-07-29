@@ -30,6 +30,7 @@ use App\Http\Controllers\Dashboard\EmployeesController;
 use App\Http\Controllers\Dashboard\DriverController;
 use App\Http\Controllers\Dashboard\PaymentMethodsController;
 use App\Http\Controllers\Dashboard\UnitsController;
+use App\Http\Controllers\Dashboard\AdminNotificationController;
 
 
 
@@ -400,6 +401,12 @@ Route::group(
             #################################################### End Drivers   ####################################################
 
 
+            #################################################### Admin Notifications route  ####################################################
+            Route::prefix('admin-notifications')->controller(AdminNotificationController::class)->group(function () {
+                Route::get('/', 'fetch')->name('admin.notifications.fetch');
+                Route::post('/mark-read', 'markAllRead')->name('admin.notifications.markRead');
+            });
+            #################################################### End Admin Notifications route  ####################################################
 
         });
     },

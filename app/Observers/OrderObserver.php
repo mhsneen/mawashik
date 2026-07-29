@@ -2,7 +2,7 @@
 
 namespace App\Observers;
 
-use App\Models\{Order, WalletTransaction};
+use App\Models\{Order, WalletTransaction, AdminNotification};
 use App\Services\{FCMServices, LoyaltyPointsService, DriverAssignmentService};
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
@@ -24,6 +24,13 @@ class OrderObserver
                     __('notifications.order_received_message', ['order_id' => $order->id])
                 );
             }
+
+             AdminNotification::create([
+            'order_id' => $order->id,
+            'type'     => 'new_order_cash',
+            'title'    => __('dashboard.new_order_notification_title'),
+            'body'     => __('dashboard.new_order_notification_body', ['order_id' => $order->id]),
+        ]);
         }
     }
 
@@ -130,6 +137,15 @@ class OrderObserver
                 }
             }
         }
+// ✅ إشعار أدمن عند نجاح الدفع الإلكتروني
+          if ($order->isDirty('payment_status') && $order->payment_status === 'paid') {
+        AdminNotification::create([
+            'order_id' => $order->id,
+            'type'     => 'order_paid_online',
+            'title'    => __('dashboard.order_paid_notification_title'),
+            'body'     => __('dashboard.order_paid_notification_body', ['order_id' => $order->id]),
+        ]);
+    }
     }
 
     public function deleted(Order $order): void {}
