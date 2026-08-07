@@ -29,14 +29,18 @@ class LoginRequest extends FormRequest
     public function rules()
     {
            return [
-          'mobile'       => [
+        
+          
+          
+           'mobile' => [
               'required_without:email',
               'prohibits:email',
               'nullable',
-              'numeric',
-              'digits_between:10,20',
-              Rule::exists('users', 'mobile')->whereNull('deleted_at'),
-          ],
+               'regex:/^\+?[0-9]{8,20}$/',
+               Rule::exists('users', 'mobile')->whereNull('deleted_at'),
+           ],
+           
+           
           'email'        => [
               'required_without:mobile',
               'prohibits:mobile',

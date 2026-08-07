@@ -81,7 +81,7 @@ return Application::configure(basePath: dirname(__DIR__))
             'role_or_permission' => \Spatie\Permission\Middleware\RoleOrPermissionMiddleware::class,
             'apiCheckUse' => \App\Http\Middleware\ApiCheckUse::class,
             'apiChangeLanguage' => \App\Http\Middleware\ApiChangeLanguage::class,
-            'ApiAutoLogoutUserInactive' => \App\Http\Middleware\ApiAutoLogoutUserInactive::class,
+            'ApiCheckBlockedUser' => \App\Http\Middleware\ApiCheckBlockedUser::class,
             'CheckRole' => \App\Http\Middleware\CheckRole::class,
             'checkMaintenance' => \App\Http\Middleware\CheckMaintenanceMode::class,
             'ensureIsDriver' => \App\Http\Middleware\EnsureIsDriver::class,

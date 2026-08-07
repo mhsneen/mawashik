@@ -202,7 +202,7 @@
                                         <tr id="tr_{{ $item->id }}">
                                             <th><input type="checkbox" class="sub_chk" data-id="{{ $item->id }}">
                                             </th>
-                                            <td>{{ $item->id }}
+                                            <td>{{ $item->order_number }}
                                                 @if ($item->read == '0')
                                                     <span class="badge bg-info me-1">{{ __('dashboard.New') }}</span>
                                                 @endif
@@ -210,35 +210,40 @@
                                             </td>
                                             <td>{{ $item->user->name }}</td>
 
-                                            <td>
-                                                @if ($item->status_id == 1)
-                                                    <span class="label text-warning  d-flex">
-                                                        <div class="dot-label bg-warning  ml-1"></div>
-                                                        {{ $item->status->name }}
-                                                    </span>
-                                                @endif
 
-                                                @if ($item->status_id == 2)
-                                                    <span class="label text-info   d-flex">
-                                                        <div class="dot-label bg-info  ml-1"></div>
-                                                        {{ $item->status->name }}
-                                                    </span>
-                                                @endif
+<td>
+    @php
+        // لون مميز لكل حالة
+        $statusColors = [
+            1 => '#036FE7', // طلب جديد - أزرق
+            2 => '#F5B700', // قيد التجهيز - أصفر/ذهبي
+            3 => '#00797D', // تم التجهيز - تركواز
+            4 => '#7B61FF', // قيد التوصيل - بنفسجي
+            5 => '#28A745', // تم التسليم - أخضر
+            6 => '#DC3545', // ملغي - أحمر
+            7 => '#FF7A00', // بإنتظار الدفع - برتقالي
+        ];
 
-                                                @if ($item->status_id == 3 || $item->status_id == 4)
-                                                    <span class="label text-success d-flex">
-                                                        <div class="dot-label bg-success ml-1"></div>
-                                                        {{ $item->status->name }}
-                                                    </span>
-                                                @endif
+        // لون افتراضي في حال الحالة غير موجودة
+        $statusColor = $statusColors[$item->status_id] ?? '#6C757D';
+    @endphp
 
-                                                @if ($item->status_id == 5)
-                                                    <span
-                                                        class="label text-danger d-flex">{{ $item->status->name }}</span>
-                                                @endif
+    <span
+        class="label d-flex align-items-center"
+        style="color: {{ $statusColor }};"
+    >
+        <div
+            class="dot-label ml-1"
+            style="bottom:1px;background-color: {{ $statusColor }};"
+        ></div>
+
+        {{ $item->status?->name ?? __('Unknown Status') }}
+    </span>
+</td>
 
 
-                                            </td>
+
+
 
                                             <td>{{ $item->created_at->diffForHumans() }}</td>
 

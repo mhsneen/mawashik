@@ -13,7 +13,7 @@ use App\Observers\UserObserver;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Schema;
 use App\Services\Payments\PaymentGatewayManager;
-
+use Illuminate\Http\Resources\Json\JsonResource;
 class AppServiceProvider extends ServiceProvider
 {
     /**
@@ -30,7 +30,10 @@ class AppServiceProvider extends ServiceProvider
      * Bootstrap any application services.
      */
     public function boot(): void
+
     {
+         // عشان ما يضيفش data مرتين مع الـ ApiTrait
+    JsonResource::withoutWrapping();
         Gate::after(function ($user, $ability) {
             return $user->hasRole('admin'); // note this returns boolean
         });

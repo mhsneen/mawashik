@@ -21,7 +21,7 @@ class HyperPayGateway extends AbstractPaymentGateway
         return rtrim($this->config('base_url', 'https://eu-test.oppwa.com'), '/');
     }
 
-    public function initiate(Order $order, array $options = []): GatewayInitResult
+      public function initiate(Order $order, array $options = []): GatewayInitResult
     {
         $response = Http::asForm()
             ->withToken($this->config('access_token'))
@@ -32,24 +32,28 @@ class HyperPayGateway extends AbstractPaymentGateway
                 'paymentType'           => 'DB',
                 'merchantTransactionId' => (string) $order->id,
                 'customer.email'        => $order->user->email ?? 'guest@example.com',
+                'shopperResultUrl'      => $this->returnUrl($order->id),
             ]);
 
         $data = $response->json();
 
         if (!$response->successful() || empty($data['id'])) {
-            $this->logError('initiate failed', $data ?? []);
+            // ✅✅✅ تعديل هنا: طباعة الرد الخام لمعرفة السبب الحقيقي ✅✅✅
+            $this->logError('initiate failed', ['raw_response' => $response->body()]);
+            
             return GatewayInitResult::fail(data_get($data, 'result.description', 'HyperPay error'), $data ?? []);
         }
 
         $checkoutId = $data['id'];
-        $widgetUrl  = $this->baseUrl() . '/v1/paymentWidgets.js?checkoutId=' . $checkoutId;
 
-        // لا يوجد رابط redirect جاهز - التطبيق يفتح صفحة تحوي الويدجت (WebView) باستخدام checkoutId
-        return GatewayInitResult::ok(null, $checkoutId, [
-            'checkout_id'    => $checkoutId,
-            'widget_script'  => $widgetUrl,
-            'shopper_result_url' => $this->returnUrl($order->id),
-        ], $data);
+        // ✅ إنشاء رابط صفحة الدفع (Hosted Page) التي أنشأناها
+        $checkoutUrl = route('api.payments.hyperpay.form', [
+            'checkout_id' => $checkoutId,
+            'result_url'  => $this->returnUrl($order->id)
+        ]);
+
+        // ✅ إرجاع الرابط للتطبيق ليفتحه في المتصفح
+        return GatewayInitResult::ok($checkoutUrl, $checkoutId, [], $data);
     }
 
     public function verify(string $reference): GatewayVerifyResult

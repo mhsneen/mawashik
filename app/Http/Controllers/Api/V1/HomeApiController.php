@@ -66,6 +66,7 @@ class HomeApiController extends Controller
                 'netPrice', 'salePrice', 'salePrice_start', 'salePrice_end',
                 'category_id', 'calories', 'sku'
             )
+          ->withExists('variationAttributeValues as has_variants')
             ->with(['category:id'])
                ->latest()
             ->paginate(API_PAGANATION_COUNT)
@@ -112,6 +113,7 @@ class HomeApiController extends Controller
                 'netPrice', 'salePrice', 'salePrice_start', 'salePrice_end',
                 'category_id', 'calories', 'sku'
             )
+            ->withExists('variationAttributeValues as has_variants')
             ->with(['category:id'])
               ->latest()
             ->paginate(API_PAGANATION_COUNT)

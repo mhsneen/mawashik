@@ -309,6 +309,7 @@ Route::group(
                 Route::post('sendingmessage/{id}',  'sendingmessage')->name('clients.sendingmessage');
                 Route::post('changepassword/{id}',  'changepassword')->name('clients.changepassword');
                 Route::post('changeactive/{id}',  'changeactive')->name('clients.ChangeActive');
+                 Route::post('changeblock/{id}',  'ChangeBlock')->name('clients.ChangeBlock');
                 Route::get('show/{id}',  'show')->name('clients.show');
                 Route::get('Export_Excel', 'export_excel')->name('clients.export_excel');
             });
@@ -395,6 +396,7 @@ Route::group(
                 Route::post('sendingmessage/{id}',  'sendingmessage')->name('drivers.sendingmessage');
                 Route::post('changepassword/{id}',  'changepassword')->name('drivers.changepassword');
                 Route::post('changeactive/{id}',  'changeactive')->name('drivers.ChangeActive');
+                Route::post('changeblock/{id}',  'ChangeBlock')->name('drivers.ChangeBlock');
                 Route::get('show/{id}',  'show')->name('drivers.show');
                 Route::get('Export_Excel', 'export_excel')->name('drivers.export_excel');
             });

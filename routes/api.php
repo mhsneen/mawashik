@@ -23,6 +23,7 @@ use App\Http\Controllers\Api\V1\Client\AddressApiController;
 use App\Http\Controllers\Api\V1\Client\LoyaltyPointsApiController;
 use App\Http\Controllers\Api\V1\Client\PaymentApiController;
 use App\Http\Controllers\Api\V1\BrandsApiController;
+use App\Http\Controllers\Api\V1\SalesApiController;
 
 
 
@@ -89,14 +90,15 @@ Route::group(['middleware' => ['guest:sanctum', 'api', 'apiChangeLanguage', 'api
     Route::post('calculateCart', [CartApiController::class, 'calculateCart']);
     Route::post('getStoreStatus', [SettingsApiController::class, 'getStoreStatus']);
     Route::post('get_order_cancel_reasons', [OrderCancelReasonsApiController::class, 'index']);
-
+    Route::post('get_SalesCategories', [SalesApiController::class, 'index']);
+    Route::post('get_SalesCategoryDetails', [SalesApiController::class, 'show']); // category_id required
 
     #################################################### End Client   ####################################################
 
 });
 
 
-Route::group(['middleware' => ['auth:sanctum', 'api', 'apiCheckUse', 'apiChangeLanguage', 'ApiAutoLogoutUserInactive', 'checkMaintenance']], function () {
+Route::group(['middleware' => ['auth:sanctum', 'api', 'apiCheckUse', 'apiChangeLanguage', 'ApiCheckBlockedUser', 'checkMaintenance']], function () {
 
     Route::post('updatePassword', [AuthCommonApiController::class, 'updatePassword']);
     Route::post('destroyaccount', [AuthCommonApiController::class, 'destroy']);
@@ -163,6 +165,9 @@ Route::group(['middleware' => ['auth:sanctum', 'api', 'apiCheckUse', 'apiChangeL
     Route::post('initiate_payment', [PaymentApiController::class, 'initiate_payment']);
     #################################################### End Payments   ####################################################
 
+    Route::post('get_wallet_balance', [ClientApiController::class, 'getWalletBalance']);
+    Route::post('get_wallet_transactions', [ClientApiController::class, 'getWalletTransactions']);
+
 });
 
 // ============================================================
@@ -177,7 +182,7 @@ use App\Http\Controllers\Api\V1\Driver\DriverProfileApiController;
 
 Route::group([
     'prefix'     => 'driver',
-    'middleware' => ['auth:sanctum', 'api', 'apiCheckUse', 'apiChangeLanguage', 'ensureIsDriver', 'checkMaintenance'],
+    'middleware' => ['auth:sanctum', 'api', 'apiCheckUse', 'apiChangeLanguage','ApiCheckBlockedUser', 'ensureIsDriver', 'checkMaintenance'],
 ], function () {
 
     #################################################### Profile ####################################################
@@ -213,4 +218,14 @@ Route::group([
 Route::group(['middleware' => ['api'], 'prefix' => 'payments'], function () {
     Route::get('return/{gateway}', [PaymentApiController::class, 'payment_return'])->name('api.payments.return');
     Route::match(['get', 'post'], 'webhook/{gateway}', [PaymentApiController::class, 'payment_webhook'])->name('api.payments.webhook');
+    
+    // ✅ أضف هذا السطر لصفحة HyperPay
+       // ✅ أضف هذا السطر لصفحة HyperPay
+    Route::get('hyperpay/checkout', function (\Illuminate\Http\Request $request) {
+        $checkoutId = $request->query('checkout_id');
+        $resultUrl = $request->query('result_url');
+        
+        // ✅ تعديل اسم العرض ليتطابق مع المسار الذي وضعته أنت
+        return view('site.payment.hyperpay_form', compact('checkoutId', 'resultUrl'));
+    })->name('api.payments.hyperpay.form');
 });

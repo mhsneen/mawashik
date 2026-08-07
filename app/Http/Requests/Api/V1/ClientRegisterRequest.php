@@ -42,7 +42,7 @@ class ClientRegisterRequest extends FormRequest
                'max:255',
                Rule::unique('users', 'email')->whereNull('deleted_at'),
            ],
-           'image'  => 'nullable|image',
+           'image'  => 'nullable|image|mimes:jpeg,png,jpg|max:2048',
        ];
     }
 

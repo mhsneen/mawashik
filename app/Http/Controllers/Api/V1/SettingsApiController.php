@@ -135,6 +135,11 @@ class SettingsApiController extends Controller
             'secure_payment_sentence',
             'secure_payment_details',
             'minimum_price_order',
+			'loyalty_points_enabled',
+'loyalty_points_earn_rate',
+'loyalty_points_redeem_value',
+'loyalty_points_min_redeem',
+'open_pickup',
 
             ]
         )
@@ -161,6 +166,12 @@ class SettingsApiController extends Controller
             'secure_payment_sentence' => $settings['secure_payment_sentence']->final_value ?? "",
             'secure_payment_details' => $settings['secure_payment_details']->final_value ?? "",
             'minimum_price_order' => $settings['minimum_price_order']->final_value ?? "",
+			'loyalty_points_enabled' => $settings['loyalty_points_enabled']->plain_value ?? false,
+            'loyalty_points_earn_rate' => $settings['loyalty_points_earn_rate']->final_value ?? "",
+            'loyalty_points_redeem_value' => $settings['loyalty_points_redeem_value']->final_value ?? "",
+            'loyalty_points_min_redeem' => $settings['loyalty_points_min_redeem']->final_value ?? "",
+            'open_pickup' => $settings['open_pickup']->plain_value ?? false,
+
         ];
 
             DB::commit();

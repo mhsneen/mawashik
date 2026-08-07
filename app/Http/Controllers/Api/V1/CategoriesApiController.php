@@ -66,6 +66,7 @@ class CategoriesApiController extends Controller
                     'netPrice', 'salePrice', 'salePrice_start', 'salePrice_end',
                     'category_id', 'calories', 'sku'
                 )
+                ->withExists('variationAttributeValues as has_variants')
                 ->with(['category:id'])
                 ->orderByDesc('id')
                 ->paginate(API_PAGANATION_COUNT)

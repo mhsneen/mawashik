@@ -34,8 +34,8 @@
 
 
 <script>
-    // نولّد الرابط الأساسي من Laravel مع تمرير قيمة فارغة مؤقتاً لنأخذ بادئة الرابط الصحيحة (مع دعم اللغة)
-    const orderShowBaseUrl = "{{ route('orders.show', ['id' => '']) }}";
+    // ✅ نمرر نصاً وهمياً (PLACEHOLDER) بدل فراغ لتجنب خطأ Missing parameter
+    const orderShowBaseUrl = "{{ route('orders.show', ['id' => 'PLACEHOLDER']) }}";
 
     // ✅ إعداد ملف الصوت (تأكد من وضع ملف صوتي في المسار public/sounds/notification.mp3)
     const notifSound = new Audio('/sounds/notification.mp3');
@@ -56,22 +56,22 @@
 
             let html = '';
             let currentMaxId = lastNotifId;
-
+            
             data.items.forEach(item => {
                 // ✅ تحديث أعلى رقم إشعار وصلنا
                 if (item.id > currentMaxId) {
                     currentMaxId = item.id;
                 }
 
-                // دمج الرابط الأساسي مع رقم الطلب
-                let orderUrl = orderShowBaseUrl + item.order_id;
-
+                // ✅ استبدال النص الوهمي برقم الطلب الحقيقي
+                let orderUrl = orderShowBaseUrl.replace('PLACEHOLDER', item.order_id);
+                
                 html += `<a class="d-flex p-3 border-bottom ${item.is_read ? '' : 'bg-light'}" href="${orderUrl}">
                     <div class="mr-3"><h6 class="mb-1">${item.title}</h6>
                     <div class="notification-subtext">${item.time}</div></div>
                 </a>`;
             });
-
+            
             $('#notifList').html(html || '<p class="p-3 text-muted">{{ __('dashboard.No_Data_in_this_category') }}</p>');
 
             // ✅ تشغيل الصوت فقط إذا وجدنا إشعار جديد ولم يكن هذا أول تحميل للصفحة
@@ -81,7 +81,7 @@
 
             // ✅ تحديث آخر إشعار وصلنا
             lastNotifId = currentMaxId;
-
+            
             if (isFirstLoad) {
                 isFirstLoad = false;
             }
@@ -106,4 +106,3 @@
         $.post("{{ route('admin.notifications.markRead') }}", { _token: "{{ csrf_token() }}" }, loadNotifications);
     });
 </script>
-

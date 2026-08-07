@@ -168,7 +168,7 @@ class DriverProfileApiController extends Controller
             $transactions = WalletTransaction::where('wallet_id', $wallet->id)
                 ->with('order:id,final_price,delivery_price,payment_method')
                 ->orderBy('id', 'DESC')
-                ->paginate(20);
+                ->get();
 
             $transactions->getCollection()->transform(function ($tx) {
                 return [

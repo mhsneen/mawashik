@@ -35,10 +35,15 @@ class ClientsController extends Controller
      *
      * @return \Illuminate\Http\Response
      */
-    public function index(Request $request)
+      public function index(Request $request)
     {
-
-        $items = User::Clients()->FilterDashbordClients(request(['search_name', 'search_mobile', 'search_active']))->select('id', 'name', 'mobile', 'is_active', 'created_at')->latest('id')->paginate(PAGANATION_COUNT)->withQueryString();
+        // ✅ جلب is_blocked بجانب is_active
+        $items = User::Clients()
+                    ->FilterDashbordClients(request(['search_name', 'search_mobile', 'search_active', 'search_is_blocked']))
+                    ->select('id', 'name', 'mobile', 'is_active', 'is_blocked', 'created_at')
+                    ->latest('id')
+                    ->paginate(PAGANATION_COUNT)
+                    ->withQueryString();
 
         $data = [
             'items' => $items,
@@ -310,6 +315,39 @@ class ClientsController extends Controller
         return redirect()->route($this->routeName)->with(['error' => __('dashboard.Error_DB')]);
     }
 }
+
+public function ChangeBlock(Request $request, $id)
+    {
+        $item = User::find($id);
+        if (!$item)
+            return redirect()->route($this->routeName)->with(['error' => __('dashboard.ID_Not_Found')]);
+
+        $rules = [
+            'is_blocked' => 'required|in:0,1'
+        ];
+        $attributes = [
+            'is_blocked' => __('dashboard.Block_Status'),
+        ];
+
+        $validator = Validator::make($request->all(), $rules, [], $attributes)->validateWithBag("changeblockbag_{$id}");
+
+        try {
+            $item = User::find($id);
+            if (!$item)
+                return redirect()->route($this->routeName)->with(['error' => __('dashboard.ID_Not_Found')]);
+
+            DB::beginTransaction();
+            $item_data = [
+                'is_blocked' => $request->is_blocked,
+            ];
+            $item->update($item_data);
+            DB::commit();
+            return redirect()->route($this->routeName)->with(['success' => __('dashboard.Edit_success')]);
+        } catch (Exception $ex) {
+            DB::rollback();
+            return redirect()->back()->with(['error' => __('dashboard.Error_DB')]);
+        }
+    }
 
     /**
      * Remove the specified resource from storage.

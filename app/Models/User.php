@@ -30,6 +30,7 @@ class User extends Authenticatable
         'device_token',
         'desktop_token',
         'branch_id',
+        'is_blocked',
     ];
     protected $appends = ['image_url', 'base_image_url'];
     const FOLDER = 'users';
@@ -82,7 +83,7 @@ class User extends Authenticatable
         return $query->role('driver', 'web');
     }
 
-    public function ScopeFilterDashbordDrivers($query, array $filters)
+        public function ScopeFilterDashbordDrivers($query, array $filters)
     {
         $query->when($filters['search_name'] ?? false, function ($query, $search) {
             return $query->where('name', 'LIKE', '%' . $search . '%');
@@ -92,12 +93,18 @@ class User extends Authenticatable
             return $query->where('mobile', 'LIKE', '%' . $search . '%');
         });
 
+        // ✅ فلتر حالة الفعالية
         $query->when($filters['search_active'] ?? false, function ($query, $search) {
             if ($search === '1') {
-                return $query->where('is_active', $search);
-            } else {
-                return $query->where('is_active', '0');
+                return  $query->where('is_active', '1');
+            } else if ($search === '2') {
+                return  $query->where('is_active', '0');
             }
+        });
+
+        // ✅ فلتر حالة الحظر
+        $query->when($filters['search_is_blocked'] ?? false, function ($query, $search) {
+            return $query->where('is_blocked', $search);
         });
     }
 
@@ -105,27 +112,28 @@ class User extends Authenticatable
     {
         return $query->role('employee', 'admin');
     }
-    public function ScopeFilterDashbordClients($query, array $filters)
+        public function ScopeFilterDashbordClients($query, array $filters)
     {
-
         $query->when($filters['search_name'] ?? false, function ($query, $search) {
-
             return  $query->where('name', 'LIKE', '%' . $search . '%');
         });
 
         $query->when($filters['search_mobile'] ?? false, function ($query, $search) {
-
             return  $query->where('mobile', 'LIKE', '%' . $search . '%');
         });
 
-
-
+        // ✅ فلتر حالة الفعالية
         $query->when($filters['search_active'] ?? false, function ($query, $search) {
             if ($search === '1') {
-                return  $query->where('is_active', $search);
-            } else {
+                return  $query->where('is_active', '1');
+            } else if ($search === '2') {
                 return  $query->where('is_active', '0');
             }
+        });
+
+        // ✅ فلتر حالة الحظر
+        $query->when($filters['search_is_blocked'] ?? false, function ($query, $search) {
+            return $query->where('is_blocked', $search);
         });
     }
 

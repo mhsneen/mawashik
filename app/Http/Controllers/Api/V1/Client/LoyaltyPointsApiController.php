@@ -6,7 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Traits\ApiTrait;
 use App\Services\LoyaltyPointsService;
 use Illuminate\Http\Request;
-
+use App\Http\Resources\Api\V1\LoyaltyPointTransactionResource;
 class LoyaltyPointsApiController extends Controller
 {
     use ApiTrait;
@@ -23,13 +23,23 @@ class LoyaltyPointsApiController extends Controller
         ], __('api.Api_Return_Data'));
     }
 
-    public function getHistory(Request $request)
+       public function getHistory(Request $request)
     {
         $transactions = $request->user()
             ->loyaltyPointTransactions()
             ->latest()
-            ->paginate(15);
+            ->paginate(API_PAGANATION_COUNT);
 
-        return $this->returnData('data', $transactions, __('api.Api_Return_Data'));
+        $data = [
+            'data' => LoyaltyPointTransactionResource::collection($transactions->getCollection()),
+            'meta' => [
+                'current_page' => $transactions->currentPage(),
+                'total_pages'  => $transactions->lastPage(),
+                'total_items'  => $transactions->total(),
+                'per_page'     => $transactions->perPage(),
+            ],
+        ];
+
+        return $this->returnData('data', $data, __('api.Api_Return_Data'));
     }
 }

@@ -80,8 +80,7 @@ class ProductDetailsResource extends JsonResource
             'sale_ends_at'    => $this->salePrice_end ?? "",
 
             // المخزون
-            'has_variants'    => $this->whenLoaded('variants', fn() => $this->variants->isNotEmpty(), false),
-            'track_quantity'  => (bool) $this->track_quantity,
+            'has_variants'    => $this->whenLoaded('attributeValues', fn() => $this->variationValues()->isNotEmpty(), false),            'track_quantity'  => (bool) $this->track_quantity,
             'quantity'        => $this->quantity ?? "0.00",
             'in_stock'        => $this->inStock(),
 

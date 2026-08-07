@@ -263,6 +263,16 @@ public function outOfStock(): bool
     {
         return $this->attributeValues->filter(fn($value) => ! $value->attribute->is_variation);
     }
+    // ✅ جديد: نسخة query-able من variationValues() - بترجع Builder مش
+    // Collection، فبنقدر نستخدمها مع withExists/whereHas بدون ما نحمّل
+    // كل الـ attributeValues مسبقاً
+    public function variationAttributeValues()
+    {
+        return $this->attributeValues()->whereHas('attribute', function ($q) {
+            $q->where('is_variation', true);
+        });
+    }
+
     public function wishLists()
     {
         return $this->hasMany(WishList::class, 'product_id');
@@ -352,6 +362,17 @@ public function scopeOutOfStock($query)
     return $query->where('track_quantity', true)
         ->whereNotNull('quantity')
         ->where('quantity', '<=', 0);
+}
+
+
+public function scopeOnSale($query)
+{
+    $now = now();
+    return $query->whereNotNull('salePrice')
+        ->whereNotNull('salePrice_start')
+        ->whereNotNull('salePrice_end')
+        ->where('salePrice_start', '<=', $now)
+        ->where('salePrice_end', '>=', $now);
 }
 
 

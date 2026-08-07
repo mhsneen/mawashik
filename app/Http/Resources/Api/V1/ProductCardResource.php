@@ -37,6 +37,9 @@ class ProductCardResource extends JsonResource
 
     'category_id'   => $this->category_id,
     'category_name' => $this->whenLoaded('category', fn($cat) => $cat->name),
+            'has_variants'  => (bool) ($this->has_variants ?? false),
+
+
         ];
     }
 }

@@ -19,6 +19,7 @@ use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 use Illuminate\Http\Request;
+use App\Http\Resources\Api\V1\Client\UserResource;
 
 class AuthCommonApiController extends Controller
 {
@@ -27,45 +28,36 @@ class AuthCommonApiController extends Controller
     // مدة صلاحية توكن إعادة تعيين كلمة المرور (بعد التحقق من الكود)
     protected const RESET_TOKEN_TTL_MINUTES = 10;
 
-    public function login(LoginRequest $request, OtpService $otpService)
+         public function login(LoginRequest $request, OtpService $otpService)
     {
-// البحث حسب الإيميل أو رقم الجوال
-     $user = User::when($request->filled('email'), function ($query) use ($request) {
+        $user = User::when($request->filled('email'), function ($query) use ($request) {
             return $query->where('email', $request->email);
         }, function ($query) use ($request) {
             return $query->where('mobile', $request->mobile);
         })
-        ->whereNull('deleted_at') // ← تأكيد Soft Delete
+        ->whereNull('deleted_at')
         ->first();
 
         if (!$user) {
             return $this->returnError(__('dashboard.error_login'));
         }
 
-         if ($user->is_active != 1) {
-             return $this->returnError(__('dashboard.The_account_is_not_activated'));
-         }
+        // منع المستخدم المحظور من تسجيل الدخول
+        if ($user->is_blocked) {
+            return $this->returnError(__('api.account_blocked'));
+        }
 
         // بوضع "مباشر": تسجيل دخول فوري بدون أي كود
         if ($otpService->isDirectMode()) {
             $user->update(['device_token' => $request->device_token]);
- // ← حذف جميع التوكنات القديمة للمستخدم
-    $user->tokens()->delete();
+            $user->tokens()->delete();
             $token = $user->createToken($user->name . 'Auth-Token')->plainTextToken;
 
-              $data = [
-            'requires_verification' => false,
-            'user' => [
-               'token' => $token,
-                'id' => $user->id,
-                'name' => $user->name ?? '',
-                'email' => $user->email ?? '',
-                'mobile' => $user->mobile ?? '',
-                'image_url' => $user->image_url ?? '',
-                'base_image_url' => $user->base_image_url ?? '',
-                'role' => $user->getRoleNames()->first() ?? '',
-            ],
-        ];
+            // ✅ ضف التوكن كـ attribute
+            $user->access_token = $token;
+
+            // ✅ استخدام UserResource الموحد
+            $data = new UserResource($user);
 
             return $this->returnData('data', $data, __('api.Api_You_have_successfully_logged_in'));
         }
@@ -77,9 +69,8 @@ class AuthCommonApiController extends Controller
             return $this->returnError(__('api.Api_Error_Contact_Programmer'));
         }
 
-           $data = [
+        $data = [
             'requires_verification' => true,
-
         ];
         return $this->returnData('data', $data, __('api.A verification code has been sent for login'));
     }
@@ -87,18 +78,21 @@ class AuthCommonApiController extends Controller
     public function check_login_code(VerifyOtpRequest $request, OtpService $otpService)
     {
         try {
-
-          $user = User::when($request->filled('email'), function ($query) use ($request) {
-     return $query->where('email', $request->email);
- }, function ($query) use ($request) {
-     return $query->where('mobile', $request->mobile);
- })
- ->whereNull('deleted_at')
- ->first();
-
+            $user = User::when($request->filled('email'), function ($query) use ($request) {
+                return $query->where('email', $request->email);
+            }, function ($query) use ($request) {
+                return $query->where('mobile', $request->mobile);
+            })
+            ->whereNull('deleted_at')
+            ->first();
 
             if (!$user) {
                 return $this->returnError(__('api.User_Not_Found'));
+            }
+
+            // منع المستخدم المحظور من تفعيل الكود وتسجيل الدخول
+            if ($user->is_blocked) {
+                return $this->returnError(__('api.account_blocked'));
             }
 
             try {
@@ -111,20 +105,15 @@ class AuthCommonApiController extends Controller
                 return $this->returnError(__('api.Invalid verification code'));
             }
 
-            $user->update(['device_token' => $request->device_token]);
-// ← حذف جميع التوكنات القديمة للمستخدم
-$user->tokens()->delete();
+            $user->update(['device_token' => $request->device_token, 'is_active' => 1]);
+            $user->tokens()->delete();
             $token = $user->createToken($user->name . 'Auth-Token')->plainTextToken;
-                      $data = [
-    'token'           => $token,
-    'userId'          => $user->id,
-    'name'            => $user->name ?? '',
-    'email'           => $user->email ?? '',
-    'mobile'          => $user->mobile ?? '',
-    'image_url'       => $user->image_url ?? '',
-    'base_image_url'  => $user->base_image_url ?? '',
-    'role'            => $user->getRoleNames()->first() ?? '',
-];
+
+            // ✅ ضف التوكن كـ attribute
+            $user->access_token = $token;
+
+            // ✅ استخدام UserResource الموحد
+            $data = new UserResource($user);
 
             return $this->returnData('data', $data, __('api.Api_You_have_successfully_logged_in'));
         } catch (Exception $ex) {
@@ -139,15 +128,21 @@ $user->tokens()->delete();
     public function rsend_login_code(ResendOtpRequest $request, OtpService $otpService)
     {
         try {
-        $user = User::when($request->filled('email'), function ($query) use ($request) {
-     return $query->where('email', $request->email);
- }, function ($query) use ($request) {
-     return $query->where('mobile', $request->mobile);
- })
- ->whereNull('deleted_at')
- ->first();
+            $user = User::when($request->filled('email'), function ($query) use ($request) {
+                return $query->where('email', $request->email);
+            }, function ($query) use ($request) {
+                return $query->where('mobile', $request->mobile);
+            })
+            ->whereNull('deleted_at')
+            ->first();
+
             if (!$user) {
                 return $this->returnError(__('api.User_Not_Found'));
+            }
+
+            // ✅ منع المستخدم المحظور من طلب كود جديد
+            if ($user->is_blocked) {
+                return $this->returnError(__('api.account_blocked'));
             }
 
             $otpService->generateAndSend($user, OtpCode::PURPOSE_LOGIN);

@@ -793,4 +793,9 @@ return array(
 
 'order_paid_notification_title' => 'Order Paid',
 'order_paid_notification_body' => 'Order #:order_id has been paid successfully.',
+
+ "Block_Status"=> "Block Status",
+    "Blocked"=> "Blocked",
+    "Active"=> "Active",
+    "Block_Unblock"=> "Block / Unblock"
 );

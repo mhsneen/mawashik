@@ -127,4 +127,6 @@ return [
 'Insufficient_stock_for_modifier' => 'Insufficient stock for the selected modifier.',
 'location_outside_delivery_range' => 'Sorry, your location is outside our delivery range.',
 'Notification_Not_Found' => 'Notification not found.',
+    "account_blocked"=> "Your account has been blocked by the administration. Please contact support for assistance.",
+
 ];

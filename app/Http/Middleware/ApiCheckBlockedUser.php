@@ -5,10 +5,9 @@ namespace App\Http\Middleware;
 use Closure;
 use Illuminate\Http\Request;
 use Symfony\Component\HttpFoundation\Response;
-use App\Traits\ApiTrait;
-class ApiAutoLogoutUserInactive
+
+class ApiCheckBlockedUser
 {
-    use ApiTrait;
     /**
      * Handle an incoming request.
      *
@@ -16,13 +15,18 @@ class ApiAutoLogoutUserInactive
      */
     public function handle(Request $request, Closure $next): Response
     {
-        $user = $request->user();
-        if (auth()->guard('sanctum')->check() && auth()->guard('sanctum')->user()->is_active == 0) {
-            $request->user()->currentAccessToken()->delete();
+        // التحقق إذا كان المستخدم مسجل دخوله وحسابه محظور
+        if (auth()->guard('sanctum')->check() && auth()->guard('sanctum')->user()->is_blocked == 1) {
+
+            $user = $request->user();
+
+            // ✅ حذف جميع التوكنات الخاصة بالمستخدم (من كل الأجهزة)
+            $user->tokens()->delete();
+
             return response()->json([
                 'status' => false,
                 'code' => 403,
-                'message' => __('dashboard.Your_account_has_been_suspended')
+                'message' => __('api.account_blocked') // رسالة الحظر الجديدة
             ]);
         }
 

@@ -6,7 +6,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Facades\Auth;
-
+use Illuminate\Support\Facades\DB;
 class Order extends Model
 {
     use HasFactory, SoftDeletes;
@@ -54,6 +54,7 @@ class Order extends Model
         'paid_at',
         'payment_gateway_response',
         'branch_id',
+        'order_number',
     ];
 
 
@@ -160,7 +161,8 @@ class Order extends Model
 
         $query->when($filters['search_order_number'] ?? false, function ($query, $search) {
 
-            return  $query->where('id', $search);
+                            $query->where('order_number', 'LIKE', '%' . $search . '%');
+
         });
         $query->when($filters['search_status_id'] ?? false, function ($query, $search) {
             return  $query->where('status_id', $search);
@@ -304,6 +306,37 @@ public function scopeStatusCancelled($query)
     {
         return str_pad(random_int(0, 9999), 4, '0', STR_PAD_LEFT);
     }
+
+
+    protected static function booted()
+{
+    static::creating(function ($order) {
+        $order->order_number = self::generateOrderNumber();
+    });
+}
+
+public static function generateOrderNumber(): string
+{
+    $year = now()->year;
+
+    return DB::transaction(function () use ($year) {
+        // آخر رقم لنفس السنة، مع قفل الصف لمنع التعارض عند طلبات متزامنة
+        $lastOrder = self::withTrashed()
+            ->where('order_number', 'like', "ORD-{$year}-%")
+            ->lockForUpdate()
+            ->orderByDesc('id')
+            ->first();
+
+        $nextNumber = 1;
+
+        if ($lastOrder) {
+            $lastSequence = (int) substr($lastOrder->order_number, -3);
+            $nextNumber = $lastSequence + 1;
+        }
+
+        return sprintf('ORD-%d-%03d', $year, $nextNumber);
+    });
+}
 
 }
 

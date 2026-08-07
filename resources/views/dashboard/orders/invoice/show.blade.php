@@ -1,6 +1,6 @@
 @extends('layouts.admin_dashboard')
 @section('title')
-    {{ __('dashboard.Bill') }} # {{ $item->id }}
+    {{ __('dashboard.Bill') }} # {{ $item->order_number }}
 @endsection
 @section('css')
 <style>
@@ -29,7 +29,7 @@
     <div class="breadcrumb-header justify-content-between ">
         <div class="my-auto">
             <div class="d-flex">
-                <h4 class="content-title mb-0 my-auto">{{ __('dashboard.Bill') }} # {{ $item->id }}</h4><span
+                <h4 class="content-title mb-0 my-auto">{{ __('dashboard.Bill') }} # {{ $item->order_number }}</h4><span
                     class="text-muted mt-1 tx-13 mr-2 mb-0">/ {{ __('dashboard.View') }}</span>
             </div>
         </div>

@@ -16,49 +16,49 @@ use App\Http\Resources\Api\V1\ProductCardResource;
 class WishlistApiController extends Controller
 {
     use ApiTrait;
-   public function index(Request $request)
-{
-    try {
-        $user = $request->user();
+       public function index(Request $request)
+    {
+        try {
+            $user = $request->user();
 
-        $items = $user->favoriteProducts()
-            ->Active()
-            ->select(
-                'products.id',
-                'products.image',
-                'products.netPrice',
-                'products.salePrice',
-                'products.salePrice_start',
-                'products.salePrice_end',
-                'products.category_id',
-                'products.sku',
-                'products.quantity',
-                'products.calories'
-            )
-            ->with([
-                'category:id', // <-- أضفنا name
-            ])
-            ->latest('wish_lists.created_at')
-            ->paginate(API_PAGANATION_COUNT);
+            $items = $user->favoriteProducts()
+                ->Active()
+                ->select(
+                    'products.id', 
+                    // ✅ تم إزالة 'products.name' لأنه يأتي تلقائياً من جدول الترجمة
+                    'products.image',
+                    'products.netPrice',
+                    'products.salePrice',
+                    'products.salePrice_start',
+                    'products.salePrice_end',
+                    'products.category_id',
+                    'products.sku',
+                    'products.quantity',
+                    'products.calories'
+                )
+                ->withExists('variationAttributeValues as has_variants')
+                ->with(['category:id']) 
+                ->latest('wish_lists.created_at')
+                ->paginate(API_PAGANATION_COUNT);
 
-        // تمرير البيانات مباشرة للريسورس المعتمد
-        $data = ProductCardResource::collection($items->getCollection());
+            // تمرير البيانات مباشرة للريسورس المعتمد
+            $data = ProductCardResource::collection($items->getCollection());
 
-        return $this->returnData('data', [
-            'items' => $data,
-            'meta' => [
-                'current_page' => $items->currentPage(),
-                'total_pages' => $items->lastPage(),
-                'total_items' => $items->total(),
-                'per_page' => $items->perPage(),
-            ],
-        ], __('api.Api_Return_Data'));
+            return $this->returnData('data', [
+                'items' => $data,
+                'meta' => [
+                    'current_page' => $items->currentPage(),
+                    'total_pages' => $items->lastPage(),
+                    'total_items' => $items->total(),
+                    'per_page' => $items->perPage(),
+                ],
+            ], __('api.Api_Return_Data'));
 
-    } catch (\Exception $ex) {
-        Log::error('WishlistApi index: ' . $ex->getMessage());
-        return $this->returnError(__('api.Api_Error_Contact_Programmer'));
+        } catch (\Exception $ex) {
+            Log::error('WishlistApi index: ' . $ex->getMessage());
+            return $this->returnError(__('api.Api_Error_Contact_Programmer'));
+        }
     }
-}
 
 
 

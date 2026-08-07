@@ -3,6 +3,7 @@
 namespace App\Http\Requests\Dashboard;
 
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
 
 class DiscountCodeRequest extends FormRequest
 {
@@ -25,7 +26,14 @@ class DiscountCodeRequest extends FormRequest
     {
 
         return [
-            'code' => 'required|string|max:50|unique:discount_codes,code,' . $this->id . ',id',
+         'code' => [
+    'required',
+    'string',
+    'max:50',
+    Rule::unique('discount_codes', 'code')
+        ->ignore($this->id)
+        ->whereNull('deleted_at'),
+],
             'discount_percentage' => 'required|integer|min:1|max:50',
             'start_date' => 'required|date|after_or_equal:today',
             'end_date' => 'required|date|after:start_date',

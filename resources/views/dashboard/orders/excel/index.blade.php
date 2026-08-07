@@ -18,7 +18,7 @@
     <tbody style=" text-align:center">
         @foreach ($items as $item)
             <tr>
-                <td>{{ $item->id }}</td>
+                <td>{{ $item->order_number }}</td>
                 <td>{{ $item->user->name }}</td>
 
                 <td>

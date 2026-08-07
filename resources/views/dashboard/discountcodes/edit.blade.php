@@ -58,7 +58,7 @@
                                         </div>
                                         <div class="col-md-8">
                                             <input class="form-control tx_L" id="code" name="code" type="text"
-                                                style="text-align: center" value="{{ $item->code }}" readonly>
+                                                style="text-align: center" value="{{ $item->code }}" >
                                             @error('code')
                                                 <span class="tx-danger">{{ $message }} </span>
                                             @enderror

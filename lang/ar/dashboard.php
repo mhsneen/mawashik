@@ -792,4 +792,9 @@ return [
 
 'order_paid_notification_title' => 'تم دفع الطلب',
 'order_paid_notification_body' => 'تم دفع الطلب رقم #:order_id بنجاح.',
+
+ "Block_Status"=> "حالة الحظر",
+    "Blocked"=> "محظور",
+    "Active"=> "نشط",
+    "Block_Unblock"=> "حظر / إلغاء حظر"
 ];

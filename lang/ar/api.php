@@ -127,4 +127,6 @@ return [
 'Insufficient_stock_for_modifier' => 'الكمية المتوفرة غير كافية للخيار الإضافي المحدد.',
 'location_outside_delivery_range' => 'عذرًا، موقعك خارج نطاق التوصيل لدينا.',
 'Notification_Not_Found' => 'الإشعار غير موجود.',
+    "account_blocked"=> "تم حظر حسابك من قبل الإدارة. يرجى التواصل مع الدعم للمساعدة.",
+
 ];

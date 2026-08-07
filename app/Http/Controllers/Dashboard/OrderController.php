@@ -42,7 +42,7 @@ class OrderController extends Controller
 
         $items = Order::FilterDashbordAdmin(request(['search_order_number', 'search_client_name', 'search_client_mobile', 'search_status_id', 'search_date_from', 'search_date_to']))
             ->with('user:id,name', 'status:id', 'coupon:id,code,discount_percentage')
-            ->select('id', 'user_id', 'total_items',  'status_id', 'currency', 'read', 'created_at', 'total_price', 'discount_amount', 'coupon_id', 'added_tax', 'final_price')->latest('id')->paginate(PAGANATION_COUNT)->withQueryString();
+            ->select('id', 'user_id', 'total_items',  'status_id', 'currency', 'read', 'created_at', 'total_price', 'discount_amount', 'coupon_id', 'added_tax', 'final_price', 'order_number')->latest('id')->paginate(PAGANATION_COUNT)->withQueryString();
         $orderstatus = Orderstatus::select('id')->orderBy('id', 'asc')->get();
 
         $data = [

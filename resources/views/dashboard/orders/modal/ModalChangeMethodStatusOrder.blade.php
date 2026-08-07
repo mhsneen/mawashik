@@ -6,7 +6,7 @@
 					<input type="hidden" id="id" name="id" value="{{$item->id}}">
 				<div class="modal-content ">
 					<div class="modal-header">
-                    <h4 class="modal-title"> {{ __('dashboard.Order_number') }} {{ $item->id }}</h4>
+                    <h4 class="modal-title"> {{ __('dashboard.Order_number') }} {{ $item->order_number }}</h4>
                     <h5>{{ __('dashboard.Change_payment_status') }}</h5>
                 					</div>
 									<div class="modal-body">

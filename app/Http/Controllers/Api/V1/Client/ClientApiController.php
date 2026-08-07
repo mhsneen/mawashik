@@ -17,6 +17,9 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Http\Request;
 use Spatie\Permission\Models\Role;
+use App\Models\Wallet;
+use App\Models\WalletTransaction;
+use App\Http\Resources\Api\V1\Client\UserResource;
 
 class ClientApiController extends Controller
 {
@@ -55,35 +58,27 @@ class ClientApiController extends Controller
 
             DB::commit();
 
-            // بوضع "مباشر": الحساب انخلق مفعّل من أول استعلام -> نرجّع توكن مباشرة بدون أي كود
             if ($isDirect) {
                 $token = $user->createToken($user->name . 'Auth-Token')->plainTextToken;
-            $user->update(['device_token' => $request->device_token]);
-            $data = [
-            'requires_verification' => false,
-            'user' => [
-               'token' => $token,
-                'id' => $user->id,
-                'name' => $user->name ?? '',
-                'email' => $user->email ?? '',
-                'mobile' => $user->mobile ?? '',
-                'image_url' => $user->image_url ?? '',
-                'base_image_url' => $user->base_image_url ?? '',
-                'role' => $user->getRoleNames()->first() ?? '',
-            ],
-        ];
+                $user->update(['device_token' => $request->device_token]);
+
+                $user->access_token = $token;
+
+                $data = [
+                    'requires_verification' => false,
+                    'user' => new UserResource($user),
+                ];
 
                 return $this->returnData('data', $data, __('api.You_have_been_successfully_registered'));
             }
 
-            // بوضع "تحقق": نولّد ونرسل الكود بعد الـ commit وخارج الـ transaction
             $otpService->generateAndSend($user, OtpCode::PURPOSE_REGISTRATION);
 
-               $data = [
-            'requires_verification' => true,
-        ];
+            $data = [
+                'requires_verification' => true,
+            ];
             return $this->returnData(
-              'data', $data,  __('api.You have been successfully registeredplease enter the code sent to your mobile to activate the account')
+                'data', $data,  __('api.You have been successfully registeredplease enter the code sent to your mobile to activate the account')
             );
         } catch (Exception $ex) {
             DB::rollback();
@@ -98,16 +93,21 @@ class ClientApiController extends Controller
     public function check_active_code(VerifyOtpRequest $request, OtpService $otpService)
     {
         try {
-          $user = User::when($request->filled('email'), function ($query) use ($request) {
-        return $query->where('email', $request->email);
-    }, function ($query) use ($request) {
-        return $query->where('mobile', $request->mobile);
-    })
-    ->whereNull('deleted_at')
-    ->first();
+            $user = User::when($request->filled('email'), function ($query) use ($request) {
+                return $query->where('email', $request->email);
+            }, function ($query) use ($request) {
+                return $query->where('mobile', $request->mobile);
+            })
+            ->whereNull('deleted_at')
+            ->first();
 
             if (!$user) {
                 return $this->returnError(__('api.User_Not_Found'));
+            }
+
+            // ✅ منع المستخدم المحظور من تفعيل الحساب
+            if ($user->is_blocked) {
+                return $this->returnError(__('api.account_blocked'));
             }
 
             try {
@@ -128,21 +128,11 @@ class ClientApiController extends Controller
             ]);
 
             $token = $user->createToken($user->name . 'Auth-Token')->plainTextToken;
-
             DB::commit();
 
+            $user->access_token = $token;
 
-
-            $data = [
-    'token'           => $token,
-    'userId'          => $user->id,
-    'name'            => $user->name ?? '',
-    'email'           => $user->email ?? '',
-    'mobile'          => $user->mobile ?? '',
-    'image_url'       => $user->image_url ?? '',
-    'base_image_url'  => $user->base_image_url ?? '',
-    'role'            => $user->getRoleNames()->first() ?? '',
-];
+            $data = new UserResource($user);
 
             return $this->returnData('data', $data, __('api.Account activated successfully'));
         } catch (Exception $ex) {
@@ -158,16 +148,21 @@ class ClientApiController extends Controller
     public function rsend_active_code(ResendOtpRequest $request, OtpService $otpService)
     {
         try {
-           $user = User::when($request->filled('email'), function ($query) use ($request) {
-        return $query->where('email', $request->email);
-    }, function ($query) use ($request) {
-        return $query->where('mobile', $request->mobile);
-    })
-    ->whereNull('deleted_at')
-    ->first();
+            $user = User::when($request->filled('email'), function ($query) use ($request) {
+                return $query->where('email', $request->email);
+            }, function ($query) use ($request) {
+                return $query->where('mobile', $request->mobile);
+            })
+            ->whereNull('deleted_at')
+            ->first();
 
             if (!$user) {
                 return $this->returnError(__('api.User_Not_Found'));
+            }
+
+            // ✅ منع المستخدم المحظور من طلب كود تفعيل جديد
+            if ($user->is_blocked) {
+                return $this->returnError(__('api.account_blocked'));
             }
 
             $otpService->generateAndSend($user, OtpCode::PURPOSE_REGISTRATION);
@@ -186,22 +181,11 @@ class ClientApiController extends Controller
     {
         $user = $request->user();
 
-        $user->makeHidden([
-            'email_verified_at',
-            'password',
-            'remember_token',
-            'created_at',
-            'updated_at',
-            'is_active',
-            'device_token',
-            'desktop_token',
-            'deleted_at',
-            'image',
-
-        ]);
-        $user->branch_id = $user->branch_id ?? 0;
-
-        return $this->returnData('data', $user, __('api.Api_Return_Data'));
+        return $this->returnData(
+            'data',
+            new UserResource($user),
+            __('api.Api_Return_Data')
+        );
     }
 
     public function client_Update(ClientUpdateRequest $request, ImageUploadService $imageService)
@@ -234,6 +218,83 @@ class ClientApiController extends Controller
                 'trace' => $ex->getTraceAsString(),
                 'input' => $request->all(),
             ]);
+            return $this->returnError(__('api.Api_Error_Contact_Programmer'));
+        }
+    }
+
+    /**
+     * عرض رصيد محفظة العميل وإحصائياتها
+     */
+    public function getWalletBalance(Request $request)
+    {
+        try {
+            $client = $request->user();
+
+            $wallet = Wallet::firstOrCreate(
+                ['user_id' => $client->id],
+                ['balance' => 0, 'rolename' => 'client']
+            );
+
+            $totalSpent = WalletTransaction::where('wallet_id', $wallet->id)
+                ->where('type', 'debit')
+                ->sum('amount');
+
+            $totalRefunded = WalletTransaction::where('wallet_id', $wallet->id)
+                ->where('type', 'credit')
+                ->sum('amount');
+
+            $todayOrders = $client->orders()
+                ->whereDate('created_at', today())
+                ->count();
+
+            return $this->returnData('data', [
+                'balance'        => (float) $wallet->balance,
+                'total_spent'    => (float) $totalSpent,
+                'total_refunded' => (float) $totalRefunded,
+                'today_orders'   => $todayOrders,
+            ], __('api.Api_Return_Data'));
+
+        } catch (Exception $ex) {
+            Log::error('getWalletBalance (Client): ' . $ex->getMessage(), ['trace' => $ex->getTraceAsString()]);
+            return $this->returnError(__('api.Api_Error_Contact_Programmer'));
+        }
+    }
+
+    /**
+     * سجل معاملات محفظة العميل
+     */
+    public function getWalletTransactions(Request $request)
+    {
+        try {
+            $client = $request->user();
+            $wallet = Wallet::where('user_id', $client->id)->first();
+
+            if (!$wallet) {
+                return $this->returnData('data', [], __('api.Api_Return_Data'));
+            }
+
+            $transactions = WalletTransaction::where('wallet_id', $wallet->id)
+                ->with('order:id,final_price,delivery_price,payment_method')
+                ->orderBy('id', 'DESC')
+                ->get();
+
+            $transformedData = $transactions->map(function ($tx) {
+                return [
+                    'id'            => $tx->id,
+                    'type'          => $tx->type,
+                    'type_label'    => $tx->type_translated,
+                    'amount'        => $tx->amount,
+                    'amount_signed' => $tx->amount_signed,
+                    'description'   => $tx->description,
+                    'order_id'      => $tx->order_id,
+                    'date'          => $tx->created_at?->format('Y-m-d H:i'),
+                ];
+            });
+
+            return $this->returnData('data', $transformedData, __('api.Api_Return_Data'));
+
+        } catch (Exception $ex) {
+            Log::error('getWalletTransactions (Client): ' . $ex->getMessage(), ['trace' => $ex->getTraceAsString()]);
             return $this->returnError(__('api.Api_Error_Contact_Programmer'));
         }
     }
