@@ -804,7 +804,7 @@ return array(
 'Payment_Status_Refunded' => 'Refunded',
 'Payment_Status_Cancelled' => 'Cancelled',
 'Pickup_From_Store' => 'Pickup from store',
-'Delivery_To_Address' => 'Delivery to address',
+'Delivery_To_Address' => 'Order delivery',
 'Cash_Payment' => 'Cash Payment',
 'Online_Payment' => 'Online Payment',
 'Wallet_Payment' => 'Wallet Payment',
@@ -813,4 +813,6 @@ return array(
 'Delivery_Type' => 'Delivery Type',
 'Payment_Method' => 'Payment Method',
 'Added_Tax_Value' => 'Tax Amount',
+
+
 );

@@ -3,316 +3,323 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>متجرك الشامل | كل ما تحتاجه في مكان واحد</title>
+    <title>{{ $settings['store_name']->value ?? config('app.name') }}</title>
+    <link rel="icon" href="{{ URL::asset('uploads/settings/thumbnail/' . ($settings['store_logo']->plain_value ?? '')) }}">
     <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <!-- إضافة مكتبة الأيقونات Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <style>
         :root {
             --primary: #2563eb;
             --primary-hover: #1d4ed8;
-            --accent: #f59e0b;
             --dark: #0f172a;
             --light: #f8fafc;
             --gray: #64748b;
             --border: #e2e8f0;
+            --shadow-sm: 0 2px 10px rgba(0,0,0,0.05);
+            --shadow-md: 0 4px 20px rgba(0,0,0,0.08);
+            --shadow-lg: 0 10px 30px rgba(0,0,0,0.1);
         }
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Cairo', sans-serif; }
+        body { background-color: var(--light); color: var(--dark); line-height: 1.6; }
 
-        * {
-            box-sizing: border-box;
-            margin: 0;
-            padding: 0;
-            font-family: 'Cairo', sans-serif;
-        }
-
-        body {
-            background-color: var(--light);
-            color: var(--dark);
-            line-height: 1.6;
-        }
-
-        /* Top Bar */
-        .top-bar {
-            background: var(--dark);
-            color: #fff;
-            text-align: center;
-            padding: 8px 15px;
-            font-size: 0.9rem;
-        }
-        .top-bar span {
-            color: var(--accent);
-            font-weight: bold;
-        }
-
-        /* Header */
         header {
             background: #fff;
             padding: 15px 5%;
             display: flex;
             justify-content: space-between;
             align-items: center;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+            box-shadow: var(--shadow-sm);
             position: sticky;
             top: 0;
             z-index: 100;
         }
-        .logo {
-            font-size: 1.5rem;
-            font-weight: 800;
-            color: var(--primary);
-        }
-        .btn-header {
-            background: var(--primary);
-            color: #fff;
-            padding: 8px 20px;
-            border-radius: 6px;
-            text-decoration: none;
-            font-weight: 600;
-            transition: 0.3s;
-        }
-        .btn-header:hover { background: var(--primary-hover); }
+        header img { height: 45px; width: 45px; object-fit: contain; border-radius: 8px; }
+        .logo-text { font-size: 1.4rem; font-weight: 800; color: var(--primary); }
 
-        /* Hero Section */
         .hero {
-            padding: 60px 5%;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            gap: 40px;
-            max-width: 1200px;
+            padding: 80px 5% 60px;
+            text-align: center;
+            max-width: 900px;
             margin: 0 auto;
+            background: linear-gradient(180deg, #ffffff 0%, var(--light) 100%);
         }
-        .hero-text { flex: 1; }
-        .hero-text h1 {
-            font-size: 2.5rem;
-            font-weight: 800;
-            line-height: 1.2;
-            margin-bottom: 15px;
-        }
-        .hero-text p {
-            color: var(--gray);
-            font-size: 1.1rem;
-            margin-bottom: 25px;
-        }
-        .btn-hero {
-            background: var(--accent);
-            color: #fff;
-            padding: 14px 32px;
-            border-radius: 8px;
-            text-decoration: none;
-            font-weight: 700;
-            font-size: 1.1rem;
-            display: inline-block;
-            box-shadow: 0 4px 15px rgba(245, 158, 11, 0.4);
-            transition: 0.3s;
-        }
-        .btn-hero:hover { transform: translateY(-2px); }
-        .hero-image { flex: 1; text-align: center; }
-        .hero-image img {
-            width: 100%;
-            max-width: 500px;
-            border-radius: 16px;
-            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
-        }
+        .hero img.logo-hero {
+            width: 120px; height: 120px; object-fit: contain;
+            margin-bottom: 25px; border-radius: 20px;
 
-        /* Features */
+        }
+        .hero h1 { font-size: 2.5rem; font-weight: 800; margin-bottom: 15px; color: var(--dark); }
+        .hero p { color: var(--gray); font-size: 1.2rem; }
+
+        /* قسم المميزات */
         .features {
             background: #fff;
-            padding: 30px 5%;
+            padding: 40px 5%;
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 20px;
-            max-width: 1200px;
-            margin: 0 auto 50px auto;
-            border-radius: 12px;
-            box-shadow: 0 4px 20px rgba(0,0,0,0.03);
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 25px;
+            max-width: 1100px;
+            margin: 0 auto 60px auto;
+            border-radius: 16px;
+            box-shadow: var(--shadow-md);
         }
         .feature-item {
-            text-align: center;
-            padding: 15px;
+            text-align: center; padding: 25px 15px;
+            border-radius: 12px;
+            transition: transform 0.3s ease, background 0.3s ease;
+        }
+        .feature-item:hover {
+            transform: translateY(-5px);
+            background: var(--light);
         }
         .feature-icon {
-            font-size: 2rem;
-            margin-bottom: 10px;
+            font-size: 2.5rem; margin-bottom: 15px;
+            width: 70px; height: 70px;
+            display: flex; align-items: center; justify-content: center;
+            margin: 0 auto 15px;
+            background: rgba(37, 99, 235, 0.1);
+            color: var(--primary);
+            border-radius: 50%;
         }
-        .feature-item h4 { font-size: 1rem; font-weight: 700; }
-        .feature-item p { font-size: 0.85rem; color: var(--gray); }
+        .feature-item h4 { font-size: 1.1rem; font-weight: 700; margin-bottom: 8px; }
+        .feature-item p { font-size: 0.95rem; color: var(--gray); }
 
-        /* Section Titles */
-        .section-title {
+        /* قسم تطبيقات الجوال */
+        .apps-section {
             text-align: center;
-            font-size: 1.8rem;
-            margin-bottom: 30px;
-            font-weight: 800;
-        }
-
-        /* Best Sellers */
-        .products-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
-            gap: 25px;
-            max-width: 1200px;
-            margin: 0 auto 60px auto;
+            margin: 0 auto 80px;
             padding: 0 5%;
         }
-        .product-card {
+        .apps-section h3 {
+            font-size: 1.5rem;
+            font-weight: 800;
+            margin-bottom: 25px;
+            color: var(--dark);
+        }
+        .app-links {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            flex-wrap: wrap;
+        }
+        .app-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 12px;
+            background: var(--dark);
+            color: #fff;
+            padding: 12px 25px;
+            border-radius: 12px;
+            text-decoration: none;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            box-shadow: var(--shadow-sm);
+        }
+        .app-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: var(--shadow-md);
+            background: #000;
+        }
+        .app-btn i { font-size: 2rem; }
+        .app-btn .text-container { text-align: right; line-height: 1.2; }
+        .app-btn .small-text { font-size: 0.7rem; opacity: 0.8; }
+        .app-btn .big-text { font-size: 1.1rem; font-weight: 700; }
+
+        /* قسم التواصل */
+        .contact-section {
+            max-width: 900px;
+            margin: 0 auto 80px auto;
+            padding: 0 5%;
+            text-align: center;
+        }
+        .contact-section h2 { font-size: 1.8rem; font-weight: 800; margin-bottom: 30px; }
+        .contact-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 20px;
+        }
+        .contact-card {
             background: #fff;
             border: 1px solid var(--border);
             border-radius: 12px;
-            padding: 15px;
-            text-align: center;
-            transition: 0.3s;
+            padding: 25px 20px;
+            transition: border-color 0.3s ease, box-shadow 0.3s ease;
         }
-        .product-card:hover {
-            box-shadow: 0 8px 20px rgba(0,0,0,0.08);
-            transform: translateY(-4px);
+        .contact-card:hover {
+            border-color: var(--primary);
+            box-shadow: var(--shadow-md);
         }
-        .product-card img {
-            width: 100%;
-            height: 200px;
-            object-fit: cover;
-            border-radius: 8px;
-            margin-bottom: 15px;
-        }
-        .product-card h3 { font-size: 1.1rem; margin-bottom: 8px; }
-        .price {
-            font-size: 1.2rem;
-            font-weight: 700;
-            color: var(--primary);
-            margin-bottom: 15px;
-        }
-        .price old {
-            font-size: 0.9rem;
-            color: var(--gray);
-            text-decoration: line-through;
-            margin-left: 8px;
-        }
-        .btn-card {
-            background: var(--dark);
-            color: #fff;
-            border: none;
-            width: 100%;
-            padding: 10px;
-            border-radius: 6px;
-            font-weight: 700;
-            cursor: pointer;
-            transition: 0.3s;
-        }
-        .btn-card:hover { background: var(--primary); }
+        .contact-card i { font-size: 1.8rem; color: var(--primary); margin-bottom: 15px; display: block; }
+        .contact-card a, .contact-card span { color: var(--dark); text-decoration: none; font-weight: 600; font-size: 1rem; }
+        .contact-card a:hover { color: var(--primary); }
 
-        /* Testimonials */
-        .testimonials {
-            background: #fff;
-            padding: 60px 5%;
-            margin-bottom: 60px;
+        .social-links {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin-top: 40px;
         }
-        .testimonials-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-            gap: 20px;
-            max-width: 1200px;
-            margin: 0 auto;
-        }
-        .testimonial-card {
-            background: var(--light);
-            padding: 20px;
-            border-radius: 10px;
+        .social-links a {
+            width: 50px; height: 50px;
+            display: flex; align-items: center; justify-content: center;
+            background: #fff; color: var(--primary); border-radius: 50%;
+            text-decoration: none; transition: 0.3s;
             border: 1px solid var(--border);
+            font-size: 1.3rem;
         }
-        .testimonial-card p { font-style: italic; margin-bottom: 15px; }
-        .testimonial-card h5 { font-weight: 700; color: var(--primary); }
+        .social-links a:hover {
+            background: var(--primary); color: #fff; transform: translateY(-3px);
+            box-shadow: var(--shadow-md);
+        }
+        .social-links img { width: 24px; height: 24px; }
 
-        /* Footer */
         footer {
             background: var(--dark);
             color: #fff;
             text-align: center;
             padding: 30px 5%;
-            font-size: 0.9rem;
-        }
-
-        /* Responsive */
-        @media (max-width: 768px) {
-            .hero {
-                flex-direction: column;
-                text-align: center;
-                padding: 40px 5%;
-            }
-            .hero-text h1 { font-size: 1.8rem; }
+            font-size: 0.95rem;
         }
     </style>
 </head>
 <body>
 
-    <!-- Top Announcement Bar -->
-    <div class="top-bar">
-        🚚 شحن مجاني للطلبات الأعلى من $50! استخدم كود الخصم: <span>FIRST10</span>
-    </div>
-
-    <!-- Header -->
     <header>
-        <div class="logo">متجري</div>
-        <a href="#products" class="btn-header">تسوق الآن</a>
+        <div style="display:flex; align-items:center; gap:12px;">
+            @if (!empty($settings['store_logo']->plain_value ?? null))
+                <img src="{{ URL::asset('uploads/settings/thumbnail/' . $settings['store_logo']->plain_value) }}" alt="logo">
+            @endif
+            <span class="logo-text">{{ $settings['store_name']->value ?? '' }}</span>
+        </div>
     </header>
 
-    <!-- Hero Section -->
     <section class="hero">
-        <div class="hero-text">
-            <h1>كل ما تحتاجه حياتك اليومية.. في مكان واحد!</h1>
-            <p>اكتشف تشكيلة ممتازة من أحدث المنتجات الأكثر مبيعاً بأفضل الأسعار والجودة العالية. توصيل سريع حتى باب بيتك.</p>
-            <a href="#products" class="btn-hero">استكشف العروض الحصرية ⚡</a>
-        </div>
-        <div class="hero-image">
-            <img src="https://images.unsplash.com/photo-1472851294608-062f824d29cc?w=600&auto=format&fit=crop&q=80" alt="منتجات المتجر">
-        </div>
+        @if (!empty($settings['store_logo']->plain_value ?? null))
+            <img src="{{ URL::asset('uploads/settings/thumbnail/' . $settings['store_logo']->plain_value) }}" class="logo-hero" alt="logo">
+        @endif
+        <h1>{{ $settings['store_name']->value ?? '' }}</h1>
+
     </section>
 
-    <!-- Trust Features -->
-    <div class="features">
-        <div class="feature-item">
-            <div class="feature-icon">🚚</div>
-            <h4>توصيل سريع</h4>
-            <p>خلال 2 - 4 أيام عمل</p>
-        </div>
-        <div class="feature-item">
-            <div class="feature-icon">💳</div>
-            <h4>دفع آمن</h4>
-            <p>عند الاستلام أو بالبطاقة</p>
-        </div>
-        <div class="feature-item">
-            <div class="feature-icon">🔄</div>
-            <h4>استرجاع سهل</h4>
-            <p>ضمان لمدة 14 يوماً</p>
-        </div>
-        <div class="feature-item">
-            <div class="feature-icon">🎧</div>
-            <h4>دعم متواصل</h4>
-            <p>فريقنا جاهز لمساعدتك</p>
-        </div>
-    </div>
+       @if (
+        !empty($settings['free_shipping_sentence']->value ?? null) ||
+        !empty($settings['return_policy_sentence']->value ?? null) ||
+        !empty($settings['secure_payment_sentence']->value ?? null)
+    )
+        <div class="features">
+            @if (!empty($settings['free_shipping_sentence']->value ?? null))
+                <div class="feature-item">
+                    <div class="feature-icon"><i class="fas fa-shipping-fast"></i></div>
+                    <h4>{{ $settings['free_shipping_sentence']->value }}</h4>
+                    @if (!empty($settings['free_shipping_details']->value ?? null))
+                        <!-- تم التعديل هنا -->
+                        <p>{!! $settings['free_shipping_details']->value !!}</p>
+                    @endif
+                </div>
+            @endif
 
+            @if (!empty($settings['return_policy_sentence']->value ?? null))
+                <div class="feature-item">
+                    <div class="feature-icon"><i class="fas fa-undo-alt"></i></div>
+                    <h4>{{ $settings['return_policy_sentence']->value }}</h4>
+                    @if (!empty($settings['return_policy_details']->value ?? null))
+                        <!-- تم التعديل هنا -->
+                        <p>{!! $settings['return_policy_details']->value !!}</p>
+                    @endif
+                </div>
+            @endif
 
-
-    <!-- Testimonials -->
-    <section class="testimonials">
-        <h2 class="section-title">آراء العملاء 💬</h2>
-        <div class="testimonials-grid">
-            <div class="testimonial-card">
-                <p>"المنتجات وصلتني بتغليف ممتاز وفي وقت قياسي. الجودة أفضل مما توقعت!"</p>
-                <h5>- أحمد م. ⭐⭐⭐⭐⭐</h5>
-            </div>
-            <div class="testimonial-card">
-                <p>"تجربة شراء سهلة جداً وسرعة في الرد عبر الواتساب. حتماً سأكرر الطلب."</p>
-                <h5>- سارة ك. ⭐⭐⭐⭐⭐</h5>
-            </div>
-            <div class="testimonial-card">
-                <p>"خدمة الدفع عند الاستلام ريحتني، والمنتج يعمل بجودة ممتازة."</p>
-                <h5>- خالد ع. ⭐⭐⭐⭐⭐</h5>
-            </div>
+            @if (!empty($settings['secure_payment_sentence']->value ?? null))
+                <div class="feature-item">
+                    <div class="feature-icon"><i class="fas fa-lock"></i></div>
+                    <h4>{{ $settings['secure_payment_sentence']->value }}</h4>
+                    @if (!empty($settings['secure_payment_details']->value ?? null))
+                        <!-- تم التعديل هنا -->
+                        <p>{!! $settings['secure_payment_details']->value !!}</p>
+                    @endif
+                </div>
+            @endif
         </div>
+    @endif
+
+    @if (!empty($settings['appStorePageLink']->plain_value ?? null) || !empty($settings['googlePlayPageLink']->plain_value ?? null))
+        <section class="apps-section">
+            <h3>حمّل تطبيقنا الآن</h3>
+            <div class="app-links">
+                @if (!empty($settings['appStorePageLink']->plain_value ?? null))
+                    <a href="{{ $settings['appStorePageLink']->plain_value }}" target="_blank" class="app-btn">
+                        <i class="fab fa-apple"></i>
+                        <div class="text-container">
+                            <span class="small-text">Download on the</span><br>
+                            <span class="big-text">App Store</span>
+                        </div>
+                    </a>
+                @endif
+
+                @if (!empty($settings['googlePlayPageLink']->plain_value ?? null))
+                    <a href="{{ $settings['googlePlayPageLink']->plain_value }}" target="_blank" class="app-btn">
+                        <i class="fab fa-google-play"></i>
+                        <div class="text-container">
+                            <span class="small-text">GET IT ON</span><br>
+                            <span class="big-text">Google Play</span>
+                        </div>
+                    </a>
+                @endif
+            </div>
+        </section>
+    @endif
+
+    <section class="contact-section">
+        <h2>تواصل معنا</h2>
+        <div class="contact-grid">
+            @if (!empty($settings['store_mobile']->plain_value ?? null))
+                <div class="contact-card">
+                    <i class="fas fa-phone-alt"></i>
+                    <a href="tel:{{ $settings['store_mobile']->plain_value }}">{{ $settings['store_mobile']->plain_value }}</a>
+                </div>
+            @endif
+
+            @if (!empty($settings['store_whatsapp']->plain_value ?? null))
+                <div class="contact-card">
+                    <i class="fab fa-whatsapp"></i>
+                    <a href="https://wa.me/{{ ltrim($settings['store_whatsapp']->plain_value, '0+') }}" target="_blank">
+                        {{ $settings['store_whatsapp']->plain_value }}
+                    </a>
+                </div>
+            @endif
+
+            @if (!empty($settings['store_email']->plain_value ?? null))
+                <div class="contact-card">
+                    <i class="fas fa-envelope"></i>
+                    <a href="mailto:{{ $settings['store_email']->plain_value }}">{{ $settings['store_email']->plain_value }}</a>
+                </div>
+            @endif
+
+            @if (!empty($settings['store_address']->value ?? null))
+                <div class="contact-card">
+                    <i class="fas fa-map-marker-alt"></i>
+                    <span>{{ $settings['store_address']->value }}</span>
+                </div>
+            @endif
+        </div>
+
+        @if ($socialLinks->isNotEmpty())
+            <div class="social-links">
+                @foreach ($socialLinks as $link)
+                    <a href="{{ $link->link }}" target="_blank" title="{{ $link->name }}">
+                        @if (!empty($link->icon))
+                            <img src="{{ asset('uploads/socialmedialinks/' . $link->icon) }}" alt="{{ $link->name }}" style="width: 24px; height: 24px;">
+                        @else
+                            <i class="fas fa-link"></i> <!-- أيقونة احتياطية -->
+                        @endif
+                    </a>
+                @endforeach
+            </div>
+        @endif
     </section>
 
-    <!-- Footer -->
     <footer>
-        <p>جميع الحقوق محفوظة © 2026 - متجرك الشامل</p>
+        <p>© {{ date('Y') }} {{ $settings['store_name']->value ?? '' }} — {{ __('dashboard.CopyRight_footer') }}</p>
     </footer>
 
 </body>

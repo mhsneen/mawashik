@@ -12,6 +12,33 @@
         rel="stylesheet">
     <link href="{{ URL::asset('assets/dashboard/plugins/jquery-simple-datetimepicker/jquery.simple-dtpicker.css') }}"
         rel="stylesheet">
+    <style>
+        .userlist-table {
+            overflow-x: auto !important;
+            padding-bottom: 12px;
+            margin-bottom: 15px;
+            border-radius: 8px;
+            box-shadow: inset 0 0 5px rgba(0,0,0,0.03);
+        }
+        .userlist-table table {
+            min-width: 1450px;
+        }
+        .userlist-table th, .userlist-table td {
+            vertical-align: middle !important;
+            padding: 12px 14px !important;
+            font-size: 13px;
+        }
+        .userlist-table thead th {
+            background-color: #f8fafc !important;
+            color: #334155;
+            font-weight: 700;
+            border-bottom: 2px solid #e2e8f0;
+            white-space: nowrap;
+        }
+        .userlist-table tbody tr:hover {
+            background-color: #f1f5f9 !important;
+        }
+    </style>
 @endsection
 @section('page-header')
     <!-- breadcrumb -->

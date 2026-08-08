@@ -1457,4 +1457,21 @@ slide is-expanded side-menu__item {
 .dark-theme .side-menu__item.active .side-menu__icon {
   fill: #106ef1;
 }
+
+/* Mobile Sidebar Native Touch Scroll Fix */
+@media (max-width: 991px) {
+  .app-sidebar {
+    overflow-y: auto !important;
+    -webkit-overflow-scrolling: touch !important;
+    max-height: 100vh !important;
+    height: 100vh !important;
+  }
+  .main-sidemenu {
+    overflow-y: auto !important;
+    -webkit-overflow-scrolling: touch !important;
+    height: calc(100vh - 70px) !important;
+    max-height: calc(100vh - 70px) !important;
+    touch-action: pan-y !important;
+  }
+}
 /*# sourceMappingURL=sidemenu.css.map */

@@ -53,6 +53,11 @@ class AddCartRequest extends FormRequest
             'cart.*.variant_id' => 'nullable|integer|exists:product_variants,id',
             'cart.*.modifier_value_ids' => 'nullable|array',
             'cart.*.modifier_value_ids.*' => 'integer|exists:attribute_values,id',
+
+            // ✅ استقبال الخصائص العادية (مثل المقاس واللون)
+'cart.*.attribute_value_ids' => 'nullable|array',
+'cart.*.attribute_value_ids.*' => 'integer|exists:attribute_values,id',
+
              'cart.*.quantity' => 'required|numeric|min:0.01', // بدل integer|min:1 لدعم الأوزان (بقالة)
             'redeem_points' => 'nullable|integer|min:0',
 

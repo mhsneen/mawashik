@@ -15,15 +15,21 @@
                     ({{ $order_item->product->unit->name }})
                 @endif
             </td>
-            <td style="width:55%; text-align:right;">
+  <td style="width:55%; text-align:right;">
     {{ $order_item->product->name }}<br />
     @if ($order_item->variant_label_snapshot)
         {{ __('dashboard.Combination') }}: {{ $order_item->variant_label_snapshot }}<br />
     @endif
-    {{ __('dashboard.Product_Add_Category') }}: {{ $order_item->product->category->name }}<br />
+    @if ($order_item->product->category)
+        {{ __('dashboard.Product_Add_Category') }}: {{ $order_item->product->category->name }}<br />
+    @endif
     @if ($order_item->attributes->isNotEmpty())
         @foreach ($order_item->attributes as $attr)
-            {{ $attr->attribute_name }} ({{ $attr->value_name }})<br />
+            {{ $attr->attribute_name }}: {{ $attr->value_name }}
+            @if ($attr->price > 0)
+                (+{{ number_format($attr->price, 2) }})
+            @endif
+            <br />
         @endforeach
     @endif
 </td>

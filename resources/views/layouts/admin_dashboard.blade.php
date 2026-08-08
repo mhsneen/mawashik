@@ -20,9 +20,6 @@
     <!-- /Loader -->
 
     @include('dashboard.includes.main-sidebar')
-
-   
-        @include('dashboard.includes.main-sidebar')
    
 
 

@@ -12101,16 +12101,64 @@ pre {
   text-align: center;
   line-height: 33px; }
 
+/* Enhanced Custom Scrollbar System */
+* {
+  scrollbar-width: auto;
+  scrollbar-color: #0162e8 #f1f5f9;
+}
+
 *::-webkit-scrollbar {
-  width: 4px;
-  height: 4px;
-  transition: .3s background; }
+  width: 8px;
+  height: 8px;
+  transition: .3s background;
+}
+
+*::-webkit-scrollbar-track {
+  background: #f1f5f9;
+  border-radius: 6px;
+}
 
 ::-webkit-scrollbar-thumb {
-  background: #e1e6f1; }
+  background: #cbd5e1;
+  border-radius: 6px;
+}
 
 *:hover::-webkit-scrollbar-thumb {
-  background: #adb5bd; }
+  background: #94a3b8;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #0162e8 !important;
+}
+
+/* Enhanced Table Horizontal Scrollbar */
+.table-responsive {
+  scrollbar-width: auto;
+  scrollbar-color: #0162e8 #e2e8f0;
+  padding-bottom: 5px;
+}
+
+.table-responsive::-webkit-scrollbar {
+  height: 11px !important;
+  width: 11px !important;
+}
+
+.table-responsive::-webkit-scrollbar-track {
+  background: #e2e8f0 !important;
+  border-radius: 8px !important;
+  margin: 0 4px;
+}
+
+.table-responsive::-webkit-scrollbar-thumb {
+  background: #0162e8 !important;
+  border-radius: 8px !important;
+  border: 2px solid #e2e8f0 !important;
+  box-shadow: 0 0 4px rgba(1, 98, 232, 0.4);
+}
+
+.table-responsive::-webkit-scrollbar-thumb:hover {
+  background: #014bac !important;
+}
 
 @media (max-width: 568px) {
   .example {

@@ -21,7 +21,7 @@ class OrderObserver
                     $user->id,
                     $user->device_token,
                     __('notifications.order_received_title'),
-                    __('notifications.order_received_message', ['order_id' => $order->id])
+                    __('notifications.order_received_message', ['order_id' => $order->order_number])
                 );
             }
 
@@ -69,7 +69,7 @@ class OrderObserver
                             $user,
                             $earnedPoints,
                             $order,
-                            'نقاط مكتسبة من الطلب #' . $order->id
+                            'نقاط مكتسبة من الطلب #' . $order->order_number
                         );
 
                         $order->earned_points = $earnedPoints;
@@ -90,7 +90,7 @@ class OrderObserver
                         $wallet = $user->wallet()->lockForUpdate()->first();
 
                         if (!$wallet) {
-                            Log::error("Wallet not found for user ID: {$user->id} while refunding order ID: {$order->id}");
+                            Log::error("Wallet not found for user ID: {$user->id} while refunding order ID: {$order->order_number}");
                             return;
                         }
 
@@ -102,7 +102,7 @@ class OrderObserver
                             'order_id' => $order->id,
                             'type' => 'credit',
                             'amount' => $amount,
-                            'description' => 'استرداد مبلغ الطلب #' . $order->id,
+                            'description' => 'استرداد مبلغ الطلب #' . $order->order_number,
                         ]);
                     });
                 }
@@ -120,7 +120,7 @@ class OrderObserver
                         $user->id,
                         $user->device_token,
                         __('notifications.order_received_title'),
-                        __('notifications.order_received_message', ['order_id' => $order->id])
+                        __('notifications.order_received_message', ['order_id' => $order->order_number])
                     );
                 }
                 // 2. لباقي الحالات (جاهز، بالطريق، تم التسليم، ملغي) نرسل إشعار تغير الحالة العادي
@@ -130,7 +130,7 @@ class OrderObserver
                         $user->device_token,
                         __('notifications.order_status_changed_title'),
                         __('notifications.order_status_changed_message', [
-                            'order_id' => $order->id,
+                            'order_id' => $order->order_number,
                             'status' => $order->status->name
                         ])
                     );
@@ -140,7 +140,7 @@ class OrderObserver
 // ✅ إشعار أدمن عند نجاح الدفع الإلكتروني
     if ($order->isDirty('payment_status') && $order->payment_status === 'paid') {
     AdminNotification::create([
-        'order_id' => $order->id,
+        'order_id' => $order->order_number,
         'type'     => 'order_paid_online',
         'title'    => __('dashboard.order_paid_notification_title'),
         'body'     => __('dashboard.order_paid_notification_body', ['order_id' => $order->order_number]),

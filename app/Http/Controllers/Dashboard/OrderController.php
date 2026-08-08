@@ -40,14 +40,13 @@ class OrderController extends Controller
 
 
 
-       $items = Order::FilterDashbordAdmin(request(['search_order_number', 'search_client_name', 'search_client_mobile', 'search_status_id', 'search_date_from', 'search_date_to']))
+    $items = Order::FilterDashbordAdmin(request(['search_order_number', 'search_client_name', 'search_client_mobile', 'search_status_id', 'search_date_from', 'search_date_to']))
     ->with('user:id,name', 'status:id', 'coupon:id,code,discount_percentage')
     ->select(
         'id', 'user_id', 'total_items', 'status_id', 'currency', 'read', 'created_at',
         'total_price', 'discount_amount', 'coupon_id', 'added_tax', 'final_price', 'order_number',
         'payment_status', 'delivery_type', 'delivery_price', 'payment_method'
     )->latest('id')->paginate(PAGANATION_COUNT)->withQueryString();
-
 
             $orderstatus = Orderstatus::select('id')->orderBy('id', 'asc')->get();
 
@@ -93,7 +92,7 @@ class OrderController extends Controller
             'review',
             'cancelReason',
             'address',
-     'items' => function ($query) {
+ 'items' => function ($query) {
     $query->select('id', 'order_id', 'product_id', 'product_variant_id', 'variant_label_snapshot', 'quantity', 'unit_price', 'total_price')
         ->with([
             'product:id,image,category_id,quantity,unit_id',

@@ -350,12 +350,7 @@ public function getPaymentStatusLabelAttribute()
     };
 }
 
-public function getDeliveryTypeLabelAttribute()
-{
-    return $this->delivery_type === 'pickup'
-        ? __('dashboard.Pickup_From_Store')
-        : __('dashboard.Delivery_To_Address');
-}
+
 
 public function getPaymentMethodLabelAttribute()
 {
@@ -366,6 +361,18 @@ public function getPaymentMethodLabelAttribute()
         default  => $this->payment_method,
     };
 }
+
+
+
+public function getDeliveryTypeLabelAttribute()
+{
+    return $this->delivery_type === 'pickup'
+        ? __('dashboard.Pickup_From_Store')
+        : __('dashboard.Delivery_To_Address');
+}
+
+
+
 
 }
 

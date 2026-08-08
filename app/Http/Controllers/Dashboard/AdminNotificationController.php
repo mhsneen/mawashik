@@ -11,7 +11,7 @@ use Illuminate\Support\Str;
 
 class AdminNotificationController extends Controller
 {
-    public function fetch()
+public function fetch()
 {
     $items = AdminNotification::with('order:id,order_number')->latest()->take(10)->get();
     $unreadCount = AdminNotification::unread()->count();

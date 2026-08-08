@@ -79,11 +79,13 @@
 	$(window).resize(toggleSidebar);
 	
 	
-	//mCustomScrollbar
-	$(".main-sidemenu").mCustomScrollbar({
-		theme:"minimal",
-		autoHideScrollbar: true,
-		scrollbarPosition: "outside"
-	});
-
+	// mCustomScrollbar (only for desktop non-touch devices to avoid touch scroll breaking on mobile RTL)
+	var isTouchDevice = ('ontouchstart' in window) || (navigator.maxTouchPoints > 0) || (window.innerWidth <= 991);
+	if (!isTouchDevice) {
+		$(".main-sidemenu").mCustomScrollbar({
+			theme: "minimal",
+			autoHideScrollbar: true,
+			scrollbarPosition: "outside"
+		});
+	}
 })();

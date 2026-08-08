@@ -804,7 +804,7 @@ return [
 'Payment_Status_Refunded' => 'مسترجع',
 'Payment_Status_Cancelled' => 'ملغي',
 'Pickup_From_Store' => 'استلام من المتجر',
-'Delivery_To_Address' => 'توصيل للعنوان',
+'Delivery_To_Address' => 'توصيل الطلب ',
 'Cash_Payment' => 'الدفع كاش',
 'Online_Payment' => 'دفع إلكتروني',
 'Wallet_Payment' => 'دفع من المحفظة',
@@ -813,4 +813,6 @@ return [
 'Delivery_Type' => 'نوع الاستلام',
 'Payment_Method' => 'طريقة الدفع',
 'Added_Tax_Value' => 'قيمة الضريبة',
+
+
 ];

@@ -3,7 +3,7 @@
 namespace App\Http\Controllers\Api\V1\Client;
 
 use App\Http\Controllers\Controller;
-use App\Models\{Order, DiscountCode, Setting, Product, Address, Wallet, WalletTransaction};
+use App\Models\{Order, DiscountCode, Setting, Product, Address, Wallet, WalletTransaction, AttributeValue};
 use App\Traits\ApiTrait;
 use App\Http\Requests\Api\V1\{AddCartRequest};
 use Exception;
@@ -29,7 +29,7 @@ class CartApiController extends Controller
             $deliveryDate = $request->delivery_date;
             $deliveryTime = $request->delivery_time;
             $deliveryType = $request->delivery_type ?? 'delivery';
-            
+
             // ✅✅✅ التعديل هنا: تحويل أي بوابة دفع إلكتروني إلى كلمة online ✅✅✅
             $paymentMethod = $request->payment_method;
             if (!in_array($paymentMethod, ['cash', 'wallet'])) {
@@ -128,6 +128,43 @@ class CartApiController extends Controller
 
                 foreach ($calc['modifier_lines'] as $line) {
                     $orderItem->attributes()->create($line);
+                }
+
+                               // ✅✅✅ حفظ قيم الخصائص العادية (التي لا تؤثر على السعر مثل المقاس) ✅✅✅
+                if (!empty($item['attribute_value_ids'])) {
+                    // 1. نجلب الـ IDs الخاصة بالـ Variant (لو موجود) لتفادي حفظها مرتين
+                    $variantValueIds = $calc['variant']?->value_ids ?? [];
+
+                    // 2. جلب قيم الخصائص من قاعدة البيانات (بدون تحديد أعمدة لتفادي الخطأ)
+                    $plainAttributes = AttributeValue::whereIn('id', $item['attribute_value_ids'])
+                        ->with('attribute')
+                        ->get();
+
+                    foreach ($plainAttributes as $attrValue) {
+                        // أ. التأكد ألا تكون هذه القيمة قد حُفظت بالفعل كـ modifier
+                        $alreadySavedAsModifier = collect($calc['modifier_lines'] ?? [])
+                            ->contains('attribute_value_id', $attrValue->id);
+                        
+                        // ب. التأكد ألا تكون هذه القيمة هي جزء من الـ Variant المختار
+                        $isPartOfVariant = in_array($attrValue->id, $variantValueIds);
+
+                        if (!$alreadySavedAsModifier && !$isPartOfVariant) {
+                            // جلب اسم الخاصية بشكل آمن
+                            $attrName = 'خاصية';
+                            if ($attrValue->attribute) {
+                                $attrName = $attrValue->attribute->name ?? $attrValue->attribute->title ?? $attrValue->attribute->ar_name ?? 'خاصية';
+                            }
+
+                            $orderItem->attributes()->create([
+                                'attribute_id'       => $attrValue->attribute_id,
+                                'attribute_value_id' => $attrValue->id,
+                                'attribute_name'     => $attrName,
+                                'value_name'         => $attrValue->value,
+                                'color_code'         => $attrValue->color_code ?? null,
+                                'price'              => 0,
+                            ]);
+                        }
+                    }
                 }
 
                 if ($product->track_quantity) {

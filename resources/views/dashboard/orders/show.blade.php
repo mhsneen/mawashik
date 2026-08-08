@@ -111,19 +111,22 @@
                                         {{ $item->user->mobile }} </p>
                                 </div>
                             </div><br />
-                            <h6>{{ __('dashboard.Note') }}</h6>
-                            <div class="main-profile-bio">
-                                {{ $item->note }}
-                            </div><!-- main-profile-bio -->
+                           @if ($item->note)
+<div class="main-profile-bio">
+    <h6>{{ __('dashboard.Note') }}</h6>
+    {{ $item->note }}
+</div>
+@endif<!-- main-profile-bio -->
 
 
 
-                            <h6>{{ __('dashboard.Delivery date') }} :
-                                {{ $item->delivery_date ? $item->delivery_date->format('Y-m-d') : '-' }}</h6>
+                         @if ($item->delivery_date)
+    <h6>{{ __('dashboard.Delivery date') }} : {{ $item->delivery_date->format('Y-m-d') }}</h6>
+@endif
 
-
-                            <h6>{{ __('dashboard.Delivery time') }} :
-                                {{ $item->delivery_time ? $item->delivery_time : '-' }}</h6>
+@if ($item->delivery_time)
+    <h6>{{ __('dashboard.Delivery time') }} : {{ $item->delivery_time }}</h6>
+@endif
 
 
 
@@ -131,77 +134,67 @@
                             <hr class="mg-y-10">
 
                             <div class="table-responsive mg-t-20">
-                                <table class="table table-invoice border text-md-nowrap mb-0">
+    <table class="table table-invoice border text-md-nowrap mb-0">
+        <tbody>
 
-                                    <tbody>
+            <tr>
+                <td class="tx-uppercase tx-bold tx-inverse">{{ __('dashboard.number_products') }}</td>
+                <td colspan="2"><h4 class="tx-primary tx-bold">{{ $item->total_items }}</h4></td>
+            </tr>
 
+            <tr>
+                <td class="tx-uppercase tx-bold tx-inverse">{{ __('dashboard.Total price before discount') }}</td>
+                <td colspan="2"><h4 class="tx-primary tx-bold">{{ number_format($item->total_price, 2) }}</h4></td>
+            </tr>
 
+            @if ($item->discount_amount > 0)
+                <tr>
+                    <td class="tx-uppercase tx-bold tx-inverse">
+                        {{ __('dashboard.Coupon_Discount_Value') }}
+                        @if ($item->coupon)
+                            <br /><small>{{ $item->coupon->code }} ({{ $item->coupon->discount_percentage }}%)</small>
+                        @endif
+                    </td>
+                    <td colspan="2"><h4 class="tx-danger tx-bold">- {{ number_format($item->discount_amount, 2) }}</h4></td>
+                </tr>
 
+                <tr>
+                    <td class="tx-uppercase tx-bold tx-inverse">{{ __('dashboard.Price after discount') }}</td>
+                    <td colspan="2"><h4 class="tx-primary tx-bold">{{ number_format($item->price_after_discount, 2) }}</h4></td>
+                </tr>
+            @endif
 
+            @if ($item->added_tax)
+                <tr>
+                    <td class="tx-uppercase tx-bold tx-inverse">
+                        {{ __('dashboard.added_tax') }} ({{ $item->added_tax }}%)
+                    </td>
+                    <td colspan="2"><h4 class="tx-primary tx-bold">{{ number_format($item->tax_amount, 2) }}</h4></td>
+                </tr>
+            @endif
 
+            @if ($item->delivery_type === 'delivery' && $item->delivery_price)
+                <tr>
+                    <td class="tx-uppercase tx-bold tx-inverse">{{ __('dashboard.Delivery_Price') }}</td>
+                    <td colspan="2"><h4 class="tx-primary tx-bold">{{ number_format($item->delivery_price, 2) }}</h4></td>
+                </tr>
+            @endif
 
-                                        <tr>
-                                            <td class=" tx-uppercase tx-bold tx-inverse">
-                                                {{ __('dashboard.number_products') }}</td>
-                                            <td colspan="2">
-                                                <h4 class="tx-primary tx-bold">{{ $item->total_items }} </h4>
-                                            </td>
-                                        </tr>
+            @if ($item->redeemed_points > 0)
+                <tr>
+                    <td class="tx-uppercase tx-bold tx-inverse">{{ __('dashboard.redeem_points') }} ({{ $item->redeemed_points }})</td>
+                    <td colspan="2"><h4 class="tx-danger tx-bold">- {{ number_format($item->redeemed_points_value, 2) }}</h4></td>
+                </tr>
+            @endif
 
+            <tr>
+                <td class="tx-uppercase tx-bold tx-inverse">{{ __('dashboard.TOTAL_DUE') }}</td>
+                <td colspan="2"><h4 class="tx-success tx-bold">{{ number_format($item->final_price, 2) }} {{ $item->currency }}</h4></td>
+            </tr>
 
-
-                                        <tr>
-                                            <td class=" tx-uppercase tx-bold tx-inverse">
-                                                {{ __('dashboard.Total price before discount') }}</td>
-                                            <td colspan="2">
-                                                <h4 class="tx-primary tx-bold">{{ $item->total_price }} </h4>
-                                            </td>
-                                        </tr>
-
-
-
-
-                                        <tr>
-                                            <td class=" tx-uppercase tx-bold tx-inverse">
-                                                {{ __('dashboard.Coupon_Discount_Value') }}
-                                                @if ($item->coupon)
-                                                    <br />
-                                                    ({{ $item->coupon->discount_percentage }} %)
-                                                    {{ $item->coupon->code }}
-                                                @endif
-
-                                            </td>
-                                            <td colspan="2">
-                                                <h4 class="tx-primary tx-bold"> {{ $item->discount_amount }} </h4>
-                                            </td>
-                                        </tr>
-
-
-
-
-                                        <tr>
-                                            <td class=" tx-uppercase tx-bold tx-inverse">{{ __('dashboard.added_tax') }}
-                                            </td>
-                                            <td colspan="2">
-                                                <h4 class="tx-primary tx-bold">{{ $item->added_tax }} </h4>
-                                            </td>
-                                        </tr>
-
-
-                                        <tr>
-                                            <td class=" tx-uppercase tx-bold tx-inverse">{{ __('dashboard.TOTAL_DUE') }}
-                                            </td>
-                                            <td colspan="2">
-                                                <h4 class="tx-primary tx-bold">{{ $item->final_price }} </h4>
-                                            </td>
-                                        </tr>
-
-
-
-
-                                    </tbody>
-                                </table>
-                            </div>
+        </tbody>
+    </table>
+</div>
 
 
 
@@ -213,108 +206,150 @@
             </div>
         </div>
         <div class="col-lg-8">
-            <div class="row row-sm">
-
-
-                <div class="col-sm-12 col-xl-4 col-lg-12 col-md-12">
-                    <div class="card ">
-                        <div class="card-body">
-                            <div class="counter-status d-flex md-mb-0">
-                                <div class="counter-icon bg-primary-transparent">
-                                    <i class="icon-clock text-primary"></i>
-                                </div>
-                                <div class="mr-auto">
-                                    <h2 class="tx-14 " style="font-weight:bold">{{ __('dashboard.Created_at') }}</h2>
-                                    <h5 class=" tx-15 mb-1 mt-1">
-                                        {{ $item->created_at->format('d/m/Y') }}<br />{{ $item->created_at->format('h:i:s A') }}
-                                    </h5>
-                                </div>
-                            </div>
-                        </div>
+           <div class="row row-sm">
+    <div class="col-sm-12 col-xl-4 col-lg-12 col-md-12">
+        <div class="card ">
+            <div class="card-body">
+                <div class="counter-status d-flex md-mb-0">
+                    <div class="counter-icon bg-primary-transparent">
+                        <i class="icon-clock text-primary"></i>
+                    </div>
+                    <div class="mr-auto">
+                        <h2 class="tx-14 " style="font-weight:bold">{{ __('dashboard.Created_at') }}</h2>
+                        <h5 class=" tx-15 mb-1 mt-1">
+                            {{ $item->created_at->format('d/m/Y') }}<br />{{ $item->created_at->format('h:i:s A') }}
+                        </h5>
                     </div>
                 </div>
-                <div class="col-sm-12 col-xl-4 col-lg-12 col-md-12">
-                    <div class="card ">
-                        <div class="card-body">
-                            <div class="counter-status d-flex md-mb-0">
-                                <div class="counter-icon bg-danger-transparent">
-                                    <i class="icon-rocket text-success"></i>
-
-                                </div>
-                                <div class="mr-auto">
-                                    <h2 class="tx-14 mt-2" style="font-weight:bold">{{ __('dashboard.Order_Status') }}</h2>
-                                    <h5 class=" tx-15 mb-1 mt-1">
-
-                                        {{ $item->status->name }}
-                                        @if ($item->status_id == 5)
-                                            <br />
-                                            @if ($item->cancel_reason_id)
-                                                {{ $item->cancelReason->name }}
-                                                @if ($item->cancel_other_reason != '')
-                                                    : {{ $item->cancel_other_reason }}
-                                                @endif
-                                            @endif
-                                        @endif
-                                    </h5>
-                                </div>
-                            </div>
-                        </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-sm-12 col-xl-4 col-lg-12 col-md-12">
+        <div class="card ">
+            <div class="card-body">
+                <div class="counter-status d-flex md-mb-0">
+                    <div class="counter-icon bg-danger-transparent">
+                        <i class="icon-rocket text-success"></i>
+                    </div>
+                    <div class="mr-auto">
+                        <h2 class="tx-14 mt-2" style="font-weight:bold">{{ __('dashboard.Order_Status') }}</h2>
+                        <h5 class=" tx-15 mb-1 mt-1">
+                            {{ $item->status->name }}
+                            @if ($item->status_id == 6 && $item->cancel_reason_id)
+                                <br />{{ $item->cancelReason->name }}
+                                @if ($item->cancel_other_reason)
+                                    : {{ $item->cancel_other_reason }}
+                                @endif
+                            @endif
+                        </h5>
                     </div>
                 </div>
-                <div class="col-sm-12 col-xl-4 col-lg-12 col-md-12">
-                    <div class="card ">
-                        <div class="card-body">
-                            <div class="counter-status d-flex md-mb-0">
-                                <div class="counter-icon bg-success-transparent">
-                                    <i class="icon-paypal text-danger"></i>
-                                </div>
-                                <div class="mr-auto">
-                                    <h2 class="tx-14 mt-2" style="font-weight:bold">
-                                        {{ __('dashboard.Transaction_Number') }}</h2>
-                                    <h5 class=" tx-15 mb-1 mt-1">
-                                        {{ $item->transaction_id }}
-                                    </h5>
-                                </div>
-                            </div>
+            </div>
+        </div>
+    </div>
+    @if ($item->payment_method !== 'cash' && ($item->payment_gateway_code || $item->payment_reference))
+        <div class="col-sm-12 col-xl-4 col-lg-12 col-md-12">
+            <div class="card ">
+                <div class="card-body">
+                    <div class="counter-status d-flex md-mb-0">
+                        <div class="counter-icon bg-success-transparent">
+                            <i class="icon-paypal text-danger"></i>
+                        </div>
+                        <div class="mr-auto">
+                            <h2 class="tx-14 mt-2" style="font-weight:bold">{{ __('dashboard.Payment_Method') }}</h2>
+                            <h5 class=" tx-15 mb-1 mt-1">
+                                @if ($item->payment_gateway_code)
+                                    {{ ucfirst($item->payment_gateway_code) }}<br />
+                                @endif
+                                @if ($item->payment_reference)
+                                    <small class="text-muted">{{ $item->payment_reference }}</small>
+                                @endif
+                            </h5>
                         </div>
                     </div>
                 </div>
             </div>
-
-
-            <div class="card mg-b-20">
-    <div class="card-body">
-        <div class="row">
-            @if ($item->payment_status)
-                <div class="col-md-3">
-                    <h6 class="tx-13">{{ __('dashboard.Payment_Status') }}</h6>
-                    <p class="mb-0">{{ $item->payment_status_label }}</p>
-                </div>
-            @endif
-
-            @if ($item->delivery_type)
-                <div class="col-md-3">
-                    <h6 class="tx-13">{{ __('dashboard.Delivery_Type') }}</h6>
-                    <p class="mb-0">{{ $item->delivery_type_label }}</p>
-                </div>
-            @endif
-
-            @if ($item->delivery_type === 'delivery' && $item->delivery_price)
-                <div class="col-md-3">
-                    <h6 class="tx-13">{{ __('dashboard.Delivery_Price') }}</h6>
-                    <p class="mb-0">{{ number_format($item->delivery_price, 2) }}</p>
-                </div>
-            @endif
-
-            @if ($item->payment_method)
-                <div class="col-md-3">
-                    <h6 class="tx-13">{{ __('dashboard.Payment_Method') }}</h6>
-                    <p class="mb-0">{{ $item->payment_method_label }}</p>
-                </div>
-            @endif
         </div>
-    </div>
+    @endif
 </div>
+
+{{-- ✅ الصف الجديد: حالة الدفع / نوع الاستلام / سعر التوصيل / طريقة الدفع --}}
+<div class="row row-sm">
+    @if ($item->payment_status)
+        <div class="col-sm-12 col-xl-3 col-lg-6 col-md-6">
+            <div class="card ">
+                <div class="card-body">
+                    <div class="counter-status d-flex md-mb-0">
+                        <div class="counter-icon bg-warning-transparent">
+                            <i class="icon-credit-card text-warning"></i>
+                        </div>
+                        <div class="mr-auto">
+                            <h2 class="tx-14" style="font-weight:bold">{{ __('dashboard.Payment_Status') }}</h2>
+                            <h5 class="tx-15 mb-1 mt-1">{{ $item->payment_status_label }}</h5>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    @endif
+
+    @if ($item->delivery_type)
+        <div class="col-sm-12 col-xl-3 col-lg-6 col-md-6">
+            <div class="card ">
+                <div class="card-body">
+                    <div class="counter-status d-flex md-mb-0">
+                        <div class="counter-icon bg-info-transparent">
+                            <i class="icon-basket text-info"></i>
+                        </div>
+                        <div class="mr-auto">
+                            <h2 class="tx-14" style="font-weight:bold">{{ __('dashboard.Delivery_Type') }}</h2>
+                            <h5 class="tx-15 mb-1 mt-1">{{ $item->delivery_type_label }}</h5>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    @endif
+
+    @if ($item->delivery_type === 'delivery' && $item->delivery_price)
+        <div class="col-sm-12 col-xl-3 col-lg-6 col-md-6">
+            <div class="card ">
+                <div class="card-body">
+                    <div class="counter-status d-flex md-mb-0">
+                        <div class="counter-icon bg-success-transparent">
+                            <i class="icon-truck text-success"></i>
+                        </div>
+                        <div class="mr-auto">
+                            <h2 class="tx-14" style="font-weight:bold">{{ __('dashboard.Delivery_Price') }}</h2>
+                            <h5 class="tx-15 mb-1 mt-1">{{ number_format($item->delivery_price, 2) }}</h5>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    @endif
+
+    @if ($item->payment_method)
+        <div class="col-sm-12 col-xl-3 col-lg-6 col-md-6">
+            <div class="card ">
+                <div class="card-body">
+                    <div class="counter-status d-flex md-mb-0">
+                        <div class="counter-icon bg-primary-transparent">
+                            <i class="icon-wallet text-primary"></i>
+                        </div>
+                        <div class="mr-auto">
+                            <h2 class="tx-14" style="font-weight:bold">{{ __('dashboard.Payment_Method') }}</h2>
+                            <h5 class="tx-15 mb-1 mt-1">{{ $item->payment_method_label }}</h5>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    @endif
+</div>
+
+
+
 
 
             @if ($item->delivery_type === 'delivery')
@@ -364,25 +399,28 @@
                 <div class="card-body">
                     <div class="tabs-menu ">
                         <!-- Tabs -->
-                        <ul class="nav nav-tabs profile navtab-custom panel-tabs">
-                            <li class="active">
-                                <a href="#home" data-toggle="tab" aria-expanded="true"> <span class="visible-xs"><i
-                                            class="las la-shopping-cart tx-20 mr-1"></i></span> <span
-                                        class="hidden-xs">{{ __('dashboard.Order_Products') }}</span> </a>
-                            </li>
-                            <li class="">
-                                <a href="#profile" data-toggle="tab" aria-expanded="false"> <span class="visible-xs"><i
-                                            class="las la-map-marker-alt tx-20 mr-1"></i></span> <span
-                                        class="hidden-xs">{{ __('dashboard.Customer address') }}</span> </a>
-                            </li>
-
-
-                            <li class="">
-                                <a href="#rating" data-toggle="tab" aria-expanded="false"> <span class="visible-xs"><i
-                                            class="lar la-star tx-20 mr-1"></i></span> <span
-                                        class="hidden-xs">{{ __('dashboard.Evaluation') }}</span> </a>
-                            </li>
-                        </ul>
+                      <ul class="nav nav-tabs profile navtab-custom panel-tabs">
+    <li class="active">
+        <a href="#home" data-toggle="tab" aria-expanded="true">
+            <span class="visible-xs"><i class="las la-shopping-cart tx-20 mr-1"></i></span>
+            <span class="hidden-xs">{{ __('dashboard.Order_Products') }}</span>
+        </a>
+    </li>
+    @if ($item->delivery_type === 'delivery')
+        <li class="">
+            <a href="#profile" data-toggle="tab" aria-expanded="false">
+                <span class="visible-xs"><i class="las la-map-marker-alt tx-20 mr-1"></i></span>
+                <span class="hidden-xs">{{ __('dashboard.Customer address') }}</span>
+            </a>
+        </li>
+    @endif
+    <li class="">
+        <a href="#rating" data-toggle="tab" aria-expanded="false">
+            <span class="visible-xs"><i class="lar la-star tx-20 mr-1"></i></span>
+            <span class="hidden-xs">{{ __('dashboard.Evaluation') }}</span>
+        </a>
+    </li>
+</ul>
                     </div>
                     <div class="tab-content border-left border-bottom border-right border-top-0 p-4">
                         <div class="tab-pane active" id="home">
@@ -409,47 +447,8 @@
                                                                 alt="img" class="h-60 w-60">
                                                         </div>
 <div class="media-body">
-    <div class="card-item-desc mt-0">
-        <h6 class="font-weight-semibold mt-0 text-uppercase">{{ $order_item->product->name }}</h6>
-
-        @if ($order_item->product->unit)
-            <span class="text-muted tx-12">{{ $order_item->product->quantity }} {{ $order_item->product->unit->name }}</span><br>
-        @endif
-
-        {{-- ✅ متغير المنتج (Variant) --}}
-        @if ($order_item->variant_label_snapshot)
-            <span class="badge bg-info text-white mb-1">
-                {{ __('dashboard.Combination') }}: {{ $order_item->variant_label_snapshot }}
-            </span><br>
-        @endif
-
-        <dl class="card-item-desc-1">
-            <dt>{{ __('dashboard.Product_Add_Category') }}: </dt>
-            <dd>{{ $order_item->product->category->name }}</dd>
-        </dl>
-
-        {{-- ===== إضافات المنتج (Modifiers) ===== --}}
-        @if ($order_item->attributes->isNotEmpty())
-            <dl class="card-item-desc-1">
-                <dd>
-                    @foreach ($order_item->attributes as $attr)
-                        <span class="badge bg-primary text-white mr-1 mb-1">
-                            {{ $attr->attribute_name }}:
-                            @if ($attr->color_code)
-                                <span style="display:inline-block;width:15px;height:15px;background-color:{{ $attr->color_code }};border:1px solid #ccc;margin-left:3px;"></span>
-                            @endif
-                            {{ $attr->value_name }}
-                            @if ($attr->price > 0)
-                                (+{{ number_format($attr->price, 2) }})
-                            @endif
-                        </span>
-                    @endforeach
-                </dd>
-            </dl>
-        @endif
-    </div>
-</div>
-                                                    </div>
+    @include('dashboard.orders.partials.item_details', ['order_item' => $order_item])
+</div>                                        </div>
                                                 </td>
 
                                                 <td>
@@ -469,13 +468,13 @@
                                 </table>
                             </div>
                         </div>
-                        <div class="tab-pane" id="profile">
-                            <div class="row">
-                                <div id="maporder"></div>
-
-
-                            </div>
-                        </div>
+                        @if ($item->delivery_type === 'delivery')
+    <div class="tab-pane" id="profile">
+        <div class="row">
+            <div id="maporder"></div>
+        </div>
+    </div>
+@endif
 
                         <div class="tab-pane" id="rating">
 

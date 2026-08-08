@@ -17,7 +17,7 @@
                 </div>
 
                 <div class="text-end">
-                    <h6 class="mb-1">{{ __('dashboard.Invoice_No') }}: #{{ $item->id }}</h6>
+                    <h6 class="mb-1">{{ __('dashboard.Invoice_No') }}: #{{ $item->order_number }}</h6>
                     <p class="mb-0 small">{{ __('dashboard.Issue_Date') }}: {{ $item->created_at->format('d/m/Y') }}</p>
                 </div>
             </div>
@@ -28,7 +28,6 @@
                 <p class="mb-0 small">
                     {{ __('dashboard.Client_Name') }} : {{ $item->user->name }} <br>
                     {{ __('dashboard.Mobile') }} : {{ $item->user->mobile }} <br>
-                    {{ __('dashboard.Address') }} : {{ $item->address }}
                 </p>
             </div>
 
@@ -46,18 +45,7 @@
                     <tbody>
                         @foreach ($item->items as $order_item)
                             <tr>
-                              <td >
-    {{ $order_item->product->name }}<br />
-    @if ($order_item->variant_label_snapshot)
-        {{ __('dashboard.Combination') }}: {{ $order_item->variant_label_snapshot }}<br />
-    @endif
-    {{ __('dashboard.Product_Add_Category') }}: {{ $order_item->product->category->name }}<br />
-    @if ($order_item->attributes->isNotEmpty())
-        @foreach ($order_item->attributes as $attr)
-            {{ $attr->attribute_name }} ({{ $attr->value_name }})<br />
-        @endforeach
-    @endif
-</td>
+    <td>@include('dashboard.orders.partials.item_details', ['order_item' => $order_item])</td>
 
                                 <td class="text-center">
                                     {{ $order_item->quantity }}

@@ -68,7 +68,7 @@ class DriverAssignmentService
                 $driver->id,
                 $driver->device_token,
                 __('notifications.driver_order_assigned_title'),
-                __('notifications.driver_order_assigned_message', ['order_id' => $order->id])
+                __('notifications.driver_order_assigned_message', ['order_id' => $order->order_number])
             );
         }
     }
