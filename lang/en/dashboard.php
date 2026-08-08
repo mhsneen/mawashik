@@ -669,8 +669,8 @@ return array(
     'sms_username' => 'SMS Username',
     'sms_password' => 'SMS Password',
     'sms_base_url' => 'SMS Base URL',
-	
-	
+
+
 	    'whatsapp_settings' => 'WhatsApp Settings : ',
 
     'whatsapp_provider' => 'WhatsApp Provider',
@@ -680,8 +680,8 @@ return array(
     'whatsapp_phone_number' => 'WhatsApp Phone Number',
     'whatsapp_phone_number_id' => 'WhatsApp Phone Number ID',
     'whatsapp_business_account_id' => 'WhatsApp Business Account ID',
-	
-	
+
+
 	'email_settings' => 'Email Settings',
     'mail_mailer' => 'Mail Driver',
     'mail_host' => 'Mail Host (SMTP)',
@@ -691,7 +691,7 @@ return array(
     'mail_encryption' => 'Mail Encryption',
     'mail_from_address' => 'Sender Email Address',
     'mail_from_name' => 'Sender Name',
-	
+
 'Registration_Activation_Mode' => 'Registration Activation Mode',
 'Direct_Registration' => 'Direct Activation',
 'Registration_Requires_Verification' => 'Requires Verification',
@@ -709,7 +709,7 @@ return array(
     'Day' => 'Day',
     'Start_time' => 'Start Time',
     'End_time' => 'End Time',
-	
+
 	'Attribute_Usage' => 'Attribute Usage',
 'Attribute_Usage_Hint' => 'Choose whether this attribute is used to create product variations or as a price modifier.',
 'Variation_Usage' => 'Variation',
@@ -750,12 +750,12 @@ return array(
     'Loyalty_points_min_redeem_required' => 'The minimum redeemable loyalty points field is required.',
     'Loyalty_points_min_redeem_integer' => 'The minimum redeemable loyalty points must be an integer.',
 	'Loyalty_Points' => 'Loyalty Points',
-	
+
 	    'loyalty_points_enabled' => 'Enable Loyalty Points',
     'loyalty_points_earn_rate' => 'Loyalty Points Earn Rate',
     'loyalty_points_redeem_value' => 'Loyalty Points Redemption Value',
     'loyalty_points_min_redeem' => 'Minimum Loyalty Points Required for Redemption',
-	
+
 	'loyalty_points_earn_rate_hint' => 'Every 1 currency unit spent on products = 1 loyalty point.',
 'loyalty_points_redeem_value_hint' => 'Each loyalty point = 0.01 currency unit when redeemed (100 points = 1 currency unit).',
 'loyalty_points_min_redeem_hint' => 'Minimum number of loyalty points a customer can use in an order.',
@@ -797,5 +797,20 @@ return array(
  "Block_Status"=> "Block Status",
     "Blocked"=> "Blocked",
     "Active"=> "Active",
-    "Block_Unblock"=> "Block / Unblock"
+    "Block_Unblock"=> "Block / Unblock",
+    'Payment_Status_Pending' => 'Pending Payment',
+'Payment_Status_Paid' => 'Paid',
+'Payment_Status_Failed' => 'Payment Failed',
+'Payment_Status_Refunded' => 'Refunded',
+'Payment_Status_Cancelled' => 'Cancelled',
+'Pickup_From_Store' => 'Pickup from store',
+'Delivery_To_Address' => 'Delivery to address',
+'Cash_Payment' => 'Cash Payment',
+'Online_Payment' => 'Online Payment',
+'Wallet_Payment' => 'Wallet Payment',
+'Delivery_Price' => 'Delivery Price',
+'Payment_Status' => 'Payment Status',
+'Delivery_Type' => 'Delivery Type',
+'Payment_Method' => 'Payment Method',
+'Added_Tax_Value' => 'Tax Amount',
 );

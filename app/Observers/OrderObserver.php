@@ -25,12 +25,12 @@ class OrderObserver
                 );
             }
 
-             AdminNotification::create([
-            'order_id' => $order->id,
-            'type'     => 'new_order_cash',
-            'title'    => __('dashboard.new_order_notification_title'),
-            'body'     => __('dashboard.new_order_notification_body', ['order_id' => $order->id]),
-        ]);
+          AdminNotification::create([
+    'order_id' => $order->id,
+    'type'     => 'new_order_cash',
+    'title'    => __('dashboard.new_order_notification_title'),
+    'body'     => __('dashboard.new_order_notification_body', ['order_id' => $order->order_number]),
+]);
         }
     }
 
@@ -138,14 +138,14 @@ class OrderObserver
             }
         }
 // ✅ إشعار أدمن عند نجاح الدفع الإلكتروني
-          if ($order->isDirty('payment_status') && $order->payment_status === 'paid') {
-        AdminNotification::create([
-            'order_id' => $order->id,
-            'type'     => 'order_paid_online',
-            'title'    => __('dashboard.order_paid_notification_title'),
-            'body'     => __('dashboard.order_paid_notification_body', ['order_id' => $order->id]),
-        ]);
-    }
+    if ($order->isDirty('payment_status') && $order->payment_status === 'paid') {
+    AdminNotification::create([
+        'order_id' => $order->id,
+        'type'     => 'order_paid_online',
+        'title'    => __('dashboard.order_paid_notification_title'),
+        'body'     => __('dashboard.order_paid_notification_body', ['order_id' => $order->order_number]),
+    ]);
+}
     }
 
     public function deleted(Order $order): void {}

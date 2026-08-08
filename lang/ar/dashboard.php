@@ -150,8 +150,8 @@ return [
     'Delivery_Settings' => 'إعدادات التوصيل',
     'Store_Settings' => 'إعدادات المتجر',
 	'Store_policy_settings' => 'إعدادات سياسة المتجر',
-	
-	
+
+
     'Order_Settings' => 'إعدادات الطلب',
     'App_Name' => 'اسم التطبيق',
     'Websiite_Name' => 'اسم الموقع',
@@ -626,7 +626,7 @@ return [
     'Please note that the minimum transfer amount is' => 'مع العلم بان اقل  طلب مبلغ تحويل :',
     'The transfer amount must be greater than or equal to' => 'لابد ان يكون مبلغ التحويل اكبر او يساوي ',
     'Your wallet value is insufficient for the required amount' => 'قيمة المحفظة الخاص بك لا تكفي للمبلغ المطلوب',
-	
+
 	'The application is undergoing maintenance' => 'التطبيق في حالة صيانة',
 'Maintenance text' => 'نص الصيانة',
 
@@ -671,7 +671,7 @@ return [
     'sms_username' => 'اسم مستخدم الرسائل',
     'sms_password' => 'كلمة مرور الرسائل',
     'sms_base_url' => 'الرابط الأساسي لخدمة SMS',
-	
+
 	  'whatsapp_settings' => 'إعدادات الواتساب : ',
 
     'whatsapp_provider' => 'مزود خدمة الواتساب',
@@ -681,8 +681,8 @@ return [
     'whatsapp_phone_number' => 'رقم الواتساب',
     'whatsapp_phone_number_id' => 'معرف رقم الواتساب',
     'whatsapp_business_account_id' => 'معرف حساب واتساب للأعمال',
-	
-	
+
+
 	    'email_settings' => 'إعدادات البريد الإلكتروني',
 
     'mail_mailer' => 'نوع البريد الإلكتروني',
@@ -693,7 +693,7 @@ return [
     'mail_encryption' => 'تشفير البريد',
     'mail_from_address' => 'بريد المرسل',
     'mail_from_name' => 'اسم المرسل',
-	
+
 	'Registration_Activation_Mode' => 'طريقة تفعيل الحساب',
 'Direct_Registration' => 'تفعيل مباشر',
 'Registration_Requires_Verification' => 'يتطلب التحقق',
@@ -709,7 +709,7 @@ return [
     'Day' => 'اليوم',
     'Start_time' => 'وقت البداية',
     'End_time' => 'وقت النهاية',
-	
+
 	'Attribute_Usage' => 'استخدام الخاصية',
 'Attribute_Usage_Hint' => 'اختر ما إذا كانت هذه الخاصية تُستخدم لإنشاء متغيرات للمنتج أو كإضافة تؤثر على السعر.',
 'Variation_Usage' => 'متغير',
@@ -750,12 +750,12 @@ return [
     'Loyalty_points_min_redeem_required' => 'الحد الأدنى لاستخدام نقاط الولاء مطلوب.',
     'Loyalty_points_min_redeem_integer' => 'الحد الأدنى لاستخدام نقاط الولاء يجب أن يكون عددًا صحيحًا.',
 	'Loyalty_Points' => 'نقاط الولاء',
-	
+
 	  'loyalty_points_enabled' => 'تفعيل نقاط الولاء',
     'loyalty_points_earn_rate' => 'معدل اكتساب نقاط الولاء',
     'loyalty_points_redeem_value' => 'قيمة استبدال نقاط الولاء',
     'loyalty_points_min_redeem' => 'الحد الأدنى من نقاط الولاء للاستبدال',
-	
+
 	'loyalty_points_earn_rate_hint' => 'كل 1 وحدة عملة يتم إنفاقها على المنتجات = 1 نقطة ولاء.',
 'loyalty_points_redeem_value_hint' => 'كل نقطة ولاء = 0.01 من وحدة العملة عند الاستبدال (100 نقطة = 1 وحدة عملة).',
 'loyalty_points_min_redeem_hint' => 'الحد الأدنى لعدد نقاط الولاء التي يمكن للعميل استخدامها في الطلب.',
@@ -796,5 +796,21 @@ return [
  "Block_Status"=> "حالة الحظر",
     "Blocked"=> "محظور",
     "Active"=> "نشط",
-    "Block_Unblock"=> "حظر / إلغاء حظر"
+    "Block_Unblock"=> "حظر / إلغاء حظر",
+
+    'Payment_Status_Pending' => 'بانتظار الدفع',
+'Payment_Status_Paid' => 'مدفوع',
+'Payment_Status_Failed' => 'فشل الدفع',
+'Payment_Status_Refunded' => 'مسترجع',
+'Payment_Status_Cancelled' => 'ملغي',
+'Pickup_From_Store' => 'استلام من المتجر',
+'Delivery_To_Address' => 'توصيل للعنوان',
+'Cash_Payment' => 'الدفع كاش',
+'Online_Payment' => 'دفع إلكتروني',
+'Wallet_Payment' => 'دفع من المحفظة',
+'Delivery_Price' => 'سعر التوصيل',
+'Payment_Status' => 'حالة الدفع',
+'Delivery_Type' => 'نوع الاستلام',
+'Payment_Method' => 'طريقة الدفع',
+'Added_Tax_Value' => 'قيمة الضريبة',
 ];

@@ -115,10 +115,11 @@
  --}}
 
                            <div class="dropdown nav-item main-header-notification">
-    <a class="new nav-link" href="#" id="notifBell">
-        <svg xmlns="http://www.w3.org/2000/svg" class="header-icon-svgs" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path><path d="M13.73 21a2 2 0 0 1-3.46 0"></path></svg>
-        <span class="pulse d-none" id="notifPulse"></span>
-    </a>
+   <a class="new nav-link" href="#" id="notifBell" style="position: relative;">
+    <svg xmlns="http://www.w3.org/2000/svg" class="header-icon-svgs" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path><path d="M13.73 21a2 2 0 0 1-3.46 0"></path></svg>
+    <span id="notifCount" class="badge badge-danger"
+          style="display:none; position:absolute; top:0; right:0; border-radius:50%; font-size:10px; min-width:18px; padding:2px 5px;">0</span>
+</a>
     <div class="dropdown-menu">
         <div class="menu-header-content bg-primary text-right">
             <h6 class="dropdown-title mb-1 tx-15 text-white font-weight-semibold">{{ __('dashboard.Alerts') }}</h6>

@@ -404,7 +404,7 @@
                             @foreach ($recently_last_five_order as $rlfo)
                                 <tr>
 
-                                    <td class="tx-center tx-medium tx-inverse">{{ $rlfo->id }}</td>
+                                    <td class="tx-center tx-medium tx-inverse">{{ $rlfo->order_number }}</td>
                                     <td class="tx-center tx-medium tx-inverse">{{ $rlfo->user->name }}</td>
                                     <td class="tx-center tx-medium tx-danger">{{ $rlfo->status->name }}</td>
                                     <td class="tx-center tx-medium tx-inverse">
@@ -449,7 +449,7 @@
                                 <tr>
 
                                     <td class="tx-center tx-medium tx-inverse"> {{ $rlfor->client->name }}</td>
-                                    <td class="tx-center tx-medium tx-inverse"> {{ $rlfor->order_id }}</td>
+                                    <td class="tx-center tx-medium tx-inverse"> {{ $rlfor->order_number }}</td>
                                     <td class="tx-center tx-medium tx-inverse">
                                         <div class="rating-stars  ">
                                             <div class="rating-stars-container ">

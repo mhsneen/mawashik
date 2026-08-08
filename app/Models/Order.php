@@ -338,5 +338,34 @@ public static function generateOrderNumber(): string
     });
 }
 
+public function getPaymentStatusLabelAttribute()
+{
+    return match ($this->payment_status) {
+        'pending'  => __('dashboard.Payment_Status_Pending'),
+        'paid'     => __('dashboard.Payment_Status_Paid'),
+        'failed'   => __('dashboard.Payment_Status_Failed'),
+        'refunded' => __('dashboard.Payment_Status_Refunded'),
+        'cancelled'=> __('dashboard.Payment_Status_Cancelled'),
+        default    => $this->payment_status,
+    };
+}
+
+public function getDeliveryTypeLabelAttribute()
+{
+    return $this->delivery_type === 'pickup'
+        ? __('dashboard.Pickup_From_Store')
+        : __('dashboard.Delivery_To_Address');
+}
+
+public function getPaymentMethodLabelAttribute()
+{
+    return match ($this->payment_method) {
+        'cash'   => __('dashboard.Cash_Payment'),
+        'online' => __('dashboard.Online_Payment'),
+        'wallet' => __('dashboard.Wallet_Payment'),
+        default  => $this->payment_method,
+    };
+}
+
 }
 

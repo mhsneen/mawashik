@@ -12,22 +12,23 @@ use Illuminate\Support\Str;
 class AdminNotificationController extends Controller
 {
     public function fetch()
-    {
-        $items = AdminNotification::latest()->take(10)->get();
-        $unreadCount = AdminNotification::unread()->count();
+{
+    $items = AdminNotification::with('order:id,order_number')->latest()->take(10)->get();
+    $unreadCount = AdminNotification::unread()->count();
 
-        return response()->json([
-            'unread_count' => $unreadCount,
-            'items' => $items->map(fn($n) => [
-                'id' => $n->id,
-                'title' => $n->title,
-                'body' => $n->body,
-                'is_read' => $n->is_read,
-                'order_id' => $n->order_id,
-                'time' => $n->created_at->diffForHumans(),
-            ]),
-        ]);
-    }
+    return response()->json([
+        'unread_count' => $unreadCount,
+        'items' => $items->map(fn($n) => [
+            'id' => $n->id,
+            'title' => $n->title,
+            'body' => $n->body,
+            'is_read' => $n->is_read,
+            'order_id' => $n->order_id,
+            'order_number' => $n->order?->order_number,
+            'time' => $n->created_at->diffForHumans(),
+        ]),
+    ]);
+}
 
     public function markAllRead()
     {

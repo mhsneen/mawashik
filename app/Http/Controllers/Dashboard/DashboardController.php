@@ -36,17 +36,27 @@ class DashboardController extends Controller
             ->where('quantity', '<=', 0)
             ->count();
 
-        $recently_last_five_order = Order::select('id', 'user_id', 'total_items', 'final_price', 'status_id', 'currency', 'read', 'created_at')->with([
+        $recently_last_five_order = Order::select('id', 'order_number','user_id', 'total_items', 'final_price', 'status_id', 'currency', 'read', 'created_at')->with([
             'status' => function ($query) {
                 $query->select('id');
             }
         ])->orderBy('id', 'DESC')->take(5)->get();
 
-        $recently_last_five_order_reviews = OrderReview::select('id', 'client_id', 'rating', 'comment', 'order_id', 'created_at')->with([
-            'client' => function ($query) {
-                $query->select('id', 'name');
-            }
-        ])->take(5)->get();
+       $recently_last_five_order_reviews = OrderReview::select(
+    'id',
+    'client_id',
+    'rating',
+    'comment',
+    'order_id',
+    'created_at'
+)->with([
+    'client' => function ($query) {
+        $query->select('id', 'name');
+    },
+    'order' => function ($query) {
+        $query->select('id', 'order_number');
+    }
+])->take(5)->get();
 
         // ✅ المنتجات اللي شارفت على الانتهاء (فقط اللي بتتبع المخزون وعندها كمية محددة)
         $expire_products_quantity = Product::select('id',  'image', 'quantity', 'track_quantity')

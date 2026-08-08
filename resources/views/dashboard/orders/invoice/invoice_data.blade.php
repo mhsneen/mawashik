@@ -46,26 +46,18 @@
                     <tbody>
                         @foreach ($item->items as $order_item)
                             <tr>
-                                <td>
-                                    <strong>{{ $order_item->product->name }}</strong>
-                                    <div class="text-muted small">
-                                        {{ $order_item->product->category->name }}
-                                    </div>
-
-                                    {{-- Addons --}}
-                                    @if ($order_item->attributes->isNotEmpty())
-                                        <div class="mt-1 small">
-                                            @foreach ($order_item->attributes as $attr)
-                                                <div>{{ $attr->attribute_name }} ({{ $attr->value_name }}
-                                                    )</div>
-                                            @endforeach
-                                        </div>
-                                    @endif
-
-
-
-
-                                </td>
+                              <td >
+    {{ $order_item->product->name }}<br />
+    @if ($order_item->variant_label_snapshot)
+        {{ __('dashboard.Combination') }}: {{ $order_item->variant_label_snapshot }}<br />
+    @endif
+    {{ __('dashboard.Product_Add_Category') }}: {{ $order_item->product->category->name }}<br />
+    @if ($order_item->attributes->isNotEmpty())
+        @foreach ($order_item->attributes as $attr)
+            {{ $attr->attribute_name }} ({{ $attr->value_name }})<br />
+        @endforeach
+    @endif
+</td>
 
                                 <td class="text-center">
                                     {{ $order_item->quantity }}

@@ -26,6 +26,25 @@
         <td style="text-align:center;">{{ $item->added_tax }}%</td>
         <td style="text-align:right;">{{ __('dashboard.added_tax') }}</td>
     </tr>
+
+    @if ($item->payment_status)
+<tr>
+    <td style="text-align:center;">{{ $item->payment_status_label }}</td>
+    <td style="text-align:right;">{{ __('dashboard.Payment_Status') }}</td>
+</tr>
+@endif
+@if ($item->delivery_type)
+<tr>
+    <td style="text-align:center;">{{ $item->delivery_type_label }}</td>
+    <td style="text-align:right;">{{ __('dashboard.Delivery_Type') }}</td>
+</tr>
+@endif
+@if ($item->delivery_type === 'delivery' && $item->delivery_price)
+<tr>
+    <td style="text-align:center;">{{ number_format($item->delivery_price, 2) }}</td>
+    <td style="text-align:right;">{{ __('dashboard.Delivery_Price') }}</td>
+</tr>
+@endif
     <tr>
         <td style="text-align:center;">{{ $item->currency }} {{ $item->final_price }}</td>
         <td style="text-align:right; font-weight:bold;">{{ __('dashboard.TOTAL_DUE') }}</td>

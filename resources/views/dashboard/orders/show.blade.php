@@ -281,6 +281,42 @@
                 </div>
             </div>
 
+
+            <div class="card mg-b-20">
+    <div class="card-body">
+        <div class="row">
+            @if ($item->payment_status)
+                <div class="col-md-3">
+                    <h6 class="tx-13">{{ __('dashboard.Payment_Status') }}</h6>
+                    <p class="mb-0">{{ $item->payment_status_label }}</p>
+                </div>
+            @endif
+
+            @if ($item->delivery_type)
+                <div class="col-md-3">
+                    <h6 class="tx-13">{{ __('dashboard.Delivery_Type') }}</h6>
+                    <p class="mb-0">{{ $item->delivery_type_label }}</p>
+                </div>
+            @endif
+
+            @if ($item->delivery_type === 'delivery' && $item->delivery_price)
+                <div class="col-md-3">
+                    <h6 class="tx-13">{{ __('dashboard.Delivery_Price') }}</h6>
+                    <p class="mb-0">{{ number_format($item->delivery_price, 2) }}</p>
+                </div>
+            @endif
+
+            @if ($item->payment_method)
+                <div class="col-md-3">
+                    <h6 class="tx-13">{{ __('dashboard.Payment_Method') }}</h6>
+                    <p class="mb-0">{{ $item->payment_method_label }}</p>
+                </div>
+            @endif
+        </div>
+    </div>
+</div>
+
+
             @if ($item->delivery_type === 'delivery')
                 <div class="card mg-b-20">
                     <div class="card-body">
@@ -372,36 +408,47 @@
                         {{ URL::asset($order_item->product->base_image_url) }} @endif"
                                                                 alt="img" class="h-60 w-60">
                                                         </div>
-                                                        <div class="media-body">
-                                                            <div class="card-item-desc mt-0">
-                                                              <h6 class="font-weight-semibold mt-0 text-uppercase">{{ $order_item->product->name }}</h6>
-@if ($order_item->product->unit)
-    <span class="text-muted tx-12">{{ $order_item->product->quantity }} {{ $order_item->product->unit->name }}</span><br>
-@endif
-                                                                <dl class="card-item-desc-1">
-                                                                    <dt>{{ __('dashboard.Product_Add_Category') }}: </dt>
-                                                                    <dd>{{ $order_item->product->category->name }}</dd>
-                                                                </dl>
+<div class="media-body">
+    <div class="card-item-desc mt-0">
+        <h6 class="font-weight-semibold mt-0 text-uppercase">{{ $order_item->product->name }}</h6>
 
-                                                                {{-- ===== خصائص المنتج ===== --}}
-                                                                <dl class="card-item-desc-1">
+        @if ($order_item->product->unit)
+            <span class="text-muted tx-12">{{ $order_item->product->quantity }} {{ $order_item->product->unit->name }}</span><br>
+        @endif
 
-                                                                    <dd>
-                                                                        @foreach ($order_item->attributes as $attr)
-                                                                            <span
-                                                                                class="badge bg-primary text-white mr-1 mb-1">
-                                                                                {{ $attr->attribute_name }}:
-                                                                                @if ($attr->color_code)
-                                                                                    <span
-                                                                                        style="display:inline-block;width:15px;height:15px;background-color:{{ $attr->color_code }};border:1px solid #ccc;margin-left:3px;"></span>
-                                                                                @endif
-                                                                                {{ $attr->value_name }}
-                                                                            </span>
-                                                                        @endforeach
-                                                                    </dd>
-                                                                </dl>
-                                                            </div>
-                                                        </div>
+        {{-- ✅ متغير المنتج (Variant) --}}
+        @if ($order_item->variant_label_snapshot)
+            <span class="badge bg-info text-white mb-1">
+                {{ __('dashboard.Combination') }}: {{ $order_item->variant_label_snapshot }}
+            </span><br>
+        @endif
+
+        <dl class="card-item-desc-1">
+            <dt>{{ __('dashboard.Product_Add_Category') }}: </dt>
+            <dd>{{ $order_item->product->category->name }}</dd>
+        </dl>
+
+        {{-- ===== إضافات المنتج (Modifiers) ===== --}}
+        @if ($order_item->attributes->isNotEmpty())
+            <dl class="card-item-desc-1">
+                <dd>
+                    @foreach ($order_item->attributes as $attr)
+                        <span class="badge bg-primary text-white mr-1 mb-1">
+                            {{ $attr->attribute_name }}:
+                            @if ($attr->color_code)
+                                <span style="display:inline-block;width:15px;height:15px;background-color:{{ $attr->color_code }};border:1px solid #ccc;margin-left:3px;"></span>
+                            @endif
+                            {{ $attr->value_name }}
+                            @if ($attr->price > 0)
+                                (+{{ number_format($attr->price, 2) }})
+                            @endif
+                        </span>
+                    @endforeach
+                </dd>
+            </dl>
+        @endif
+    </div>
+</div>
                                                     </div>
                                                 </td>
 
@@ -478,6 +525,23 @@
     </div>
     <!-- main-content closed -->
 @endsection
+
+
+@php
+    // Order model عنده علاقة address() بنفس اسم عمود address النصي، فنستخدم getRelation
+    $addressModel = $item->getRelation('address');
+
+    if ($addressModel && $addressModel->latitude && $addressModel->longitude) {
+        $mapLat = $addressModel->latitude;
+        $mapLng = $addressModel->longitude;
+        $mapAddressText = $addressModel->address;
+    } else {
+        $mapLat = $item->latitude;
+        $mapLng = $item->longitude;
+        $mapAddressText = $item->address; // النص المحفوظ وقت الطلب
+    }
+@endphp
+
 @section('js')
     <!-- Internal Select2 js-->
     <script src="{{ URL::asset('assets/dashboard/plugins/select2/js/select2.min.js') }}"></script>
@@ -488,44 +552,32 @@
     <!-- Internal Form-validation js -->
     <script src="{{ URL::asset('assets/dashboard/plugins/parsleyjs/i18n/' . app()->getLocale() . '.js') }}"></script>
     <script type="text/javascript">
-        function initMap() {
-            const myLatLng = {
-                lat: {{ $item->latitude }},
-                lng: {{ $item->longitude }}
-            };
-            const map = new google.maps.Map(document.getElementById("maporder"), {
-                zoom: 11,
-                center: myLatLng,
-            });
+function initMap() {
+    const myLatLng = {
+        lat: {{ $mapLat ?? 0 }},
+        lng: {{ $mapLng ?? 0 }}
+    };
+    const map = new google.maps.Map(document.getElementById("maporder"), {
+        zoom: 11,
+        center: myLatLng,
+    });
 
-            var contentString = '<div id="contentmap">' + '{{ $item->address }}' + '</div>';
+    var contentString = '<div id="contentmap">' + @json($mapAddressText ?? '') + '</div>';
 
-            var infowindow = new google.maps.InfoWindow({
-                content: contentString
-            });
+    var infowindow = new google.maps.InfoWindow({ content: contentString });
+    var marker = new google.maps.Marker({ position: myLatLng, map: map });
 
+    google.maps.event.addListener(marker, 'click', function() {
+        infowindow.open(map, marker);
+    });
+    infowindow.open(map, marker);
+}
+window.initMap = initMap;
 
-            var marker = new google.maps.Marker({
-                position: myLatLng,
-                map: map
-            });
-            google.maps.event.addListener(marker, 'click', function() {
-                infowindow.open(map, marker);
-            });
-            infowindow.open(map, marker);
-        }
-
-        window.initMap = initMap;
-
-        $("#maporder").on('click', function() {
-
-            url = "https://www.google.com.sa/maps/search/@" + {{ $item->latitude }} + "," +
-                {{ $item->longitude }} + ",12.21z?hl=en";
-
-            window.open(url, '_blank');
-
-
-        });
+$("#maporder").on('click', function() {
+    url = "https://www.google.com.sa/maps/search/@" + {{ $mapLat ?? 0 }} + "," + {{ $mapLng ?? 0 }} + ",12.21z?hl=en";
+    window.open(url, '_blank');
+});
 
         $(document).ready(function() {
             $(function() {

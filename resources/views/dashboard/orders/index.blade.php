@@ -191,7 +191,11 @@
                                         <th>{{ __('dashboard.Total price before discount') }}</th>
                                         <th>{{ __('dashboard.Discount value') }}</th>
                                         <th>{{ __('dashboard.Tax amount') }}</th>
-
+<th>{{ __('dashboard.Added_Tax_Value') }}</th>
+<th>{{ __('dashboard.Payment_Status') }}</th>
+<th>{{ __('dashboard.Delivery_Type') }}</th>
+<th>{{ __('dashboard.Delivery_Price') }}</th>
+<th>{{ __('dashboard.Payment_Method') }}</th>
                                         <th>{{ __('dashboard.TOTAL_DUE') }}</th>
 
                                         <th>{{ __('dashboard.Action') }}</th>
@@ -259,6 +263,32 @@
 
                                             </td>
                                             <td>{{ $item->added_tax }} %</td>
+                                            <td>{{ number_format($item->tax_amount, 2) }}</td>
+
+<td>
+    @php
+        $paymentBadge = match($item->payment_status) {
+            'paid' => 'success',
+            'pending' => 'warning',
+            'failed', 'cancelled' => 'danger',
+            'refunded' => 'info',
+            default => 'secondary',
+        };
+    @endphp
+    <span class="badge bg-{{ $paymentBadge }}">{{ $item->payment_status_label }}</span>
+</td>
+
+<td>{{ $item->delivery_type_label }}</td>
+
+<td>
+    @if ($item->delivery_type === 'delivery')
+        {{ number_format($item->delivery_price, 2) }}
+    @else
+        —
+    @endif
+</td>
+
+<td>{{ $item->payment_method_label }}</td>
 
                                             <td style="font-weight: bold;line-height:25px;"> {{ $item->final_price }}
 

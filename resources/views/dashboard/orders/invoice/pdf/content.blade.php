@@ -16,14 +16,17 @@
                 @endif
             </td>
             <td style="width:55%; text-align:right;">
-                {{ $order_item->product->name }}<br />
-                {{ __('dashboard.Product_Add_Category') }}: {{ $order_item->product->category->name }}<br />
-                @if ($order_item->attributes->isNotEmpty())
-                    @foreach ($order_item->attributes as $attr)
-                        {{ $attr->attribute_name }} ({{ $attr->value_name }})<br />
-                    @endforeach
-                @endif
-            </td>
+    {{ $order_item->product->name }}<br />
+    @if ($order_item->variant_label_snapshot)
+        {{ __('dashboard.Combination') }}: {{ $order_item->variant_label_snapshot }}<br />
+    @endif
+    {{ __('dashboard.Product_Add_Category') }}: {{ $order_item->product->category->name }}<br />
+    @if ($order_item->attributes->isNotEmpty())
+        @foreach ($order_item->attributes as $attr)
+            {{ $attr->attribute_name }} ({{ $attr->value_name }})<br />
+        @endforeach
+    @endif
+</td>
         </tr>
     @endforeach
 </table>
