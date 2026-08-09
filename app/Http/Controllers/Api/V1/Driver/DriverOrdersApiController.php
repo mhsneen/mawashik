@@ -100,42 +100,100 @@ class DriverOrdersApiController extends Controller
     /**
      * قبول الطلب من السائق: 3 → 4 (قيد التوصيل)
      */
-    public function accept_Order(Request $request)
-    {
-        $validator = Validator::make($request->all(), [
-            'order_id' => 'required|integer|exists:orders,id',
+   public function accept_Order(Request $request, \App\Services\DriverAssignmentService $assignmentService)
+{
+    $validator = Validator::make($request->all(), [
+        'order_id' => 'required|integer|exists:orders,id',
+    ]);
+
+    if ($validator->fails()) {
+        return $this->returnError($validator->errors()->first());
+    }
+
+    try {
+        $driver = $request->user();
+        $order = Order::find($request->order_id);
+
+        if (!$order) {
+            return $this->returnError(__('api.ID_Not_Found'));
+        }
+
+        $assignmentService->acceptOffer($order, $driver);
+
+        return $this->returnSuccessMessage(__('api.Order_accepted_successfully'));
+    } catch (\InvalidArgumentException $ex) {
+        return $this->returnError($ex->getMessage());
+    } catch (Exception $ex) {
+        Log::error('driver accept_Order: ' . $ex->getMessage(), ['trace' => $ex->getTraceAsString()]);
+        return $this->returnError(__('api.Api_Error_Contact_Programmer'));
+    }
+}
+
+public function reject_Order(Request $request, \App\Services\DriverAssignmentService $assignmentService)
+{
+    $validator = Validator::make($request->all(), [
+        'order_id' => 'required|integer|exists:orders,id',
+    ]);
+
+    if ($validator->fails()) {
+        return $this->returnError($validator->errors()->first());
+    }
+
+    try {
+        $driver = $request->user();
+        $order = Order::find($request->order_id);
+
+        if (!$order) {
+            return $this->returnError(__('api.ID_Not_Found'));
+        }
+
+        $assignmentService->rejectOffer($order, $driver);
+
+        return $this->returnSuccessMessage(__('api.Order_rejected_successfully'));
+    } catch (\InvalidArgumentException $ex) {
+        return $this->returnError($ex->getMessage());
+    } catch (Exception $ex) {
+        Log::error('driver reject_Order: ' . $ex->getMessage(), ['trace' => $ex->getTraceAsString()]);
+        return $this->returnError(__('api.Api_Error_Contact_Programmer'));
+    }
+}
+
+/**
+ * الطلبات المعروضة على السائق حالياً وبانتظار رده (لم تُقبل من أي سائق آخر بعد)
+ */
+public function pending_Offers(Request $request)
+{
+    try {
+        $driver = $request->user();
+
+        $offers = \App\Models\OrderDriverOffer::where('driver_id', $driver->id)
+            ->where('status', 'pending')
+            ->whereHas('order', fn($q) => $q->where('status_id', 3)->whereNull('driver_id'))
+            ->with(['order' => function ($q) {
+                $q->select('id', 'order_number', 'delivery_price', 'address', 'latitude', 'longitude', 'final_price', 'total_items', 'created_at')
+                    ->with('user:id,name,mobile');
+            }])
+            ->latest()
+            ->get();
+
+        $data = $offers->map(fn($offer) => [
+            'offer_id'       => $offer->id,
+            'order_id'       => $offer->order->id,
+            'order_number'   => $offer->order->order_number,
+            'client_name'    => $offer->order->user->name ?? '',
+            'address'        => $offer->order->address,
+            'delivery_price' => $offer->order->delivery_price,
+            'final_price'    => $offer->order->final_price,
+            'total_items'    => $offer->order->total_items,
+            'offered_at'     => $offer->offered_at?->diffForHumans(),
         ]);
 
-        if ($validator->fails()) {
-            return $this->returnError($validator->errors()->first());
-        }
-
-        try {
-            $driver = $request->user();
-
-            $order = Order::where('id', $request->order_id)
-                ->where('driver_id', $driver->id)
-                ->where('status_id', 3) // يجب أن يكون بحالة "تم التجهيز"
-                ->first();
-
-            if (!$order) {
-                return $this->returnError(__('api.ID_Not_Found'));
-            }
-
-            DB::beginTransaction();
-            $order->update([
-                'status_id'          => 4,
-                'out_for_delivery_at' => now(),
-            ]);
-            DB::commit();
-
-            return $this->returnSuccessMessage(__('api.Order_accepted_successfully'));
-        } catch (Exception $ex) {
-            DB::rollback();
-            Log::error('driver accept_Order: ' . $ex->getMessage(), ['trace' => $ex->getTraceAsString()]);
-            return $this->returnError(__('api.Api_Error_Contact_Programmer'));
-        }
+        return $this->returnData('data', $data, __('api.Api_Return_Data'));
+    } catch (Exception $ex) {
+        Log::error('driver pending_Offers: ' . $ex->getMessage(), ['trace' => $ex->getTraceAsString()]);
+        return $this->returnError(__('api.Api_Error_Contact_Programmer'));
     }
+}
 
     /**
      * تأكيد التسليم: 4 → 5

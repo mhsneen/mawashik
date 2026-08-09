@@ -76,3 +76,30 @@ Schedule::call(function () {
 })->hourly()
   ->name('cleanup:pending-orders')
   ->withoutOverlapping();
+
+Schedule::call(function () {
+    $service = new \App\Services\DriverAssignmentService();
+
+    $staleOrderIds = \App\Models\OrderDriverOffer::where('status', 'pending')
+        ->where('offered_at', '<', now()->subMinutes(2))
+        ->pluck('order_id')
+        ->unique();
+
+    foreach ($staleOrderIds as $orderId) {
+        $order = \App\Models\Order::find($orderId);
+        if (!$order || $order->driver_id || $order->status_id != 3) {
+            continue;
+        }
+
+        \App\Models\OrderDriverOffer::where('order_id', $orderId)
+            ->where('status', 'pending')
+            ->where('offered_at', '<', now()->subMinutes(2))
+            ->update(['status' => 'expired', 'responded_at' => now()]);
+
+        $stillPending = \App\Models\OrderDriverOffer::where('order_id', $orderId)->where('status', 'pending')->exists();
+        if (!$stillPending) {
+            $nextBatch = \App\Models\OrderDriverOffer::where('order_id', $orderId)->max('batch_number') + 1;
+            $service->broadcastToAvailableDrivers($order, $nextBatch);
+        }
+    }
+})->everyTwoMinutes()->name('expire:driver-offers')->withoutOverlapping();

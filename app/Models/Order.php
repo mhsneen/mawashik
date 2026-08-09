@@ -371,7 +371,10 @@ public function getDeliveryTypeLabelAttribute()
         : __('dashboard.Delivery_To_Address');
 }
 
-
+public function driverOffers()
+{
+    return $this->hasMany(OrderDriverOffer::class);
+}
 
 
 }

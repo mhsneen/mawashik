@@ -205,6 +205,9 @@ Route::group([
     Route::post('order_Details',          [DriverOrdersApiController::class, 'order_Details']);
     // قبول الطلب (3 → 4)
     Route::post('accept_Order',           [DriverOrdersApiController::class, 'accept_Order']);
+    Route::post('pending_Offers', [DriverOrdersApiController::class, 'pending_Offers']);
+    Route::post('reject_Order',   [DriverOrdersApiController::class, 'reject_Order']);
+
     // تأكيد التسليم بكود (4 → 5)
     Route::post('deliver_Order',          [DriverOrdersApiController::class, 'deliver_Order']);
     // سجل الطلبيات المنتهية

@@ -54,8 +54,8 @@ class OrderObserver
 
             // ✅ تعيين سائق متاح فور جهوزية الطلب (الحالة 3 = جاهز للاستلام)
             if ($newStatus === 3 && $order->delivery_type === 'delivery' && is_null($order->driver_id)) {
-                (new DriverAssignmentService())->assignAvailableDriver($order);
-            }
+    (new DriverAssignmentService())->broadcastToAvailableDrivers($order);
+}
 
             // ✅ منطق الدفع الكاش عند الاستلام (Pickup or Delivery):
             // إذا تحول الطلب إلى (5 = تم التسليم) وكانت طريقة الدفع (كاش) ولم يُسجل كمدفوع بعد،

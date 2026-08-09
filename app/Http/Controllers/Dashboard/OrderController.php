@@ -162,10 +162,7 @@ class OrderController extends Controller
         if ($request->status_id == 4) $updateData['out_for_delivery_at'] = now();
         if ($request->status_id == 5) $updateData['delivered_at']         = now();
 
-        // إذا وصل الطلب لمرحلة التجهيز وهو توصيل → عيّن سائق تلقائياً إن لم يكن معيّناً
-        if ($request->status_id == 3 && $item->delivery_type === 'delivery' && !$item->driver_id) {
-            (new DriverAssignmentService())->assignAvailableDriver($item);
-        }
+
 
         $item->update($updateData);
         DB::commit();

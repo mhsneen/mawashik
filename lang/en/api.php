@@ -132,5 +132,7 @@ return [
     'Order_accepted_successfully' => 'Order accepted successfully',
     'Invalid_delivery_pin' => 'Invalid delivery PIN',
     'Order_delivered_successfully' => 'Order delivered successfully',
-
+'Order_Already_Taken' => 'This order has already been accepted by another driver.',
+'Offer_Not_Found_Or_Expired' => 'This offer is no longer available.',
+'Order_rejected_successfully' => 'Order rejected successfully.',
 ];

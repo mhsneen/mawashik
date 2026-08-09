@@ -132,5 +132,8 @@ return [
     'Order_accepted_successfully' => 'تم قبول الطلب بنجاح',
     'Invalid_delivery_pin' => 'رمز التسليم غير صحيح',
     'Order_delivered_successfully' => 'تم تسليم الطلب بنجاح',
+    'Order_Already_Taken' => 'تم قبول هذا الطلب من قبل سائق آخر بالفعل.',
+'Offer_Not_Found_Or_Expired' => 'هذا العرض لم يعد متاحاً.',
+'Order_rejected_successfully' => 'تم رفض الطلب بنجاح.',
 
 ];
