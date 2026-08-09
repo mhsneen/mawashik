@@ -110,7 +110,7 @@ return [
 	'Delivery_date_and_time_must_be_both_or_none' => 'يجب إرسال تاريخ ووقت التوصيل معاً أو عدم إرسالهما إطلاقاً',
 	'Address_Required_For_Delivery' => 'عنوان التوصيل مطلوب.',
 'No_time_in_the_past_can_be_chosen' => 'لا يمكن اختيار وقت في الماضي.',
-	
+
 'Loyalty_Points_Disabled' => 'ميزة نقاط الولاء غير مفعّلة حالياً',
 'Points_Below_Minimum_Redeem' => 'الحد الأدنى لاستخدام النقاط هو :min نقطة',
 'Insufficient_Points_Balance' => 'رصيد نقاطك غير كافٍ',
@@ -128,5 +128,9 @@ return [
 'location_outside_delivery_range' => 'عذرًا، موقعك خارج نطاق التوصيل لدينا.',
 'Notification_Not_Found' => 'الإشعار غير موجود.',
     "account_blocked"=> "تم حظر حسابك من قبل الإدارة. يرجى التواصل مع الدعم للمساعدة.",
+      'ID_Not_Found' => 'المعرّف غير موجود',
+    'Order_accepted_successfully' => 'تم قبول الطلب بنجاح',
+    'Invalid_delivery_pin' => 'رمز التسليم غير صحيح',
+    'Order_delivered_successfully' => 'تم تسليم الطلب بنجاح',
 
 ];

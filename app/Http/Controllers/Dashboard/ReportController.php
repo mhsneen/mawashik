@@ -60,32 +60,36 @@ class ReportController extends Controller
     }
 
 
-    function product_purchased(Request $request)
-    {
-        $items = OrderItem::query()
-            ->select(
-                'order_items.id',
-                'order_items.order_id',
-                'order_items.product_id',
-                'order_items.unit_price',
-                'order_items.quantity',
-                'order_items.total_price',
-                'order_items.created_at'
-            )
-            ->whereHas('order', function ($q) {
-                $q->where('status_id', 5);
-            })
-            ->FilterDashbordReport(
-                request(['search_date_from', 'search_date_to'])
-            )
-            ->with([
-                'product:id,image,category_id',
-                'product.category:id'
-            ])
-            ->latest('order_items.id')
-            ->paginate(PAGANATION_COUNT)
-            ->withQueryString();
 
-        return view('dashboard.reports.product_purchased', compact('items'));
-    }
+function product_purchased(Request $request)
+{
+    $items = OrderItem::query()
+        ->select(
+            'order_items.id',
+            'order_items.order_id',
+            'order_items.product_id',
+            'order_items.unit_price',
+            'order_items.quantity',
+            'order_items.total_price',
+            'order_items.created_at'
+        )
+        ->whereHas('order', function ($q) {
+            $q->where('status_id', 5);
+        })
+        ->FilterDashbordReport(
+            request(['search_date_from', 'search_date_to'])
+        )
+        ->with([
+            'order:id,order_number',
+            'product:id,image,category_id',
+            'product.category:id'
+        ])
+        ->latest('order_items.id')
+        ->paginate(PAGANATION_COUNT)
+        ->withQueryString();
+
+    return view('dashboard.reports.product_purchased', compact('items'));
+}
+
+
 }

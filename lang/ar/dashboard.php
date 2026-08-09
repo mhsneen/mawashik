@@ -755,9 +755,9 @@ return [
     'loyalty_points_earn_rate' => 'معدل اكتساب نقاط الولاء',
     'loyalty_points_redeem_value' => 'قيمة استبدال نقاط الولاء',
     'loyalty_points_min_redeem' => 'الحد الأدنى من نقاط الولاء للاستبدال',
+'loyalty_points_earn_rate_hint' => 'هاي القيمة هي عدد نقاط الولاء يلي بياخدها العميل مقابل كل 1 وحدة عملة يصرفها على المنتجات (بدون توصيل وضريبة). مثال: لو حطيت هون 1، فكل 1 ريال شراء = 1 نقطة. لو حطيت 50، فكل 1 ريال شراء = 50 نقطة (رقم كبير – انتبه!).',
+'loyalty_points_redeem_value_hint' => 'هاي القيمة هي كم بتساوي النقطة الواحدة بالعملة وقت ما العميل يستبدلها كخصم. مثال: لو حطيت هون 0.01، فكل 100 نقطة = 1 ريال. لو حطيت 2، فكل نقطة واحدة = 2 ريال (رقم كبير جداً – خطر!).',
 
-	'loyalty_points_earn_rate_hint' => 'كل 1 وحدة عملة يتم إنفاقها على المنتجات = 1 نقطة ولاء.',
-'loyalty_points_redeem_value_hint' => 'كل نقطة ولاء = 0.01 من وحدة العملة عند الاستبدال (100 نقطة = 1 وحدة عملة).',
 'loyalty_points_min_redeem_hint' => 'الحد الأدنى لعدد نقاط الولاء التي يمكن للعميل استخدامها في الطلب.',
 'redeem_points' => 'استبدال النقاط',
 
@@ -813,6 +813,10 @@ return [
 'Delivery_Type' => 'نوع الاستلام',
 'Payment_Method' => 'طريقة الدفع',
 'Added_Tax_Value' => 'قيمة الضريبة',
-
+    'The order_status_cannot_be_changed_to_this_state' => 'لا يمكن تغيير حالة الطلب إلى هذه الحالة',
+'loyalty_points_earned_description' => 'نقاط مكتسبة من الطلب #:order_number',
+'order_refund_description' => 'استرداد مبلغ الطلب #:order_number',
+'loyalty_points_redeemed_description' => 'استبدال نقاط بالطلب #:order_number',
+'order_purchase_description' => 'شراء طلب رقم #:order_number',
 
 ];

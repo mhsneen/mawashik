@@ -26,11 +26,11 @@ class OrderObserver
             }
 
           AdminNotification::create([
-    'order_id' => $order->id,
-    'type'     => 'new_order_cash',
-    'title'    => __('dashboard.new_order_notification_title'),
-    'body'     => __('dashboard.new_order_notification_body', ['order_id' => $order->order_number]),
-]);
+            'order_id' => $order->id,
+            'type'     => 'new_order_cash',
+            'title'    => __('dashboard.new_order_notification_title'),
+            'body'     => __('dashboard.new_order_notification_body', ['order_id' => $order->order_number]),
+          ]);
         }
     }
 
@@ -57,6 +57,16 @@ class OrderObserver
                 (new DriverAssignmentService())->assignAvailableDriver($order);
             }
 
+            // ✅ منطق الدفع الكاش عند الاستلام (Pickup or Delivery):
+            // إذا تحول الطلب إلى (5 = تم التسليم) وكانت طريقة الدفع (كاش) ولم يُسجل كمدفوع بعد،
+            // نعتبره مدفوعاً تلقائياً لأن العميل استلم الطلب ودفع المبلغ للمندوب أو للكاشير في المتجر.
+            // هذا يضمن الدقة المحاسبية بأن الإيراد لا يُسجل إلا عند استلام المال الفعلي.
+            if ($newStatus == 5 && $order->payment_method === 'cash' && $order->payment_status !== 'paid') {
+                $order->payment_status = 'paid';
+                $order->paid_at = now();
+                $order->saveQuietly();
+            }
+
             // ✅ إضافة نقاط الولاء عند التسليم — مع حماية من الإضافة المكررة
             if ($newStatus == 5 && is_null($order->points_awarded_at)) {
                 $user = $order->user;
@@ -65,12 +75,17 @@ class OrderObserver
                     $earnedPoints = $loyaltyService->calculateEarnedPoints($order);
 
                     if ($earnedPoints > 0) {
-                        $loyaltyService->addPoints(
-                            $user,
-                            $earnedPoints,
-                            $order,
-                            'نقاط مكتسبة من الطلب #' . $order->order_number
-                        );
+
+$loyaltyService->addPoints(
+    $user,
+    $earnedPoints,
+    $order,
+    __('dashboard.loyalty_points_earned_description', [
+        'order_number' => $order->order_number,
+    ])
+);
+
+
 
                         $order->earned_points = $earnedPoints;
                     }
@@ -97,13 +112,7 @@ class OrderObserver
                         $wallet->balance += $amount;
                         $wallet->save();
 
-                        WalletTransaction::create([
-                            'wallet_id' => $wallet->id,
-                            'order_id' => $order->id,
-                            'type' => 'credit',
-                            'amount' => $amount,
-                            'description' => 'استرداد مبلغ الطلب #' . $order->order_number,
-                        ]);
+                     WalletTransaction::create([ 'wallet_id' => $wallet->id, 'order_id' => $order->id, 'type' => 'credit', 'amount' => $amount, 'description' => __('dashboard.order_refund_description', [ 'order_number' => $order->order_number, ]), ]);
                     });
                 }
             }
@@ -123,8 +132,8 @@ class OrderObserver
                         __('notifications.order_received_message', ['order_id' => $order->order_number])
                     );
                 }
-                // 2. لباقي الحالات (جاهز، بالطريق، تم التسليم، ملغي) نرسل إشعار تغير الحالة العادي
-                elseif (in_array($newStatus, [3, 4, 5, 6])) {
+                // 2. لباقي الحالات (قيد التجهيز، جاهز، بالطريق، تم التسليم، ملغي) نرسل إشعار تغير الحالة العادي
+                elseif (in_array($newStatus, [2, 3, 4, 5, 6])) {
                     $fcm->sendMsg(
                         $user->id,
                         $user->device_token,
@@ -137,15 +146,17 @@ class OrderObserver
                 }
             }
         }
-// ✅ إشعار أدمن عند نجاح الدفع الإلكتروني
-    if ($order->isDirty('payment_status') && $order->payment_status === 'paid') {
-    AdminNotification::create([
-        'order_id' => $order->order_number,
-        'type'     => 'order_paid_online',
-        'title'    => __('dashboard.order_paid_notification_title'),
-        'body'     => __('dashboard.order_paid_notification_body', ['order_id' => $order->order_number]),
-    ]);
-}
+
+        // ✅ إشعار أدمن عند نجاح الدفع الإلكتروني
+        if ($order->isDirty('payment_status') && $order->payment_status === 'paid') {
+            AdminNotification::create([
+                // ملاحظة: تأكد أن order_id هنا يقبل رقم وليس نص، في كودك القديم كان يمرر order_number كنص لعمود ID
+                'order_id' => $order->id,
+                'type'     => 'order_paid_online',
+                'title'    => __('dashboard.order_paid_notification_title'),
+                'body'     => __('dashboard.order_paid_notification_body', ['order_id' => $order->order_number]),
+            ]);
+        }
     }
 
     public function deleted(Order $order): void {}

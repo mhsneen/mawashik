@@ -155,6 +155,9 @@ class DriverProfileApiController extends Controller
     /**
      * سجل معاملات محفظة السائق (مُرقّم الصفحات)
      */
+        /**
+     * سجل معاملات محفظة السائق
+     */
     public function getWalletTransactions(Request $request)
     {
         try {
@@ -165,23 +168,24 @@ class DriverProfileApiController extends Controller
                 return $this->returnData('data', [], __('api.Api_Return_Data'));
             }
 
+            // ✅ استخدام get() ثم map() مباشرة
             $transactions = WalletTransaction::where('wallet_id', $wallet->id)
                 ->with('order:id,final_price,delivery_price,payment_method')
                 ->orderBy('id', 'DESC')
-                ->get();
-
-            $transactions->getCollection()->transform(function ($tx) {
-                return [
-                    'id'          => $tx->id,
-                    'type'        => $tx->type,
-                    'type_label'  => $tx->type_translated,
-                    'amount'      => $tx->amount,
-                    'amount_signed' => $tx->amount_signed,
-                    'description' => $tx->description,
-                    'order_id'    => $tx->order_id,
-                    'date'        => $tx->created_at?->format('Y-m-d H:i'),
-                ];
-            });
+                ->get()
+                ->map(function ($tx) {
+                    return [
+                        'id'            => $tx->id,
+                        'type'          => $tx->type,
+                        'type_label'    => $tx->type_translated,
+                        'amount'        => $tx->amount,
+                        'amount_signed' => $tx->amount_signed,
+                        'description'   => $tx->description,
+                        'order_id'      => $tx->order_id,
+                        'date'          => $tx->created_at?->format('Y-m-d H:i'),
+                    ];
+                })
+                ->values(); // values() لترتيب المفاتيح من 0 وتجنب تحويلها لـ JSON Object
 
             return $this->returnData('data', $transactions, __('api.Api_Return_Data'));
         } catch (Exception $ex) {

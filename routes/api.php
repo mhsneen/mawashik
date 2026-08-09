@@ -24,6 +24,7 @@ use App\Http\Controllers\Api\V1\Client\LoyaltyPointsApiController;
 use App\Http\Controllers\Api\V1\Client\PaymentApiController;
 use App\Http\Controllers\Api\V1\BrandsApiController;
 use App\Http\Controllers\Api\V1\SalesApiController;
+use App\Http\Controllers\Api\V1\OrderStatusApiController;
 
 
 
@@ -151,9 +152,13 @@ Route::group(['middleware' => ['auth:sanctum', 'api', 'apiCheckUse', 'apiChangeL
 
 
     #################################################### Start Client Orders   ####################################################
+    Route::get('order-statuses', [OrderStatusApiController::class, 'index']);
     Route::post('client_Current_Orders', [OrdersClientApiController::class, 'client_Current_Orders']);
     Route::post('client_End_Orders', [OrdersClientApiController::class, 'client_End_Orders']);
     Route::post('client_Cancelled_Orders', [OrdersClientApiController::class, 'client_Cancelled_Orders']);
+    Route::post('client_All_Orders', [OrdersClientApiController::class, 'client_All_Orders']);
+Route::post('order_Details', [OrdersClientApiController::class, 'order_Details']);
+Route::post('client_Confirm_Receipt', [OrdersClientApiController::class, 'client_Confirm_Receipt']);
     #################################################### End Client Orders   ####################################################
 
 
@@ -218,13 +223,13 @@ Route::group([
 Route::group(['middleware' => ['api'], 'prefix' => 'payments'], function () {
     Route::get('return/{gateway}', [PaymentApiController::class, 'payment_return'])->name('api.payments.return');
     Route::match(['get', 'post'], 'webhook/{gateway}', [PaymentApiController::class, 'payment_webhook'])->name('api.payments.webhook');
-    
+
     // ✅ أضف هذا السطر لصفحة HyperPay
        // ✅ أضف هذا السطر لصفحة HyperPay
     Route::get('hyperpay/checkout', function (\Illuminate\Http\Request $request) {
         $checkoutId = $request->query('checkout_id');
         $resultUrl = $request->query('result_url');
-        
+
         // ✅ تعديل اسم العرض ليتطابق مع المسار الذي وضعته أنت
         return view('site.payment.hyperpay_form', compact('checkoutId', 'resultUrl'));
     })->name('api.payments.hyperpay.form');

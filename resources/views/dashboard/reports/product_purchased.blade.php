@@ -150,7 +150,7 @@
 
                                             <td>
                                                 <div>
-                                                    {{ $item->order_id }}
+                                                    {{ $item->order->order_number }}
                                                 </div>
                                             </td>
 

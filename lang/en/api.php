@@ -128,5 +128,9 @@ return [
 'location_outside_delivery_range' => 'Sorry, your location is outside our delivery range.',
 'Notification_Not_Found' => 'Notification not found.',
     "account_blocked"=> "Your account has been blocked by the administration. Please contact support for assistance.",
+    'ID_Not_Found' => 'ID not found',
+    'Order_accepted_successfully' => 'Order accepted successfully',
+    'Invalid_delivery_pin' => 'Invalid delivery PIN',
+    'Order_delivered_successfully' => 'Order delivered successfully',
 
 ];

@@ -287,7 +287,8 @@ class ClientApiController extends Controller
                     'amount_signed' => $tx->amount_signed,
                     'description'   => $tx->description,
                     'order_id'      => $tx->order_id,
-                    'date'          => $tx->created_at?->format('Y-m-d H:i'),
+                         'date'          => $tx->created_at?->diffForHumans(),
+
                 ];
             });
 

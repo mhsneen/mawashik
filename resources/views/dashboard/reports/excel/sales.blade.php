@@ -14,7 +14,7 @@
         @foreach ($orders as $order)
             <tr>
                 <td>{{ $loop->iteration }}</td>
-                <td>{{ $order->id }}</td>
+                <td>{{ $order->order_number }}</td>
                 <td>{{ $order->user->name ?? '-' }}</td>
                 <td>{{ $order->final_price }}</td>
                 <td>{{ $order->created_at->format('Y-m-d') }}</td>

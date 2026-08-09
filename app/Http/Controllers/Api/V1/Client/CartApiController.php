@@ -30,7 +30,7 @@ class CartApiController extends Controller
             $deliveryTime = $request->delivery_time;
             $deliveryType = $request->delivery_type ?? 'delivery';
 
-            // ✅✅✅ التعديل هنا: تحويل أي بوابة دفع إلكتروني إلى كلمة online ✅✅✅
+            // ✅ تحويل أي بوابة دفع إلكتروني إلى كلمة online لتطابق الـ ENUM في قاعدة البيانات
             $paymentMethod = $request->payment_method;
             if (!in_array($paymentMethod, ['cash', 'wallet'])) {
                 $paymentMethod = 'online';
@@ -69,16 +69,14 @@ class CartApiController extends Controller
             $user = $request->user();
             $couponId = null;
 
-            // ✅ تعديل حالة الطلب الابتدائية لتشمل المحفظة
-            // 7 = بانتظار الدفع (لأونلاين) | 1 = طلب جديد (لكاش والمحفظة لأنهم يُخصمون فوراً)
-            // ✅✅✅ التعديل هنا: استخدام المتغير الجديد ✅✅✅
+            // ✅ تعديل حالة الطلب الابتدائية: 7 = بانتظار الدفع (لأونلاين) | 1 = طلب جديد (لكاش والمحفظة)
             $initialStatus = $paymentMethod === 'online' ? 7 : 1;
 
             $order = Order::create([
                 'user_id' => $user->id,
                 'address_id' => $address['id'] ?? null,
                 'delivery_type' => $deliveryType,
-                'payment_method' => $paymentMethod, // ✅✅✅ التعديل هنا: استخدام المتغير الجديد ✅✅✅
+                'payment_method' => $paymentMethod,
                 'delivery_price' => $deliveryPrice,
                 'delivery_date' => $request->delivery_date,
                 'delivery_time' => $request->delivery_time,
@@ -130,26 +128,20 @@ class CartApiController extends Controller
                     $orderItem->attributes()->create($line);
                 }
 
-                               // ✅✅✅ حفظ قيم الخصائص العادية (التي لا تؤثر على السعر مثل المقاس) ✅✅✅
+                // ✅ حفظ قيم الخصائص العادية (التي لا تؤثر على السعر مثل المقاس)
                 if (!empty($item['attribute_value_ids'])) {
-                    // 1. نجلب الـ IDs الخاصة بالـ Variant (لو موجود) لتفادي حفظها مرتين
                     $variantValueIds = $calc['variant']?->value_ids ?? [];
-
-                    // 2. جلب قيم الخصائص من قاعدة البيانات (بدون تحديد أعمدة لتفادي الخطأ)
                     $plainAttributes = AttributeValue::whereIn('id', $item['attribute_value_ids'])
                         ->with('attribute')
                         ->get();
 
                     foreach ($plainAttributes as $attrValue) {
-                        // أ. التأكد ألا تكون هذه القيمة قد حُفظت بالفعل كـ modifier
                         $alreadySavedAsModifier = collect($calc['modifier_lines'] ?? [])
                             ->contains('attribute_value_id', $attrValue->id);
-                        
-                        // ب. التأكد ألا تكون هذه القيمة هي جزء من الـ Variant المختار
+
                         $isPartOfVariant = in_array($attrValue->id, $variantValueIds);
 
                         if (!$alreadySavedAsModifier && !$isPartOfVariant) {
-                            // جلب اسم الخاصية بشكل آمن
                             $attrName = 'خاصية';
                             if ($attrValue->attribute) {
                                 $attrName = $attrValue->attribute->name ?? $attrValue->attribute->title ?? $attrValue->attribute->ar_name ?? 'خاصية';
@@ -167,6 +159,7 @@ class CartApiController extends Controller
                     }
                 }
 
+                // ✅ خصم المخزون للمنتجات أو الـ Variants
                 if ($product->track_quantity) {
                     $stockHolder = ($calc['variant'] && $calc['variant']->track_quantity)
                         ? $calc['variant']
@@ -181,6 +174,7 @@ class CartApiController extends Controller
                     }
                 }
 
+                // ✅ خصم مخزون الإضافات (Modifiers)
                 foreach ($calc['modifier_lines'] as $line) {
                     $pivotRow = DB::table('attribute_value_product')
                         ->where('product_id', $product->id)
@@ -203,10 +197,12 @@ class CartApiController extends Controller
                 $totalPrice += $itemTotal;
             }
 
+            // ✅ تطبيق كوبون الخصم (إذا وجد)
             if ($request->coupon_code) {
                 [$discountAmount, $couponId] = $this->applyDiscount($order, $request->coupon_code, $totalPrice, $user);
             }
 
+            // ✅ الحسابات المالية الأساسية
             $tax = $order->added_tax ?? 0;
             $added_taxAmount = ($totalPrice - $discountAmount) * ($tax / 100);
             $subtotalBeforePoints = ($totalPrice - $discountAmount) + $added_taxAmount + $deliveryPrice;
@@ -214,6 +210,7 @@ class CartApiController extends Controller
             $redeemedPoints = (int) ($request->redeem_points ?? 0);
             $pointsDiscountValue = 0;
 
+            // ✅ معالجة نقاط الولاء
             if ($redeemedPoints > 0) {
                 $pointsDiscountValue = $loyaltyService->validateAndCalculateRedeemDiscount(
                     $user,
@@ -221,15 +218,23 @@ class CartApiController extends Controller
                     $subtotalBeforePoints
                 );
 
-                $loyaltyService->redeemPoints(
-                    $user,
-                    $redeemedPoints,
-                    $order,
-                    'استبدال نقاط بالطلب #' . $order->id
-                );
+                // ✅ حماية محاسبية: قيمة خصم النقاط لا يجب أن تتجاوز المبلغ المتبقي قبل خصم النقاط
+                if ($pointsDiscountValue > $subtotalBeforePoints) {
+                    $pointsDiscountValue = $subtotalBeforePoints;
+                }
+
+               $loyaltyService->redeemPoints(
+    $user,
+    $redeemedPoints,
+    $order,
+    __('dashboard.loyalty_points_redeemed_description', [
+        'order_number' => $order->order_number,
+    ])
+);
             }
 
-            $finalPrice = $subtotalBeforePoints - $pointsDiscountValue;
+            // ✅ حساب المبلغ النهائي مع ضمان عدم وجود قيمة سالبة (إذاغطت النقاط الطلب بالكامل)
+            $finalPrice = max(0, $subtotalBeforePoints - $pointsDiscountValue);
 
             $order->update([
                 'total_items' => $totalItems,
@@ -242,37 +247,42 @@ class CartApiController extends Controller
                 'redeemed_points_value' => $pointsDiscountValue,
             ]);
 
-            // ✅✅✅ معالجة الدفع من المحفظة ✅✅✅
-            // ✅✅✅ التعديل هنا: استخدام المتغير الجديد ✅✅✅
-            if ($paymentMethod === 'wallet') {
-                // 1. جلب المحفظة مع قفل الصف لمنع Race Condition
+            // ✅✅✅ المنطق المحاسبي للدفع ✅✅✅
+
+            // 1. إذا كان المبلغ النهائي (0) (بسبب النقاط أو الكوبون)، نعتبره مدفوعاً فوراً
+            if ($finalPrice == 0) {
+                $order->update([
+                    'payment_status' => 'paid',
+                    'paid_at' => now(),
+                    'status_id' => 1, // تحويله لطلب جديد مدفوع
+                ]);
+            }
+            // 2. إذا كان هناك مبلغ مستحق والدفع عن طريق المحفظة
+            elseif ($paymentMethod === 'wallet') {
                 $wallet = Wallet::where('user_id', $user->id)->lockForUpdate()->first();
 
-                // 2. التحقق من وجود المحفظة ومن كفاية الرصيد
                 if (!$wallet || $wallet->balance < $finalPrice) {
                     throw new InvalidArgumentException(__('api.Insufficient_wallet_balance'));
                 }
 
-                // 3. خصم المبلغ من المحفظة
+                // ✅ خصم المبلغ المتبقي فقط (بعد طرح قيمة النقاط) من المحفظة
                 $wallet->balance -= $finalPrice;
                 $wallet->save();
 
-                // 4. تسجيل حركة الخصم (debit)
-                WalletTransaction::create([
-                    'wallet_id' => $wallet->id,
-                    'order_id' => $order->id,
-                    'type' => 'debit', // خصم
-                    'amount' => $finalPrice,
-                    'description' => 'شراء طلب رقم #' . $order->id,
-                ]);
+               WalletTransaction::create([
+    'wallet_id'   => $wallet->id,
+    'order_id'    => $order->id,
+    'type'        => 'debit',
+    'amount'      => $finalPrice,
+    'description' => __('dashboard.order_purchase_description', [
+        'order_number' => $order->order_number,
+    ]),
+]);
 
-                // 5. تحديث حالة الطلب إلى "مدفوع"
                 $order->update([
                     'payment_status' => 'paid',
                     'paid_at' => now(),
                 ]);
-
-                // ملاحظة: status_id تم تعيينه 1 بالفعل في الإنشاء، فلا حاجة لتغييره
             }
 
             DB::commit();

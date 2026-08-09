@@ -756,8 +756,14 @@ return array(
     'loyalty_points_redeem_value' => 'Loyalty Points Redemption Value',
     'loyalty_points_min_redeem' => 'Minimum Loyalty Points Required for Redemption',
 
-	'loyalty_points_earn_rate_hint' => 'Every 1 currency unit spent on products = 1 loyalty point.',
-'loyalty_points_redeem_value_hint' => 'Each loyalty point = 0.01 currency unit when redeemed (100 points = 1 currency unit).',
+
+
+'loyalty_points_earn_rate_hint' => 'This value is the number of loyalty points the customer earns for every 1 currency unit spent on products (excluding delivery and tax). Example: If you set this to 1, every 1 SAR spent = 1 point. If you set it to 50, every 1 SAR spent = 50 points (a very large number – be careful!).',
+
+'loyalty_points_redeem_value_hint' => 'This value determines how much one loyalty point is worth in currency when the customer redeems it as a discount. Example: If you set this to 0.01, every 100 points = 1 SAR. If you set it to 2, each point = 2 SAR (an extremely large value – this can be risky!).',
+
+
+
 'loyalty_points_min_redeem_hint' => 'Minimum number of loyalty points a customer can use in an order.',
 'redeem_points' => 'Redeem Points',
 
@@ -813,6 +819,9 @@ return array(
 'Delivery_Type' => 'Delivery Type',
 'Payment_Method' => 'Payment Method',
 'Added_Tax_Value' => 'Tax Amount',
-
-
+    'The order_status_cannot_be_changed_to_this_state' => 'The order status cannot be changed to this state',
+'loyalty_points_earned_description' => 'Loyalty points earned from order #:order_number',
+'order_refund_description' => 'Refund for order #:order_number',
+'loyalty_points_redeemed_description' => 'Loyalty points redeemed for order #:order_number',
+'order_purchase_description' => 'Purchase of order #:order_number',
 );

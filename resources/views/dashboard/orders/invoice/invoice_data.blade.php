@@ -63,36 +63,69 @@
 
             <!-- Summary -->
             <div class="row justify-content-end mt-4">
-                <div class="col-md-5">
-                    <table class="table table-borderless">
-                        <tr>
-                            <td>{{ __('dashboard.number_products') }}</td>
-                            <td class="text-end">{{ $item->total_items }}</td>
-                        </tr>
-                        <tr>
-                            <td>{{ __('dashboard.Total price before discount') }}</td>
-                            <td class="text-end">{{ $item->total_price }} {{ $item->currency }}</td>
-                        </tr>
+                <div class="col-md-6 col-lg-5">
+                    <div class="table-responsive">
+                        <table class="table table-invoice border text-md-nowrap mb-0">
+                            <tbody>
 
-                        <tr>
-                            <td>{{ __('dashboard.Coupon_Discount_Value') }} @if ($item->coupon)
-                                    ({{ $item->coupon->discount_percentage }}%)
+                                <tr>
+                                    <td class="tx-uppercase tx-bold tx-inverse">{{ __('dashboard.number_products') }}</td>
+                                    <td colspan="2"><h4 class="tx-primary tx-bold">{{ $item->total_items }}</h4></td>
+                                </tr>
+
+                                <tr>
+                                    <td class="tx-uppercase tx-bold tx-inverse">{{ __('dashboard.Total price before discount') }}</td>
+                                    <td colspan="2"><h4 class="tx-primary tx-bold">{{ number_format($item->total_price, 2) }}</h4></td>
+                                </tr>
+
+                                @if ($item->discount_amount > 0)
+                                    <tr>
+                                        <td class="tx-uppercase tx-bold tx-inverse">
+                                            {{ __('dashboard.Coupon_Discount_Value') }}
+                                            @if ($item->coupon)
+                                                <br /><small>{{ $item->coupon->code }} ({{ $item->coupon->discount_percentage }}%)</small>
+                                            @endif
+                                        </td>
+                                        <td colspan="2"><h4 class="tx-danger tx-bold">- {{ number_format($item->discount_amount, 2) }}</h4></td>
+                                    </tr>
+
+                                    <tr>
+                                        <td class="tx-uppercase tx-bold tx-inverse">{{ __('dashboard.Price after discount') }}</td>
+                                        <td colspan="2"><h4 class="tx-primary tx-bold">{{ number_format($item->price_after_discount, 2) }}</h4></td>
+                                    </tr>
                                 @endif
-                            </td>
-                            <td class="text-end text-danger">- {{ $item->discount_amount }} {{ $item->currency }}</td>
-                        </tr>
 
-                        <tr>
-                            <td>{{ __('dashboard.added_tax') }}</td>
-                            <td class="text-end">{{ $item->added_tax }}%</td>
-                        </tr>
-                        <tr class="fw-bold border-top">
-                            <td>{{ __('dashboard.TOTAL_DUE') }}</td>
-                            <td class="text-end text-primary">
-                                {{ $item->final_price }} {{ $item->currency }}
-                            </td>
-                        </tr>
-                    </table>
+                                @if ($item->added_tax)
+                                    <tr>
+                                        <td class="tx-uppercase tx-bold tx-inverse">
+                                            {{ __('dashboard.added_tax') }} ({{ $item->added_tax }}%)
+                                        </td>
+                                        <td colspan="2"><h4 class="tx-primary tx-bold">{{ number_format($item->tax_amount, 2) }}</h4></td>
+                                    </tr>
+                                @endif
+
+                                @if ($item->delivery_type === 'delivery' && $item->delivery_price)
+                                    <tr>
+                                        <td class="tx-uppercase tx-bold tx-inverse">{{ __('dashboard.Delivery_Price') }}</td>
+                                        <td colspan="2"><h4 class="tx-primary tx-bold">{{ number_format($item->delivery_price, 2) }}</h4></td>
+                                    </tr>
+                                @endif
+
+                                @if ($item->redeemed_points > 0)
+                                    <tr>
+                                        <td class="tx-uppercase tx-bold tx-inverse">{{ __('dashboard.redeem_points') }} ({{ $item->redeemed_points }})</td>
+                                        <td colspan="2"><h4 class="tx-danger tx-bold">- {{ number_format($item->redeemed_points_value, 2) }}</h4></td>
+                                    </tr>
+                                @endif
+
+                                <tr>
+                                    <td class="tx-uppercase tx-bold tx-inverse">{{ __('dashboard.TOTAL_DUE') }}</td>
+                                    <td colspan="2"><h4 class="tx-success tx-bold">{{ number_format($item->final_price, 2) }} {{ $item->currency }}</h4></td>
+                                </tr>
+
+                            </tbody>
+                        </table>
+                    </div>
                 </div>
             </div>
 

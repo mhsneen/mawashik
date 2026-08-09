@@ -210,34 +210,34 @@ class Order extends Model
 
 
 public function canChangeStatusTo($newStatus)
-    {
-        $allowedTransitions = [
-            1 => [2, 6],
-            2 => [3, 6],
-            3 => $this->delivery_type === 'delivery' ? [4] : [5],
-            4 => [5],
-            5 => [],
-            6 => [],
-            7 => [1, 6], // ✅ التعديل هنا: الطلب المعلق يمكن أن يصبح مدفوعاً (1) أو ملغياً (6)
-        ];
+{
+    $allowedTransitions = [
+        1 => [2, 6], // العميل يمكنه الإلغاء فقط إذا كان الطلب "جديد"
+        2 => [3],    // ❌ تم إزالة 6، لا يمكن الإلغاء بعد بدء التجهيز
+        3 => $this->delivery_type === 'delivery' ? [4] : [5],
+        4 => [5],
+        5 => [],
+        6 => [],
+        7 => [1, 6], // يمكن الإلغاء إذا كان بانتظار الدفع
+    ];
 
-        return in_array($newStatus, $allowedTransitions[$this->status_id] ?? []);
-    }
+    return in_array($newStatus, $allowedTransitions[$this->status_id] ?? []);
+}
 
 public function getAllowedStatuses()
-    {
-        $allowedTransitions = [
-            1 => [2, 6],
-            2 => [3, 6],
-            3 => $this->delivery_type === 'delivery' ? [4] : [5],
-            4 => [5],
-            5 => [],
-            6 => [],
-            7 => [1, 6], // ✅ التعديل هنا أيضاً
-        ];
+{
+    $allowedTransitions = [
+        1 => [2, 6],
+        2 => [3],    // ❌ تم إزالة 6
+        3 => $this->delivery_type === 'delivery' ? [4] : [5],
+        4 => [5],
+        5 => [],
+        6 => [],
+        7 => [1, 6],
+    ];
 
-        return $allowedTransitions[$this->status_id] ?? [];
-    }
+    return $allowedTransitions[$this->status_id] ?? [];
+}
 
     public function ScopeFilterDashbordSales($query, array $filters)
     {
