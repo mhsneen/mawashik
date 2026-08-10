@@ -10,5 +10,5 @@ return [
     'order_cancelled_message' => 'قام العميل :client_name بإلغاء الطلب رقم #:order_id',
      'order_cancelled_title' => 'تم إلغاء الطلب',
     'driver_order_assigned_title' => 'طلب جديد لك',
-    'driver_order_assigned_message' => 'تم تعيينك لتوصيل الطلب رقم #:order_id',
+    'driver_order_assigned_message' => 'طلب جديد لتوصيله رقم #:order_id',
 ];

@@ -135,5 +135,6 @@ return [
     'Order_Already_Taken' => 'تم قبول هذا الطلب من قبل سائق آخر بالفعل.',
 'Offer_Not_Found_Or_Expired' => 'هذا العرض لم يعد متاحاً.',
 'Order_rejected_successfully' => 'تم رفض الطلب بنجاح.',
-
+    'driver_cash_collected' => 'استلام مبلغ كاش من العميل - طلب #:order_id',
+    'driver_delivery_fee' => 'أجر التوصيل - طلب #:order_id',
 ];

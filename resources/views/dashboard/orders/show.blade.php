@@ -57,11 +57,6 @@
                 </div>
             </div>
 
-
-
-
-
-
             <div class="mb-3 mb-xl-0 ml-3">
                 <div class="btn-group dropdown">
                     <a href="{{ route($routeName . '.invoice', $item->id) }}" class="btn btn-dark " data-placement="top"
@@ -89,9 +84,12 @@
     @include('dashboard.includes.alerts.errors')
     @include('dashboard.includes.alerts.success')
     @include('dashboard.orders.modal.ModalChangeStatusOrder')
-    @if ($item->delivery_type === 'delivery' && !in_array($item->status_id, [5, 6]))
+    
+    {{-- ✅ إظهار مودال التعيين فقط إذا كان الطلب توصيل، في الحالة 3 أو 4، ولم يتم تعيين سائق --}}
+    @if ($item->delivery_type === 'delivery' && in_array($item->status_id, [3, 4]) && !$item->driver)
         @include('dashboard.orders.modal.ModalAssignDriver')
     @endif
+
     <div class="row row-sm">
         <div class="col-lg-4">
             <div class="card mg-b-20">
@@ -372,11 +370,13 @@
                                 </div>
                             </div>
 
-                            @if (!in_array($item->status_id, [5, 6]))
+                            {{-- ✅✅✅ المنطق الصحيح للأزرار --}}
+                            {{-- تظهر أزرار التعيين/إلغاء التعيين فقط في الحالة 3 (جاهز) أو 4 (قيد التوصيل) --}}
+                            @if (in_array($item->status_id, [3, 4]))
                                 <div class="mt-2 mt-md-0">
-                                    @if ($item->driver)
-                                        <form method="POST" action="{{ route($routeName . '.unassign_driver') }}"
-                                            class="d-inline">
+                                    {{-- زر إلغاء التعيين يظهر فقط إذا كان هناك سائق ومعين في الحالة 4 --}}
+                                    @if ($item->driver && $item->status_id == 4)
+                                        <form method="POST" action="{{ route($routeName . '.unassign_driver') }}" class="d-inline" onsubmit="return confirm('هل أنت متأكد من إلغاء تعيين السائق؟')">
                                             @csrf
                                             <input type="hidden" name="id" value="{{ $item->id }}">
                                             <button type="submit" class="btn btn-outline-danger">
@@ -384,10 +384,13 @@
                                             </button>
                                         </form>
                                     @endif
-                                    <button type="button" class="btn btn-primary" data-toggle="modal"
-                                        data-target="#ModalAssignDriver">
-                                        {{ __('dashboard.Assign_Driver') }}
-                                    </button>
+                                    
+                                    {{-- زر تعيين سائق يظهر فقط إذا لم يكن هناك سائق (في الحالة 3 أو 4) --}}
+                                    @if (!$item->driver)
+                                        <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#ModalAssignDriver">
+                                            {{ __('dashboard.Assign_Driver') }}
+                                        </button>
+                                    @endif
                                 </div>
                             @endif
                         </div>
@@ -527,7 +530,6 @@
 
 
 @php
-    // Order model عنده علاقة address() بنفس اسم عمود address النصي، فنستخدم getRelation
     $addressModel = $item->getRelation('address');
 
     if ($addressModel && $addressModel->latitude && $addressModel->longitude) {
@@ -537,18 +539,14 @@
     } else {
         $mapLat = $item->latitude;
         $mapLng = $item->longitude;
-        $mapAddressText = $item->address; // النص المحفوظ وقت الطلب
+        $mapAddressText = $item->address;
     }
 @endphp
 
 @section('js')
-    <!-- Internal Select2 js-->
     <script src="{{ URL::asset('assets/dashboard/plugins/select2/js/select2.min.js') }}"></script>
-
     <script src="{{ URL::asset('assets/dashboard/plugins/select2/js/i18n/' . app()->getLocale() . '.js') }}"></script>
-    <!--Internal  Parsley.min js -->
     <script src="{{ URL::asset('assets/dashboard/plugins/parsleyjs/parsley.min.js') }}"></script>
-    <!-- Internal Form-validation js -->
     <script src="{{ URL::asset('assets/dashboard/plugins/parsleyjs/i18n/' . app()->getLocale() . '.js') }}"></script>
     <script type="text/javascript">
 function initMap() {
@@ -573,55 +571,30 @@ function initMap() {
 }
 window.initMap = initMap;
 
-$("#maporder").on('click', function() {
+ $("#maporder").on('click', function() {
     url = "https://www.google.com.sa/maps/search/@" + {{ $mapLat ?? 0 }} + "," + {{ $mapLng ?? 0 }} + ",12.21z?hl=en";
     window.open(url, '_blank');
 });
 
         $(document).ready(function() {
             $(function() {
-
-                //check if modal_div element exists on the page
                 if ($('#ModalChangeStatusOrdervalid').length > 0) {
-
-                    //Attach Parsley validation to the modal input elements
-
-
-                    //On modal submit button click, validate all the input fields
                     $('#modal_changeorder_submit_button').click(function(event) {
-
-
                         $('#ModalChangeStatusOrdervalid select').each(function() {
                             if ($(this).parsley().validate() !== true)
                                 event.preventDefault();
                         })
-
-
                     });
                 }
             });
 
-
-
-
             $(function() {
-
-                //check if modal_div element exists on the page
                 if ($('#ModalMethodStatusOrdervalid').length > 0) {
-
-                    //Attach Parsley validation to the modal input elements
-
-
-                    //On modal submit button click, validate all the input fields
                     $('#modal_changemethodstatus_submit_button').click(function(event) {
-
-
                         $('#ModalMethodStatusOrdervalid select').each(function() {
                             if ($(this).parsley().validate() !== true)
                                 event.preventDefault();
                         })
-
-
                     });
                 }
             });
@@ -638,12 +611,26 @@ $("#maporder").on('click', function() {
                 });
             @endif
 
+            $(function() {
+                if ($('#ModalAssignDrivervalid').length > 0) {
+                    $('#modal_assigndriver_submit_button').click(function(event) {
+                        $('#ModalAssignDrivervalid select').each(function() {
+                            if ($(this).parsley().validate() !== true)
+                                event.preventDefault();
+                        });
+                    });
+                }
+            });
+
+            @if ($errors->AssignDriverBag->any())
+                $('#ModalAssignDriver').modal({ show: true });
+            @endif
+
         });
     </script>
     <script type="text/javascript"
         src="https://maps.googleapis.com/maps/api/js?key=AIzaSyB556JrqytIxxt2hT5hkpLBQdUblve3w5U&language=ar&callback=initMap">
     </script>
-    <!-- Internal Gallery js -->
     <script src="{{ URL::asset('assets/dashboard/plugins/gallery/lightgallery-all.min.js') }}"></script>
     <script src="{{ URL::asset('assets/dashboard/plugins/gallery/jquery.mousewheel.min.js') }}"></script>
     <script src="{{ URL::asset('assets/dashboard/js/gallery.js') }}"></script>

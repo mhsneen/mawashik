@@ -53,7 +53,7 @@ class OrderObserver
             }
 
             // ✅ تعيين سائق متاح فور جهوزية الطلب (الحالة 3 = جاهز للاستلام)
-            if ($newStatus === 3 && $order->delivery_type === 'delivery' && is_null($order->driver_id)) {
+            if ((int)$newStatus == 3 && $order->delivery_type === 'delivery' && is_null($order->driver_id)) {
     (new DriverAssignmentService())->broadcastToAvailableDrivers($order);
 }
 

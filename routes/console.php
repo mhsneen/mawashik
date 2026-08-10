@@ -7,15 +7,15 @@ use Illuminate\Support\Facades\DB;
 use App\Models\Order;
 use App\Models\Product;
 use App\Models\ProductVariant;
+use App\Models\Wallet;
 use App\Models\WalletTransaction;
 
 Artisan::command('inspire', function () {
     $this->comment(Inspiring::quote());
 })->purpose('Display an inspiring quote');
+
 // تنظيف الطلبات المعلّقة (بانتظار الدفع الإلكتروني status_id = 7) الأقدم من ساعة
-// مع إرجاع المخزون واسترداد المبلغ قبل الإلغاء لمنع تسريب المخزون
 Schedule::call(function () {
-    // ✅ التعديل هنا: نجلب الطلبات التي حالتها 7 (بانتظار الدفع) فقط
     $orders = Order::with('items')
         ->where('status_id', 7)
         ->where('created_at', '<', now()->subHour())
@@ -36,17 +36,18 @@ Schedule::call(function () {
                         $product->increment('quantity', $item->quantity);
                     }
                 }
-
-                // ✅ ملاحظة برمجية: إذا كنت تخصم مخزون "الإضافات" (Modifiers) في AddCart
-                // يجب عليك إرجاعها هنا أيضاً بنفس الطريقة التي شرحناها سابقاً.
             }
 
             // 2. استرداد المبلغ للمحفظة
-            // (هذا يفيد لو كان الدفع عبر المحفظة الداخلية للمتجر وتعطل شيء ما)
             if ($order->payment_status === 'paid') {
                 $user = $order->user;
                 if ($user) {
-                    $wallet = $user->wallet;
+                    // ✅ استخدام firstOrCreate لتجنب خطأ null إذا لم تكن المحفظة موجودة
+                    $wallet = Wallet::firstOrCreate(
+                        ['user_id' => $user->id],
+                        ['balance' => 0, 'rolename' => 'client']
+                    );
+
                     $amount = $order->final_price;
 
                     $wallet->balance += $amount;
@@ -57,19 +58,17 @@ Schedule::call(function () {
                         'order_id' => $order->id,
                         'type' => 'credit',
                         'amount' => $amount,
-                        'description' => 'استرداد مبلغ الطلب #' . $order->id . ' (إلغاء تلقائي لعدم إكمال الدفع الإلكتروني)',
+                        'description' => 'استرداد مبلغ الطلب #' . $order->order_number . ' (إلغاء تلقائي لعدم إكمال الدفع)',
                     ]);
                 }
             }
 
             // 3. تحديث الحالة إلى ملغي (6)
-            // استخدمنا saveQuietly لتفادي تكرار إشعارات Observer (مثل إرسال إشعار إلغاء للمستخدم)
             $order->status_id = 6;
-            $order->payment_status = 'failed'; // ✅ تحديث حالة الدفع فشل
+            $order->payment_status = 'failed';
             $order->saveQuietly();
 
             // 4. حذف الطلب ناعياً (Soft Delete)
-            // (ملاحظة: قد تفضل عدم حذفه تماماً لترك سجل للطلبات المرفوضة، لكن إذا كانت سياستك الحذف فلا بأس)
             $order->delete();
         });
     }
@@ -77,11 +76,12 @@ Schedule::call(function () {
   ->name('cleanup:pending-orders')
   ->withoutOverlapping();
 
+// إعادة تعيين الطلبات للسائقين إذا لم يردوا خلال 20 دقيقة
 Schedule::call(function () {
     $service = new \App\Services\DriverAssignmentService();
 
     $staleOrderIds = \App\Models\OrderDriverOffer::where('status', 'pending')
-        ->where('offered_at', '<', now()->subMinutes(2))
+        ->where('offered_at', '<', now()->subMinutes(20))
         ->pluck('order_id')
         ->unique();
 
@@ -93,12 +93,13 @@ Schedule::call(function () {
 
         \App\Models\OrderDriverOffer::where('order_id', $orderId)
             ->where('status', 'pending')
-            ->where('offered_at', '<', now()->subMinutes(2))
+            ->where('offered_at', '<', now()->subMinutes(20))
             ->update(['status' => 'expired', 'responded_at' => now()]);
 
         $stillPending = \App\Models\OrderDriverOffer::where('order_id', $orderId)->where('status', 'pending')->exists();
         if (!$stillPending) {
             $nextBatch = \App\Models\OrderDriverOffer::where('order_id', $orderId)->max('batch_number') + 1;
+            // ✅ هنا سيقوم تلقائياً باستخدام الترتيب الجديد (الأعلى تقييماً)
             $service->broadcastToAvailableDrivers($order, $nextBatch);
         }
     }

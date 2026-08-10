@@ -41,7 +41,7 @@ class AddCartRequest extends FormRequest
             'longitude' => 'nullable|numeric|between:-180,180',
 
             'coupon_code' => 'nullable|string|max:10',
-            'transaction_id' => 'required|max:30',
+            'transaction_id' => 'nullable|max:30',
 
             'delivery_date' => 'nullable|date',
             'delivery_time' => 'nullable|date_format:H:i:s',

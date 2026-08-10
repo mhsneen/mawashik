@@ -10,5 +10,5 @@ return [
     'order_cancelled_message' => 'The customer :client_name has cancelled order #:order_id.',
     'order_cancelled_title' => 'Order Cancelled',
     'driver_order_assigned_title' => 'New Delivery Assigned',
-    'driver_order_assigned_message' => 'You have been assigned to deliver order #:order_id',
+    'driver_order_assigned_message' => 'New delivery order #:order_id',
 ];

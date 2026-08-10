@@ -4,6 +4,7 @@ namespace App\Services;
 
 use App\Models\{Order, OrderDriverOffer, User};
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use InvalidArgumentException;
 
 class DriverAssignmentService
@@ -12,11 +13,13 @@ class DriverAssignmentService
     protected const BATCH_SIZE = 5;
 
     /**
-     * بث الطلب لأفضل N سائقين متاحين (الأقل ازدحاماً بالطلبات النشطة).
+     * بث الطلب لأفضل N سائقين متاحين (الأعلى تقييماً، ثم الأقل ازدحاماً).
      * أول سائق يقبل عبر acceptOffer() هو من يأخذ الطلب فعلياً.
      */
     public function broadcastToAvailableDrivers(Order $order, int $batchNumber = 1): void
     {
+        Log::info("🔴 [Service] محاولة بث الطلب رقم {$order->id} للسائقين (الدفعة {$batchNumber})...");
+
         $activeStatuses = [1, 2, 3, 4];
 
         // استبعاد أي سائق أُرسل له عرض على هذا الطلب مسبقاً (بأي دفعة)
@@ -28,15 +31,20 @@ class DriverAssignmentService
             ->withCount(['driverOrders' => function ($q) use ($activeStatuses) {
                 $q->whereIn('status_id', $activeStatuses);
             }])
+            // ✅ الترتيب الأساسي: متوسط التقييم (إذا لم يكن لديه تقييم، نعتبره 5.0 ليأخذ فرصة)
+            // ✅ الترتيب الثانوي: الأقل ازدحاماً بالطلبات النشطة
+            ->orderByRaw('COALESCE((SELECT AVG(rating) FROM driver_reviews WHERE driver_id = users.id), 5.0) DESC')
             ->orderBy('driver_orders_count', 'asc')
             ->orderBy('id', 'asc')
             ->limit(self::BATCH_SIZE)
             ->get();
 
         if ($drivers->isEmpty()) {
-            // ما فيه سائقين متاحين — الطلب يبقى بدون سائق، الأدمن يقدر يعيّن يدوياً
+            Log::warning("❌ [Service] لا يوجد سائقين متاحين للطلب رقم {$order->id}. تأكد من تفعيل السائقين وإعطائهم دور driver.");
             return;
         }
+
+        Log::info("✅ [Service] تم إيجاد {$drivers->count()} سائق متاح. جاري إنشاء العروض وإرسال الإشعارات...");
 
         $fcm = new FCMServices();
 
@@ -55,11 +63,21 @@ class DriverAssignmentService
                         $driver->id,
                         $driver->device_token,
                         __('notifications.driver_order_assigned_title'),
-                        __('notifications.driver_order_assigned_message', ['order_id' => $order->order_number])
+                        __('notifications.driver_order_assigned_message', ['order_id' => $order->order_number]),
+                        [
+                            'type' => 'new_order_offer',
+                            'order_id' => (string) $order->id,
+                            'click_action' => 'FLUTTER_NOTIFICATION_CLICK'
+                        ]
                     );
+                    Log::info("📧 [FCM] تم إرسال إشعار للسائق رقم {$driver->id}");
+                } else {
+                    Log::warning("⚠️ [FCM] السائق رقم {$driver->id} لا يملك device_token (لم يسجل الدخول من التطبيق).");
                 }
             }
         });
+        
+        Log::info("✅ [Service] انتهى بث الطلب رقم {$order->id} بنجاح.");
     }
 
     /**
@@ -142,7 +160,12 @@ class DriverAssignmentService
                 $driver->id,
                 $driver->device_token,
                 __('notifications.driver_order_assigned_title'),
-                __('notifications.driver_order_assigned_message', ['order_id' => $order->order_number])
+                __('notifications.driver_order_assigned_message', ['order_id' => $order->order_number]),
+                [
+                    // ✅ تغيير النوع ليقوم التطبيق بجلب كل الطلبات بدلاً من البحث عن عرض
+                    'type' => 'order_status_changed', 
+                    'order_id' => (string) $order->id
+                ]
             );
         }
     }

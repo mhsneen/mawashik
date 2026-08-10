@@ -222,6 +222,9 @@
 <th>{{ __('dashboard.Payment_Status') }}</th>
 <th>{{ __('dashboard.Delivery_Type') }}</th>
 <th>{{ __('dashboard.Delivery_Price') }}</th>
+
+
+<th>{{ __('dashboard.Driver') }}</th>
 <th>{{ __('dashboard.Payment_Method') }}</th>
                                         <th>{{ __('dashboard.TOTAL_DUE') }}</th>
 
@@ -310,6 +313,18 @@
 <td>
     @if ($item->delivery_type === 'delivery')
         {{ number_format($item->delivery_price, 2) }}
+    @else
+        —
+    @endif
+</td>
+
+<td>
+    @if ($item->delivery_type === 'delivery')
+        @if ($item->driver)
+            {{ $item->driver->name }}<br><small class="text-muted">{{ $item->driver->mobile }}</small>
+        @else
+            <span class="badge bg-secondary">{{ __('dashboard.No_Driver_Assigned') }}</span>
+        @endif
     @else
         —
     @endif

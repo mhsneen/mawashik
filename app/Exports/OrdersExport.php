@@ -33,11 +33,11 @@ class OrdersExport implements FromView, WithEvents
     'search_status_id' =>   $request->search_status_id,
     'search_date_from' =>    $request->search_date_from,
     'search_date_to' =>    $request->search_date_to
-])->with('user:id,name', 'status:id', 'coupon:code,discount_percentage')
+])->with('user:id,name', 'status:id', 'coupon:code,discount_percentage', 'driver:id,name,mobile')
     ->select(
         'id', 'user_id', 'total_items', 'status_id', 'currency', 'read', 'created_at',
         'total_price', 'discount_amount', 'coupon_id', 'added_tax', 'final_price', 'order_number',
-        'payment_status', 'delivery_type', 'delivery_price', 'payment_method'
+        'payment_status', 'delivery_type', 'delivery_price', 'payment_method', 'driver_id'
     )->latest('id');
 
 $items = $query->get();

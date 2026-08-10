@@ -14,6 +14,8 @@
         <th>{{ __('dashboard.Payment_Status') }}</th>
         <th>{{ __('dashboard.Delivery_Type') }}</th>
         <th>{{ __('dashboard.Delivery_Price') }}</th>
+                <th>{{ __('dashboard.Driver') }}</th>
+
         <th>{{ __('dashboard.Payment_Method') }}</th>
         <th>{{ __('dashboard.TOTAL_DUE') }}</th>
     </tr>
@@ -44,6 +46,13 @@
                     —
                 @endif
             </td>
+            <td>
+    @if ($item->delivery_type === 'delivery' && $item->driver)
+        {{ $item->driver->name }} ({{ $item->driver->mobile }})
+    @else
+        —
+    @endif
+</td>
             <td>{{ $item->payment_method_label }}</td>
             <td>{{ $item->final_price }} {{ $item->currency }}</td>
         </tr>

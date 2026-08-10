@@ -135,4 +135,6 @@ return [
 'Order_Already_Taken' => 'This order has already been accepted by another driver.',
 'Offer_Not_Found_Or_Expired' => 'This offer is no longer available.',
 'Order_rejected_successfully' => 'Order rejected successfully.',
+    'driver_cash_collected' => 'Cash collected from customer - Order #:order_id',
+    'driver_delivery_fee' => 'Delivery fee - Order #:order_id',
 ];

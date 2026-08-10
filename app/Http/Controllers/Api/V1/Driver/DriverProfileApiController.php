@@ -113,38 +113,49 @@ class DriverProfileApiController extends Controller
     /**
      * رصيد محفظة السائق + ملخص كامل
      */
+       /**
+     * رصيد محفظة السائق + ملخص كامل
+     */
     public function getWalletBalance(Request $request)
     {
         try {
             $driver = $request->user();
+            
+            // 1. رصيد المحفظة (الصافي المتبقي للسائق أو المديونية للمتجر)
             $wallet = Wallet::firstOrCreate(
                 ['user_id' => $driver->id],
                 ['balance' => 0, 'rolename' => 'driver']
             );
 
-            // إجمالي الكسب من الكاش
-            $cashTotal = WalletTransaction::where('wallet_id', $wallet->id)
-                ->where('type', 'credit')
-                ->where('description', 'like', 'كسب توصيل كاش%')
-                ->sum('amount');
+            // استعلام أساسي لجميع الطلبات المكتملة للسائق
+            $completedOrdersQuery = $driver->driverOrders()->where('status_id', 5);
 
-            // إجمالي الكسب من البنك/أونلاين
-            $onlineTotal = WalletTransaction::where('wallet_id', $wallet->id)
-                ->where('type', 'credit')
-                ->where('description', 'like', 'كسب توصيل بنكي%')
-                ->sum('amount');
+            // 2. إحصائيات الطلبات
+            $todayOrders = (clone $completedOrdersQuery)->whereDate('delivered_at', today())->count();
+            $totalOrders = $completedOrdersQuery->count();
 
-            // عدد الطلبات المكتملة اليوم
-            $todayCompleted = $driver->driverOrders()
-                ->where('status_id', 5)
-                ->whereDate('delivered_at', today())
-                ->count();
+            // 3. الكاش المستلم (الطلبات الكاش: السائق استلم المبلغ الكامل final_price من العميل)
+            $cashCollected = (clone $completedOrdersQuery)->where('payment_method', 'cash')->sum('final_price');
+
+            // 4. المستحقات الإلكترونية (أجر التوصيل delivery_price للطلبات المدفوعة أونلاين أو بالمحفظة)
+            // المتجر استلم المبلغ كاملاً، ويجب أن يدفع للسائق أجر التوصيل فقط
+            $onlineEarnings = (clone $completedOrdersQuery)->whereIn('payment_method', ['online', 'wallet'])->sum('delivery_price');
+
+            // 5. إجمالي الأرباح (كل أجور التوصيل للطلبات الكاش + الإلكترونية)
+            $totalEarnings = (clone $completedOrdersQuery)->sum('delivery_price');
 
             return $this->returnData('data', [
-                'balance'        => (float) $wallet->balance,
-                'cash_total'     => (float) $cashTotal,
-                'online_total'   => (float) $onlineTotal,
-                'today_orders'   => $todayCompleted,
+                'balance'            => (float) $wallet->balance,
+                'today_orders'       => $todayOrders,
+                'total_orders'       => $totalOrders,
+                
+                'cash_collected'     => (float) $cashCollected,    // الكاش الذي استلمه السائق بيده
+                'online_earnings'    => (float) $onlineEarnings,    // أجر التوصيل المستحق للسائق من الطلبات الإلكترونية
+                'total_earnings'     => (float) $totalEarnings,    // إجمالي كل أرباح السائق من التوصيل
+                
+                // ✅ إضافة متوسط التقييم وعدد التقييمات
+                'average_rating'     => (float) $driver->average_rating ?? 0.0,
+                'reviews_count'      => (int) $driver->reviews_count ?? 0,
             ], __('api.Api_Return_Data'));
         } catch (Exception $ex) {
             Log::error('getWalletBalance: ' . $ex->getMessage(), ['trace' => $ex->getTraceAsString()]);
@@ -158,7 +169,7 @@ class DriverProfileApiController extends Controller
         /**
      * سجل معاملات محفظة السائق
      */
-    public function getWalletTransactions(Request $request)
+       public function getWalletTransactions(Request $request)
     {
         try {
             $driver = $request->user();
@@ -168,7 +179,6 @@ class DriverProfileApiController extends Controller
                 return $this->returnData('data', [], __('api.Api_Return_Data'));
             }
 
-            // ✅ استخدام get() ثم map() مباشرة
             $transactions = WalletTransaction::where('wallet_id', $wallet->id)
                 ->with('order:id,final_price,delivery_price,payment_method')
                 ->orderBy('id', 'DESC')
@@ -182,10 +192,14 @@ class DriverProfileApiController extends Controller
                         'amount_signed' => $tx->amount_signed,
                         'description'   => $tx->description,
                         'order_id'      => $tx->order_id,
-                        'date'          => $tx->created_at?->format('Y-m-d H:i'),
+                        
+                        // ✅ تنسيق التاريخ والوقت ليكون واضحاً ومنظماً (مثال: 2026-08-10 03:52 م)
+                        'date'          => $tx->created_at 
+                            ? \Carbon\Carbon::parse($tx->created_at)->format('Y-m-d h:i A') 
+                            : null,
                     ];
                 })
-                ->values(); // values() لترتيب المفاتيح من 0 وتجنب تحويلها لـ JSON Object
+                ->values();
 
             return $this->returnData('data', $transactions, __('api.Api_Return_Data'));
         } catch (Exception $ex) {

@@ -6,8 +6,11 @@ use Illuminate\Http\Resources\Json\JsonResource;
 
 class OrderResource extends JsonResource
 {
-    public function toArray($request)
+       public function toArray($request)
     {
+        // ✅ جلب تقييم السائق (علاقة hasOne)
+        $driverReview = $this->driverReview;
+
         return [
             'id'               => $this->id,
             'order_number'     => $this->order_number,
@@ -48,7 +51,6 @@ class OrderResource extends JsonResource
             'final_price'      => (float) $this->final_price,
             'currency'         => $this->currency,
 
-            // يظهر فقط وقت "قيد التوصيل" ليعطيه العميل للسائق
             'delivery_pin' => $this->when(
                 $this->delivery_type === 'delivery' && $this->status_id === 4,
                 $this->delivery_pin
@@ -69,16 +71,23 @@ class OrderResource extends JsonResource
             ] : null),
             'cancel_other_reason' => $this->cancel_other_reason ?? '',
 
-            // ما المسموح للعميل يعمله على هذا الطلب حالياً
             'can_cancel'          => in_array(6, $this->getAllowedStatuses()),
             'can_confirm_receipt' => $this->delivery_type === 'pickup' && $this->status_id === 3,
-            // ✅ التعديل هنا: التقييم مسموح فقط إذا كانت الحالة 5 ولم يتم التقييم مسبقاً
             'can_review'          => $this->status_id === 5 && is_null($this->review),
             
             'review' => $this->whenLoaded('review', fn () => $this->review ? [
                 'rating'  => $this->review->rating,
                 'comment' => $this->review->comment,
             ] : null),
+            
+            // ✅ معلومات السائق وتاريخ التوصيل وتقييم السائق
+            'driver_name' => $this->driver?->name,
+            'delivered_at' => $this->delivered_at ? \Carbon\Carbon::parse($this->delivered_at)->format('Y-m-d h:i A') : null,
+            'can_review_driver' => $this->status_id == 5 && !$driverReview,
+            'driver_review' => $driverReview ? [
+                'rating' => $driverReview->rating,
+                'comment' => $driverReview->comment ?? '',
+            ] : null,
 
             'items' => OrderItemResource::collection($this->whenLoaded('items')),
         ];

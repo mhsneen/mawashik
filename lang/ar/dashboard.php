@@ -818,5 +818,11 @@ return [
 'order_refund_description' => 'استرداد مبلغ الطلب #:order_number',
 'loyalty_points_redeemed_description' => 'استبدال نقاط بالطلب #:order_number',
 'order_purchase_description' => 'شراء طلب رقم #:order_number',
+'Driver_Currently_Busy' => 'هذا السائق مشغول حالياً بطلب آخر قيد التوصيل',
+'assign_driver_status_error' => 'يجب أن يكون الطلب في حالة "جاهز" أو "قيد التوصيل" لتعيين سائق.',
+'Unassign_Driver' => 'إلغاء تعيين السائق',
+'Assign_Driver' => 'تعيين سائق',
+'Driver_Currently_Busy' => 'السائق مشغول حالياً بطلب آخر',
+'No_Driver_Assigned' => 'لم يتم تعيين سائق',
 
 ];

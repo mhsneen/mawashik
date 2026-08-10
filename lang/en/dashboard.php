@@ -824,4 +824,10 @@ return array(
 'order_refund_description' => 'Refund for order #:order_number',
 'loyalty_points_redeemed_description' => 'Loyalty points redeemed for order #:order_number',
 'order_purchase_description' => 'Purchase of order #:order_number',
+'Driver_Currently_Busy' => 'This driver is currently busy with another order in delivery',
+'assign_driver_status_error' => 'The order must be "Prepared" or "Out for Delivery" to assign a driver.',
+'Unassign_Driver' => 'Unassign Driver',
+'Assign_Driver' => 'Assign Driver',
+'Driver_Currently_Busy' => 'Driver is currently busy with another order',
+'No_Driver_Assigned' => 'No Driver Assigned',
 );

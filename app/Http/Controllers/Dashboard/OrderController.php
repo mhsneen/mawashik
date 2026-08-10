@@ -24,31 +24,22 @@ class OrderController extends Controller
     protected  $view = "orders";
     protected  $routeName = "orders";
 
-
     public function __construct()
     {
         $this->middleware('permission:Orders');
     }
 
-    /**
-     * Display a listing of the resource.
-     *
-     * @return \Illuminate\Http\Response
-     */
     public function index(OrdersSearchRequest $request)
     {
-
-
-
-    $items = Order::FilterDashbordAdmin(request(['search_order_number', 'search_client_name', 'search_client_mobile', 'search_status_id', 'search_date_from', 'search_date_to']))
-    ->with('user:id,name', 'status:id', 'coupon:id,code,discount_percentage')
-    ->select(
-        'id', 'user_id', 'total_items', 'status_id', 'currency', 'read', 'created_at',
-        'total_price', 'discount_amount', 'coupon_id', 'added_tax', 'final_price', 'order_number',
-        'payment_status', 'delivery_type', 'delivery_price', 'payment_method'
-    )->latest('id')->paginate(PAGANATION_COUNT)->withQueryString();
-
-            $orderstatus = Orderstatus::select('id')->orderBy('id', 'asc')->get();
+        $items = Order::FilterDashbordAdmin(request(['search_order_number', 'search_client_name', 'search_client_mobile', 'search_status_id', 'search_date_from', 'search_date_to']))
+            ->with('user:id,name', 'status:id', 'coupon:id,code,discount_percentage', 'driver:id,name,mobile')
+            ->select(
+                'id', 'user_id', 'total_items', 'status_id', 'currency', 'read', 'created_at',
+                'total_price', 'discount_amount', 'coupon_id', 'added_tax', 'final_price', 'order_number',
+                'payment_status', 'delivery_type', 'delivery_price', 'payment_method', 'driver_id'
+            )->latest('id')->paginate(PAGANATION_COUNT)->withQueryString();
+        
+        $orderstatus = Orderstatus::select('id')->orderBy('id', 'asc')->get();
 
         $data = [
             'items' => $items,
@@ -59,29 +50,9 @@ class OrderController extends Controller
         return view('dashboard.' . $this->view . '.index', $data);
     }
 
-    /**
-     * Show the form for creating a new resource.
-     *
-     * @return \Illuminate\Http\Response
-     */
     public function create() {}
-
-    /**
-     * Store a newly created resource in storage.
-     *
-     * @param  \Illuminate\Http\Request  $request
-     * @return \Illuminate\Http\Response
-     */
     public function store(Request $request) {}
 
-
-
-    /**
-     * Display the specified resource.
-     *
-     * @param  int  $id
-     * @return \Illuminate\Http\Response
-     */
     public function show($id)
     {
         $item = Order::with([
@@ -92,16 +63,16 @@ class OrderController extends Controller
             'review',
             'cancelReason',
             'address',
- 'items' => function ($query) {
-    $query->select('id', 'order_id', 'product_id', 'product_variant_id', 'variant_label_snapshot', 'quantity', 'unit_price', 'total_price')
-        ->with([
-            'product:id,image,category_id,quantity,unit_id',
-            'product.unit',
-            'attributes' => function ($query) {
-                $query->select('id', 'order_item_id', 'attribute_id', 'attribute_value_id', 'attribute_name', 'value_name', 'color_code', 'price');
+            'items' => function ($query) {
+                $query->select('id', 'order_id', 'product_id', 'product_variant_id', 'variant_label_snapshot', 'quantity', 'unit_price', 'total_price')
+                    ->with([
+                        'product:id,image,category_id,quantity,unit_id',
+                        'product.unit',
+                        'attributes' => function ($query) {
+                            $query->select('id', 'order_item_id', 'attribute_id', 'attribute_value_id', 'attribute_name', 'value_name', 'color_code', 'price');
+                        }
+                    ]);
             }
-        ]);
-}
         ])->find($id);
 
         if (!$item)
@@ -115,7 +86,6 @@ class OrderController extends Controller
         $allowedIds  = $item->getAllowedStatuses();
         $allowedStatuses = $allStatuses->whereIn('id', $allowedIds);
 
-        // السائقون المتاحون للتعيين (نشطون وليس لديهم طلب قيد التوصيل)
         $availableDrivers = User::Drivers()
             ->where('is_active', 1)
             ->whereDoesntHave('driverOrders', fn($q) => $q->where('status_id', 4))
@@ -131,7 +101,6 @@ class OrderController extends Controller
 
         return view('dashboard.' . $this->view . '.show', $data);
     }
-
 
     public function changeorder_status(Request $request)
     {
@@ -157,12 +126,9 @@ class OrderController extends Controller
         DB::beginTransaction();
         $updateData = ['status_id' => $request->status_id];
 
-        // تسجيل الطوابع الزمنية تلقائياً عند تغيير الحالة
         if ($request->status_id == 3) $updateData['prepared_at']          = now();
         if ($request->status_id == 4) $updateData['out_for_delivery_at'] = now();
         if ($request->status_id == 5) $updateData['delivered_at']         = now();
-
-
 
         $item->update($updateData);
         DB::commit();
@@ -171,9 +137,6 @@ class OrderController extends Controller
             ->with(['success' => __('dashboard.Status_modified_successfully')]);
     }
 
-    /**
-     * تعيين سائق يدوياً للطلب من لوحة الإدارة
-     */
     public function assignDriver(Request $request)
     {
         $rules = [
@@ -186,19 +149,53 @@ class OrderController extends Controller
         if (!$item)
             return redirect()->route($this->routeName)->with(['error' => __('dashboard.ID_Not_Found')]);
 
-        // الطلب يجب أن يكون من نوع توصيل ولم يُسلَّم/يُلغَ بعد
-        if ($item->delivery_type !== 'delivery' || in_array($item->status_id, [5, 6])) {
-            return back()->withErrors(['error' => __('dashboard.The order status cannot be changed to this state')]);
+        // ✅ يُسمح بالتعيين فقط في الحالة 3 (جاهز) أو 4 (قيد التوصيل)
+        if ($item->delivery_type !== 'delivery' || !in_array($item->status_id, [3, 4])) {
+            return back()->withErrors(['error' => __('dashboard.assign_driver_status_error')])
+                ->withErrors([], 'AssignDriverBag');
         }
 
-        // التأكد أن المستخدم المُختار سائق فعلاً ونشط
-        $driver = User::Drivers()->where('is_active', 1)->find($request->driver_id);
-        if (!$driver) {
-            return back()->withErrors(['error' => __('dashboard.ID_Not_Found')]);
+        // قفل ذرّي على السائق للتأكد أنه ليس مشغولاً حالياً
+        $driver = DB::transaction(function () use ($request) {
+            $driver = User::Drivers()
+                ->where('is_active', 1)
+                ->where('id', $request->driver_id)
+                ->lockForUpdate()
+                ->first();
+
+            if (!$driver) {
+                return null;
+            }
+
+            $isBusy = Order::where('driver_id', $driver->id)
+                ->where('status_id', 4)
+                ->exists();
+
+            return $isBusy ? false : $driver;
+        });
+
+        if ($driver === null) {
+            return back()->withErrors(['driver_id' => __('dashboard.ID_Not_Found')], 'AssignDriverBag');
+        }
+
+        if ($driver === false) {
+            return back()->withErrors(['driver_id' => __('dashboard.Driver_Currently_Busy')], 'AssignDriverBag');
         }
 
         DB::beginTransaction();
-        $item->update(['driver_id' => $driver->id]);
+        
+        // تحديث حالة الطلب إلى 4 (قيد التوصيل) وتسجيل الوقت
+        $item->update([
+            'driver_id' => $driver->id,
+            'status_id' => 4,
+            'out_for_delivery_at' => now(),
+        ]);
+
+        // تنظيف أي عروض تلقائية معلّقة
+        \App\Models\OrderDriverOffer::where('order_id', $item->id)
+            ->where('status', 'pending')
+            ->update(['status' => 'expired', 'responded_at' => now()]);
+
         DB::commit();
 
         (new DriverAssignmentService())->notifyDriverAssigned($driver, $item);
@@ -207,9 +204,6 @@ class OrderController extends Controller
             ->with(['success' => __('dashboard.Status_modified_successfully')]);
     }
 
-    /**
-     * إلغاء تعيين السائق
-     */
     public function unassignDriver(Request $request)
     {
         $item = Order::findOrFail($request->id);
@@ -219,13 +213,33 @@ class OrderController extends Controller
         }
 
         DB::beginTransaction();
-        $item->update(['driver_id' => null]);
+
+        $wasInDelivery = $item->status_id == 4;
+        $updateData = ['driver_id' => null];
+
+        // لو كان قيد التوصيل، رجّعه لحالة "تم التجهيز" حتى يُعاد بثّه
+        if ($wasInDelivery) {
+            $updateData['status_id'] = 3;
+            $updateData['out_for_delivery_at'] = null;
+        }
+
+        $item->update($updateData);
+
+        // تنظيف أي عروض قديمة معلّقة
+        \App\Models\OrderDriverOffer::where('order_id', $item->id)
+            ->where('status', 'pending')
+            ->update(['status' => 'expired', 'responded_at' => now()]);
+
         DB::commit();
+
+        // إعادة بث الطلب لسائقين آخرين تلقائياً
+        if ($wasInDelivery) {
+            (new DriverAssignmentService())->broadcastToAvailableDrivers($item->fresh());
+        }
 
         return redirect()->route($this->routeName . '.show', $request->id)
             ->with(['success' => __('dashboard.Status_modified_successfully')]);
     }
-
 
     public function changeorder_payment_status(Request $request)
     {
@@ -233,13 +247,12 @@ class OrderController extends Controller
             'id' => 'required|numeric|exists:orders,id',
             'payment_status' => 'required|string|in:pending,paid,failed,cancelled,refunded',
         ];
-        $messages = [];
         $attributes = [
             'id' => __('dashboard.Number_Order'),
             'payment_status' => __('dashboard.Payment_Statussingle'),
         ];
 
-        $validator = Validator::make($request->all(), $rules, $messages, $attributes)->validateWithBag("ModalChangeMethodStatusOrderbag");
+        $validator = Validator::make($request->all(), $rules, [], $attributes)->validateWithBag("ModalChangeMethodStatusOrderbag");
         $item = Order::find($request->id);
         if (!$item)
             return redirect()->route($this->routeName)->with(['error' => __('dashboard.ID_Not_Found')]);
@@ -254,10 +267,8 @@ class OrderController extends Controller
         return redirect()->route($this->routeName . '.show', $request->id)->with(['success' => __('dashboard.Status_modified_successfully')]);
     }
 
-
     public function invoice($id, $downloadpdf = null)
     {
-
         $item = Order::with([
            'user:id,name,mobile,image',
             'driver:id,name,mobile,image',
@@ -267,15 +278,15 @@ class OrderController extends Controller
             'cancelReason',
             'address',
                'items' => function ($query) {
-    $query->select('id', 'order_id', 'product_id', 'product_variant_id', 'variant_label_snapshot', 'quantity', 'unit_price', 'total_price')
-        ->with([
-            'product:id,image,category_id,quantity,unit_id',
-            'product.unit',
-            'attributes' => function ($query) {
-                $query->select('id', 'order_item_id', 'attribute_id', 'attribute_value_id', 'attribute_name', 'value_name', 'color_code', 'price');
+                $query->select('id', 'order_id', 'product_id', 'product_variant_id', 'variant_label_snapshot', 'quantity', 'unit_price', 'total_price')
+                    ->with([
+                        'product:id,image,category_id,quantity,unit_id',
+                        'product.unit',
+                        'attributes' => function ($query) {
+                            $query->select('id', 'order_item_id', 'attribute_id', 'attribute_value_id', 'attribute_name', 'value_name', 'color_code', 'price');
+                        }
+                    ]);
             }
-        ]);
-}
         ])->find($id);
 
         if (!$item)
@@ -284,7 +295,6 @@ class OrderController extends Controller
         $store_info = Setting::whereIn('key', ['store_logo', 'store_email', 'store_mobile', 'store_name'])
             ->get()
             ->mapWithKeys(function ($setting) {
-                // ترجع القيمة المترجمة إذا موجودة، وإلا تستخدم plain_value
                 return [$setting->key => $setting->value ?? $setting->plain_value];
             });
 
@@ -294,12 +304,7 @@ class OrderController extends Controller
             'routeName' => $this->routeName
         ];
         if ($downloadpdf == 1) {
-            // $pdf = new \TCPDF();
-            //  Set document information
-
             $pdf = new \TCPDF();
-            //  Set document information
-
             $namefile = "invoice-" . $id . '.pdf';
             $Header_view = view('dashboard.' . $this->view . '.invoice.pdf.header', $data)->render();
             $footer_view = view('dashboard.' . $this->view . '.invoice.pdf.footer', $data)->render();
@@ -319,37 +324,18 @@ class OrderController extends Controller
             $pdf->SetAutoPageBreak(true, 30);
             $pdf->SetAuthor($namefile);
             $pdf->SetDisplayMode('real', 'default');
-
-            // first page
             $pdf->AddPage();
-
             $pdf->writeHTML($main_view);
-
             $pdf->writeHTML($summery_price_view, true, false, true, false, '');
             $pdf->lastPage();
-            // Output PDF
-            $pdf->Output($namefile, 'D'); //I Output 、D download
+            $pdf->Output($namefile, 'D');
         }
-
-
 
         return view('dashboard.' . $this->view . '.invoice.show', $data);
     }
-    /**
-     * Update the specified resource in storage.
-     *
-     * @param  \Illuminate\Http\Request  $request
-     * @param  int  $id
-     * @return \Illuminate\Http\Response
-     */
+
     public function update(Request $request, $id) {}
 
-    /**
-     * Remove the specified resource from storage.
-     *
-     * @param  int  $id
-     * @return \Illuminate\Http\Response
-     */
     public function destroy($id)
     {
         try {
@@ -369,11 +355,8 @@ class OrderController extends Controller
 
     public function deleteAll(Request $request)
     {
-
         $ids = explode(",", $request->ids);
         $orders = Order::find($ids);
-
-
 
         try {
             DB::beginTransaction();
@@ -390,13 +373,11 @@ class OrderController extends Controller
 
     public function Export_Excel(Request $request)
     {
-
         return Excel::download(new OrdersExport($request), 'orders.xlsx');
     }
 
     public function latest_order()
     {
-
         $orders = Order::where('restaurant_id', Auth::id())
             ->with('user:id,name', 'status:id', 'restaurant:id', 'coupon:id,code,discount_percentage')
             ->select('id', 'user_id', 'total_items',  'status_id', 'currency', 'read', 'created_at', 'restaurant_id', 'total_price', 'discount_amount', 'coupon_id', 'added_tax', 'final_price', 'app_commission_amount', 'restaurant_earning', 'app_commission_percentage')->latest('id')
