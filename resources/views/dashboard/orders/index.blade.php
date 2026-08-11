@@ -308,8 +308,17 @@
     <span class="badge bg-{{ $paymentBadge }}">{{ $item->payment_status_label }}</span>
 </td>
 
-<td>{{ $item->delivery_type_label }}</td>
-
+<td>
+    @if ($item->delivery_type === 'pickup')
+        <span class="badge" style="background-color:#E7F5FF;color:#0d6efd;padding:6px 12px;font-weight:600;border-radius:20px;">
+            <i class="fa fa-store mr-1"></i> {{ $item->delivery_type_label }}
+        </span>
+    @else
+        <span class="badge" style="background-color:#E9FBF0;color:#198754;padding:6px 12px;font-weight:600;border-radius:20px;">
+            <i class="fa fa-truck mr-1"></i> {{ $item->delivery_type_label }}
+        </span>
+    @endif
+</td>
 <td>
     @if ($item->delivery_type === 'delivery')
         {{ number_format($item->delivery_price, 2) }}
@@ -321,12 +330,22 @@
 <td>
     @if ($item->delivery_type === 'delivery')
         @if ($item->driver)
-            {{ $item->driver->name }}<br><small class="text-muted">{{ $item->driver->mobile }}</small>
+            <div class="d-flex align-items-center">
+                <span class="avatar avatar-sm brround mr-2" style="background-color:#E9FBF0;color:#198754;display:flex;align-items:center;justify-content:center;">
+                    <i class="fa fa-id-badge"></i>
+                </span>
+                <div>
+                    <div class="font-weight-bold">{{ $item->driver->name }}</div>
+                    <small class="text-muted">{{ $item->driver->mobile }}</small>
+                </div>
+            </div>
         @else
-            <span class="badge bg-secondary">{{ __('dashboard.No_Driver_Assigned') }}</span>
+            <span class="badge" style="background-color:#FFF4E5;color:#FF7A00;padding:6px 12px;font-weight:600;border-radius:20px;">
+                <i class="fa fa-exclamation-circle mr-1"></i> {{ __('dashboard.No_Driver_Assigned') }}
+            </span>
         @endif
     @else
-        —
+        <span class="text-muted">—</span>
     @endif
 </td>
 

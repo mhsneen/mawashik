@@ -52,86 +52,15 @@
 
                             <h6>{{ __('dashboard.subscribed_since') }} : {{ $item->created_at->diffForHumans() }}</h6>
 
-                            {{--  	<div class="row">
-											<div class="col-md-4 col mb20">
-												<h5>947</h5>
-												<h6 class="text-small text-muted mb-0">Followers</h6>
-											</div>
-											<div class="col-md-4 col mb20">
-												<h5>583</h5>
-												<h6 class="text-small text-muted mb-0">Tweets</h6>
-											</div>
-											<div class="col-md-4 col mb20">
-												<h5>48</h5>
-												<h6 class="text-small text-muted mb-0">Posts</h6>
-											</div>
-										</div>
-										<hr class="mg-y-30">
-										<label class="main-content-label tx-13 mg-b-20">Social</label>
-										<div class="main-profile-social-list">
-											<div class="media">
-												<div class="media-icon bg-primary-transparent text-primary">
-													<i class="icon ion-logo-github"></i>
-												</div>
-												<div class="media-body">
-													<span>Github</span> <a href="">github.com/spruko</a>
-												</div>
-											</div>
-											<div class="media">
-												<div class="media-icon bg-success-transparent text-success">
-													<i class="icon ion-logo-twitter"></i>
-												</div>
-												<div class="media-body">
-													<span>Twitter</span> <a href="">twitter.com/spruko.me</a>
-												</div>
-											</div>
-											<div class="media">
-												<div class="media-icon bg-info-transparent text-info">
-													<i class="icon ion-logo-linkedin"></i>
-												</div>
-												<div class="media-body">
-													<span>Linkedin</span> <a href="">linkedin.com/in/spruko</a>
-												</div>
-											</div>
-											<div class="media">
-												<div class="media-icon bg-danger-transparent text-danger">
-													<i class="icon ion-md-link"></i>
-												</div>
-												<div class="media-body">
-													<span>My Portfolio</span> <a href="">spruko.com/</a>
-												</div>
-											</div>
-										</div>
-										<hr class="mg-y-30">
-										<h6>Skills</h6>
-										<div class="skill-bar mb-4 clearfix mt-3">
-											<span>HTML5 / CSS3</span>
-											<div class="progress mt-2">
-												<div class="progress-bar bg-primary-gradient" role="progressbar" aria-valuenow="85" aria-valuemin="0" aria-valuemax="100" style="width: 85%"></div>
-											</div>
-										</div>
-										<!--skill bar-->
-										<div class="skill-bar mb-4 clearfix">
-											<span>Javascript</span>
-											<div class="progress mt-2">
-												<div class="progress-bar bg-danger-gradient" role="progressbar" aria-valuenow="85" aria-valuemin="0" aria-valuemax="100" style="width: 89%"></div>
-											</div>
-										</div>
-										<!--skill bar-->
-										<div class="skill-bar mb-4 clearfix">
-											<span>Bootstrap</span>
-											<div class="progress mt-2">
-												<div class="progress-bar bg-success-gradient" role="progressbar" aria-valuenow="85" aria-valuemin="0" aria-valuemax="100" style="width: 80%"></div>
-											</div>
-										</div>
-										<!--skill bar-->
-										<div class="skill-bar clearfix">
-											<span>Coffee</span>
-											<div class="progress mt-2">
-												<div class="progress-bar bg-info-gradient" role="progressbar" aria-valuenow="85" aria-valuemin="0" aria-valuemax="100" style="width: 95%"></div>
-											</div>
-										</div> --}}
-                            <!--skill bar-->
+                            {{-- ✅ رصيد المحفظة بشكل بارز --}}
+                            <div class="card mt-4" style="background: linear-gradient(135deg,#0d6efd,#00b4d8); border:none;">
+                                <div class="card-body text-center text-white py-4">
+                                    <i class="fa fa-wallet mb-2" style="font-size:26px;"></i>
+                                    <h6 class="mb-1 text-white-50">{{ __('dashboard.Wallet_Balance') }}</h6>
+                                    <h2 class="mb-0 text-white font-weight-bold">{{ number_format($walletBalance, 2) }} {{ __('dashboard.SAR') }}</h2>
+                                </div>
+                            </div>
+
                         </div><!-- main-profile-overview -->
                     </div>
                 </div>
@@ -140,49 +69,87 @@
         <div class="col-lg-8">
             <div class="row row-sm">
 
-
-
-
-                <div class="col-sm-12 col-xl-4 col-lg-12 col-md-12">
+                <div class="col-sm-12 col-xl-3 col-lg-6 col-md-6">
                     <div class="card ">
                         <div class="card-body">
                             <div class="counter-status d-flex md-mb-0">
                                 <div class="counter-icon bg-primary-transparent">
-                                    <i class="icon-layers text-primary"></i>
+                                    <i class="icon-clock text-primary"></i>
                                 </div>
                                 <div class="mr-auto">
-                                    <h5 class="tx-13">{{ __('dashboard.number_of_orders') }}</h5>
-                                    <h2 class="mb-0 tx-15 mb-1 mt-1">{{ $item->orders_count }} </h2>
-                                    {{--
-<p class="text-muted mb-0 tx-11"><i class="si si-arrow-up-circle text-success mr-1"></i>increase</p>
-
-                                                    --}}
+                                    <h5 class="tx-13">{{ __('dashboard.Today_Completed_Orders') }}</h5>
+                                    <h2 class="mb-0 tx-15 mb-1 mt-1">{{ $todayCompletedOrders }} </h2>
                                 </div>
                             </div>
                         </div>
                     </div>
                 </div>
 
-                <div class="col-sm-12 col-xl-4 col-lg-12 col-md-12">
+                <div class="col-sm-12 col-xl-3 col-lg-6 col-md-6">
                     <div class="card ">
                         <div class="card-body">
                             <div class="counter-status d-flex md-mb-0">
                                 <div class="counter-icon bg-success-transparent">
-                                    <i class="icon-rocket text-success"></i>
+                                    <i class="icon-layers text-success"></i>
                                 </div>
                                 <div class="mr-auto">
-                                    <h5 class="tx-13">{{ __('dashboard.Total_Purchases') }}</h5>
-                                    <h2 class="mb-0 tx-15 mb-1 mt-1"> {{ $totalCompletedOrdersPrice }} SAR </h2>
-                                    {{--
-<p class="text-muted mb-0 tx-11"><i class="si si-arrow-up-circle text-success mr-1"></i>increase</p>
-
-                                                    --}}
+                                    <h5 class="tx-13">{{ __('dashboard.Total_Completed_Orders') }}</h5>
+                                    <h2 class="mb-0 tx-15 mb-1 mt-1">{{ $totalCompletedOrders }} </h2>
                                 </div>
                             </div>
                         </div>
                     </div>
                 </div>
-                <div class="col-sm-12 col-xl-4 col-lg-12 col-md-12">
+
+                <div class="col-sm-12 col-xl-3 col-lg-6 col-md-6">
+                    <div class="card ">
+                        <div class="card-body">
+                            <div class="counter-status d-flex md-mb-0">
+                                <div class="counter-icon bg-warning-transparent">
+                                    <i class="icon-basket text-warning"></i>
+                                </div>
+                                <div class="mr-auto">
+                                    <h5 class="tx-13">{{ __('dashboard.Cash_Collected') }}</h5>
+                                    <h2 class="mb-0 tx-15 mb-1 mt-1">{{ number_format($cashCollected, 2) }}</h2>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-sm-12 col-xl-3 col-lg-6 col-md-6">
+                    <div class="card ">
+                        <div class="card-body">
+                            <div class="counter-status d-flex md-mb-0">
+                                <div class="counter-icon bg-info-transparent">
+                                    <i class="icon-credit-card text-info"></i>
+                                </div>
+                                <div class="mr-auto">
+                                    <h5 class="tx-13">{{ __('dashboard.Online_Earnings') }}</h5>
+                                    <h2 class="mb-0 tx-15 mb-1 mt-1">{{ number_format($onlineEarnings, 2) }}</h2>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-sm-12 col-xl-4 col-lg-6 col-md-6">
+                    <div class="card ">
+                        <div class="card-body">
+                            <div class="counter-status d-flex md-mb-0">
+                                <div class="counter-icon bg-danger-transparent">
+                                    <i class="icon-rocket text-danger"></i>
+                                </div>
+                                <div class="mr-auto">
+                                    <h5 class="tx-13">{{ __('dashboard.Total_Earnings') }}</h5>
+                                    <h2 class="mb-0 tx-15 mb-1 mt-1">{{ number_format($totalEarnings, 2) }} {{ __('dashboard.SAR') }}</h2>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-sm-12 col-xl-4 col-lg-6 col-md-6">
                     <div class="card ">
                         <div class="card-body">
                             <div class="counter-status d-flex md-mb-0">
@@ -204,9 +171,6 @@
                         </div>
                     </div>
                 </div>
-
-
-
 
             </div>
             <div class="card">
@@ -236,44 +200,49 @@
                                         <tr>
                                             <th>{{ __('dashboard.Order_number') }}</th>
                                             <th>{{ __('dashboard.Order_Status') }}</th>
-                                            <th>{{ __('dashboard.Created_at') }}</th>
-                                            <th>{{ __('dashboard.number_products') }}</th>
-
-                                            <th>{{ __('dashboard.TOTAL_DUE') }}</th>
-
+                                            <th>{{ __('dashboard.Delivery_Price') }}</th>
+                                            <th>{{ __('dashboard.Out_For_Delivery_At') }}</th>
+                                            <th>{{ __('dashboard.Delivered_At') }}</th>
 
                                             <th>{{ __('dashboard.Action') }}</th>
                                         </tr>
                                     </thead>
                                     <tbody>
-                                        @foreach ($item->orders as $order)
+                                        @forelse ($item->orders as $order)
                                             <tr id="tr_{{ $order->id }}">
 
-                                                <td>{{ $order->id }}
+                                                <td>{{ $order->order_number }}
                                                     @if ($order->read == '0')
                                                         <span class="badge bg-info me-1">{{ __('dashboard.New') }}</span>
                                                     @endif
-
                                                 </td>
 
                                                 <td>
                                                     {{ $order->status->name }}
-
                                                 </td>
 
+                                                <td>{{ number_format($order->delivery_price, 2) }}</td>
 
-                                                <td>{{ $order->created_at->diffForHumans() }}</td>
+                                                <td>
+                                                    @if ($order->out_for_delivery_at)
+                                                        <i class="fa fa-truck text-primary mr-1"></i>
+                                                        {{ \Carbon\Carbon::parse($order->out_for_delivery_at)->format('Y-m-d h:i A') }}
+                                                    @else
+                                                        <span class="text-muted">—</span>
+                                                    @endif
+                                                </td>
 
-                                                <td>{{ $order->total_items }}</td>
-                                                <td>{{ $order->final_price }}</td>
-
+                                                <td>
+                                                    @if ($order->delivered_at)
+                                                        <i class="fa fa-check-circle text-success mr-1"></i>
+                                                        {{ \Carbon\Carbon::parse($order->delivered_at)->format('Y-m-d h:i A') }}
+                                                    @else
+                                                        <span class="text-muted">—</span>
+                                                    @endif
+                                                </td>
 
                                                 <td>
                                                     <div class="d-flex my-xl-auto right-content">
-
-
-
-
                                                         <div class="pr-1 mb-3 mb-xl-0">
                                                             <a href="{{ route('orders.show', $order->id) }}"
                                                                 class=" btn btn-success btn-icon ml-2" data-placement="top"
@@ -282,14 +251,14 @@
                                                                     class="las la-eye"></i></a>
                                                         </div>
                                                     </div>
-
-
-
-
                                                 </td>
 
                                             </tr>
-                                        @endforeach
+                                        @empty
+                                            <tr>
+                                                <td colspan="6" class="text-center text-muted">{{ __('dashboard.No_Data_in_this_category') }}</td>
+                                            </tr>
+                                        @endforelse
 
                                     </tbody>
                                 </table>
@@ -309,35 +278,21 @@
                                         </tr>
                                     </thead>
                                     <tbody>
-                                        @foreach ($reviews as $review)
+                                        @forelse ($reviews as $review)
                                             <tr style="text-align: center">
 
-                                                <td>{{ $review->order_id }}</td>
+                                                <td>{{ $review->order?->order_number ?? $review->order_id }}</td>
                                                 <td>
 
 
                                                     <div class="rating-stars  ">
                                                         <div class="rating-stars-container">
-                                                            <div
-                                                                class="rating-star @if ($review->rating >= 1) is--active @else nostaractive @endif">
-                                                                <i class="fa fa-star"></i>
-                                                            </div>
-                                                            <div
-                                                                class="rating-star @if ($review->rating >= 2) is--active @else nostaractive @endif">
-                                                                <i class="fa fa-star"></i>
-                                                            </div>
-                                                            <div
-                                                                class="rating-star @if ($review->rating >= 3) is--active @else nostaractive @endif">
-                                                                <i class="fa fa-star"></i>
-                                                            </div>
-                                                            <div
-                                                                class="rating-star @if ($review->rating >= 4) is--active @else nostaractive @endif">
-                                                                <i class="fa fa-star"></i>
-                                                            </div>
-                                                            <div
-                                                                class="rating-star @if ($review->rating >= 5) is--active @else nostaractive @endif">
-                                                                <i class="fa fa-star"></i>
-                                                            </div>
+                                                            @for ($i = 1; $i <= 5; $i++)
+                                                                <div
+                                                                    class="rating-star @if ($review->rating >= $i) is--active @else nostaractive @endif">
+                                                                    <i class="fa fa-star"></i>
+                                                                </div>
+                                                            @endfor
                                                         </div>
                                                     </div>
 
@@ -351,7 +306,11 @@
 
 
                                             </tr>
-                                        @endforeach
+                                        @empty
+                                            <tr>
+                                                <td colspan="3" class="text-center text-muted">{{ __('dashboard.No_Ratings_Yet') }}</td>
+                                            </tr>
+                                        @endforelse
 
                                     </tbody>
                                 </table>

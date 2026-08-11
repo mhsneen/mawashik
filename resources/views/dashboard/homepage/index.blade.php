@@ -309,8 +309,6 @@
                         <h4 class="card-title mb-0" style="font-size:18px">{{ __('dashboard.Order_Statuses') }}</h4>
                         <i class="mdi mdi-dots-horizontal text-gray"></i>
                     </div>
-                    {{-- 								<p class="tx-12 text-muted mb-0">Order Status and Tracking. Track your order from ship date to arrival. To begin, enter your order number.</p>
- --}}
                 </div>
                 <div class="card-body">
                    <div class="total-revenue">
@@ -345,41 +343,6 @@
 
     <!-- row opened -->
     <div class="row row-sm row-deck">
-        {{-- <div class="col-md-12 col-lg-4 col-xl-4">
-						<div class="card card-dashboard-eight pb-2">
-							<h6 class="card-title">Your Top Countries</h6><span class="d-block mg-b-10 text-muted tx-12">Sales performance revenue based by country</span>
-							<div class="list-group">
-								<div class="list-group-item border-top-0">
-									<i class="flag-icon flag-icon-us flag-icon-squared"></i>
-									<p>United States</p><span>$1,671.10</span>
-								</div>
-								<div class="list-group-item">
-									<i class="flag-icon flag-icon-nl flag-icon-squared"></i>
-									<p>Netherlands</p><span>$1,064.75</span>
-								</div>
-								<div class="list-group-item">
-									<i class="flag-icon flag-icon-gb flag-icon-squared"></i>
-									<p>United Kingdom</p><span>$1,055.98</span>
-								</div>
-								<div class="list-group-item">
-									<i class="flag-icon flag-icon-ca flag-icon-squared"></i>
-									<p>Canada</p><span>$1,045.49</span>
-								</div>
-								<div class="list-group-item">
-									<i class="flag-icon flag-icon-in flag-icon-squared"></i>
-									<p>India</p><span>$1,930.12</span>
-								</div>
-								<div class="list-group-item border-bottom-0 mb-0">
-									<i class="flag-icon flag-icon-au flag-icon-squared"></i>
-									<p>Australia</p><span>$1,042.00</span>
-								</div>
-							</div>
-						</div>
-					</div>
-				--}}
-
-
-
 
         <div class="col-md-12 col-lg-7 col-xl-7">
             <div class="card card-table-two">
@@ -409,8 +372,8 @@
                                     <td class="tx-center tx-medium tx-danger">{{ $rlfo->status->name }}</td>
                                     <td class="tx-center tx-medium tx-inverse">
                                         {{ floatval($rlfo->final_price) }} {{ $rlfo->currency }}</td>
-                                    <td class="tx-center tx-medium tx-inverse"> <a
-                                            href="{{ route('orders.show', $rlfo->id) }}"
+                                    <td class="tx-center tx-medium tx-inverse">
+                                           <a href="{{ route('orders.show', $rlfo->id) }}"
                                             class=" btn btn-success btn-icon ml-2" data-placement="top"
                                             data-toggle="tooltip" title="{{ __('dashboard.View') }} "><i
                                                 class="las la-eye"></i></a></td>
@@ -437,39 +400,43 @@
                     <table class="table table-striped table-bordered mb-0 text-sm-nowrap text-lg-nowrap text-xl-nowrap">
                         <thead>
                             <tr>
-                                <th class="wd-lg-30p tx-center">{{ __('dashboard.Client') }}</th>
-                                <th class="wd-lg-25p tx-center">{{ __('dashboard.Order_Number') }}</th>
-                                <th class="wd-lg-45p tx-center">{{ __('dashboard.Evaluation') }}</th>
-
-
+                                <th class="tx-center">{{ __('dashboard.Client') }}</th>
+                                <th class="tx-center">{{ __('dashboard.Order_Number') }}</th>
+                                <th class="tx-center">{{ __('dashboard.Evaluation') }}</th>
+                                <th class="tx-center">{{ __('dashboard.comment') }}</th>
                             </tr>
                         </thead>
                         <tbody>
-                            @foreach ($recently_last_five_order_reviews as $rlfor)
+                            @forelse ($recently_last_five_order_reviews as $rlfor)
                                 <tr>
 
-                                    <td class="tx-center tx-medium tx-inverse"> {{ $rlfor->client->name }}</td>
-                                    <td class="tx-center tx-medium tx-inverse"> {{ $rlfor->order_number }}</td>
+                                    <td class="tx-center tx-medium tx-inverse"> {{ $rlfor->client->name ?? '-' }}</td>
+                                    <td class="tx-center tx-medium tx-inverse"> {{ $rlfor->order->order_number ?? '-' }}</td>
                                     <td class="tx-center tx-medium tx-inverse">
                                         <div class="rating-stars  ">
-                                            <div class="rating-stars-container ">
-                                                <div class="rating-star @if ($rlfor->rating >= 1) is--active @else nostaractive @endif"
+                                            <div class="rating-stars-container">
+                                                <div
+                                                    class="rating-star @if ($rlfor->rating >= 1) is--active @else nostaractive @endif"
                                                     style="font-size: 12pt;padding: 4px 5px;">
                                                     <i class="fa fa-star"></i>
                                                 </div>
-                                                <div class="rating-star @if ($rlfor->rating >= 2) is--active @else nostaractive @endif"
+                                                <div
+                                                    class="rating-star @if ($rlfor->rating >= 2) is--active @else nostaractive @endif"
                                                     style="font-size: 12pt;padding: 4px 5px;">
                                                     <i class="fa fa-star"></i>
                                                 </div>
-                                                <div class="rating-star @if ($rlfor->rating >= 3) is--active @else nostaractive @endif"
+                                                <div
+                                                    class="rating-star @if ($rlfor->rating >= 3) is--active @else nostaractive @endif"
                                                     style="font-size: 12pt;padding: 4px 5px;">
                                                     <i class="fa fa-star"></i>
                                                 </div>
-                                                <div class="rating-star @if ($rlfor->rating >= 4) is--active @else nostaractive @endif"
+                                                <div
+                                                    class="rating-star @if ($rlfor->rating >= 4) is--active @else nostaractive @endif"
                                                     style="font-size: 12pt;padding: 4px 5px;">
                                                     <i class="fa fa-star"></i>
                                                 </div>
-                                                <div class="rating-star @if ($rlfor->rating >= 5) is--active @else nostaractive @endif"
+                                                <div
+                                                    class="rating-star @if ($rlfor->rating >= 5) is--active @else nostaractive @endif"
                                                     style="font-size: 12pt;padding: 4px 5px;">
                                                     <i class="fa fa-star"></i>
                                                 </div>
@@ -477,10 +444,17 @@
                                         </div>
 
                                     </td>
+                                    <td class="tx-center tx-medium tx-inverse" style="max-width:160px; white-space:normal;">
+                                        {{ $rlfor->comment ?? '-' }}
+                                    </td>
 
 
                                 </tr>
-                            @endforeach
+                            @empty
+                                <tr>
+                                    <td colspan="4" class="text-center text-muted">{{ __('dashboard.No_Data_in_this_category') }}</td>
+                                </tr>
+                            @endforelse
 
                         </tbody>
                     </table>
@@ -493,43 +467,65 @@
 
     </div>
     <!-- /row -->
+
+    {{-- ✅ صف جديد: أحدث تقييمات العملاء للسائقين --}}
+    <div class="row row-sm row-deck">
+        <div class="col-md-12 col-lg-12 col-xl-12">
+            <div class="card card-table-two">
+                <div class="d-flex justify-content-between">
+                    <h4 class="card-title mb-1" style="font-size:16px">{{ __('dashboard.Latest_Driver_Reviews') }}</h4>
+                    <i class="mdi mdi-dots-horizontal text-gray"></i>
+                </div>
+                <span class="tx-12 tx-muted mb-3 "></span>
+
+                <div class="table-responsive country-table">
+                    <table class="table table-striped table-bordered mb-0 text-sm-nowrap text-lg-nowrap text-xl-nowrap">
+                        <thead>
+                            <tr>
+                                <th class="tx-center">{{ __('dashboard.Client') }}</th>
+                                <th class="tx-center">{{ __('dashboard.Driver') }}</th>
+                                <th class="tx-center">{{ __('dashboard.Order_Number') }}</th>
+                                <th class="tx-center">{{ __('dashboard.Evaluation') }}</th>
+                                <th class="tx-center">{{ __('dashboard.comment') }}</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @forelse ($recently_last_five_driver_reviews as $rldr)
+                                <tr>
+                                    <td class="tx-center tx-medium tx-inverse">{{ $rldr->client->name ?? '-' }}</td>
+                                    <td class="tx-center tx-medium tx-inverse">{{ $rldr->driver->name ?? '-' }}</td>
+                                    <td class="tx-center tx-medium tx-inverse">{{ $rldr->order->order_number ?? '-' }}</td>
+                                    <td class="tx-center tx-medium tx-inverse">
+                                        <div class="rating-stars  ">
+                                            <div class="rating-stars-container">
+                                                @for ($i = 1; $i <= 5; $i++)
+                                                    <div class="rating-star @if ($rldr->rating >= $i) is--active @else nostaractive @endif"
+                                                        style="font-size: 12pt;padding: 4px 5px;">
+                                                        <i class="fa fa-star"></i>
+                                                    </div>
+                                                @endfor
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td class="tx-center tx-medium tx-inverse" style="max-width:220px; white-space:normal;">
+                                        {{ $rldr->comment ?? '-' }}
+                                    </td>
+                                </tr>
+                            @empty
+                                <tr>
+                                    <td colspan="5" class="text-center text-muted">{{ __('dashboard.No_Driver_Ratings_Yet') }}</td>
+                                </tr>
+                            @endforelse
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- /row -->
+
     <!-- row opened -->
     <div class="row row-sm row-deck">
-        {{-- <div class="col-md-12 col-lg-4 col-xl-4">
-						<div class="card card-dashboard-eight pb-2">
-							<h6 class="card-title">Your Top Countries</h6><span class="d-block mg-b-10 text-muted tx-12">Sales performance revenue based by country</span>
-							<div class="list-group">
-								<div class="list-group-item border-top-0">
-									<i class="flag-icon flag-icon-us flag-icon-squared"></i>
-									<p>United States</p><span>$1,671.10</span>
-								</div>
-								<div class="list-group-item">
-									<i class="flag-icon flag-icon-nl flag-icon-squared"></i>
-									<p>Netherlands</p><span>$1,064.75</span>
-								</div>
-								<div class="list-group-item">
-									<i class="flag-icon flag-icon-gb flag-icon-squared"></i>
-									<p>United Kingdom</p><span>$1,055.98</span>
-								</div>
-								<div class="list-group-item">
-									<i class="flag-icon flag-icon-ca flag-icon-squared"></i>
-									<p>Canada</p><span>$1,045.49</span>
-								</div>
-								<div class="list-group-item">
-									<i class="flag-icon flag-icon-in flag-icon-squared"></i>
-									<p>India</p><span>$1,930.12</span>
-								</div>
-								<div class="list-group-item border-bottom-0 mb-0">
-									<i class="flag-icon flag-icon-au flag-icon-squared"></i>
-									<p>Australia</p><span>$1,042.00</span>
-								</div>
-							</div>
-						</div>
-					</div>
-				--}}
-
-
-
 
         <div class="col-md-12 col-lg-7 col-xl-7">
             <div class="card card-table-two">
@@ -630,16 +626,12 @@
                                         </div>
                                     </td>
                                     <td class="tx-center tx-medium tx-inverse">
-                                        <span class="badge {{ $epq->quantity <= 0 ? 'bg-dark' : 'bg-warning' }}">
+                                        <span class="badge bg-warning">
                                             {{ $epq->quantity }}
                                         </span>
                                     </td>
                                     <td class="tx-center tx-medium tx-inverse">
-                                        @if($epq->quantity <= 0)
-                                            <span class="badge bg-dark">{{ __('dashboard.Expired') }}</span>
-                                        @else
-                                            <span class="badge bg-warning">{{ __('dashboard.Expiring_Soon') }}</span>
-                                        @endif
+                                        <span class="badge bg-warning">{{ __('dashboard.Expiring_Soon') }}</span>
                                     </td>
                                 </tr>
                             @empty

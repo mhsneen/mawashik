@@ -3,7 +3,7 @@
 namespace App\Http\Controllers\Dashboard;
 
 use App\Http\Controllers\Controller;
-use App\Models\{User};
+use App\Models\{User, Wallet};
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Exception;
@@ -286,10 +286,19 @@ class DriverController extends Controller
         // الطلبيات المعيّنة لهذا السائق (لعرضها بتبويب Orders بالصفحة)
         $item->setRelation('orders', $item->driverOrders()->with('status:id')->latest('id')->get());
 
-        // إجمالي مبيعات الطلبات المُسلَّمة عن طريق هذا السائق
-        $totalCompletedOrdersPrice = $item->driverOrders()
-            ->where('status_id', 5)
-            ->sum('final_price');
+        // ✅ إحصائيات المحفظة والأرباح (نفس منطق واجهة الـ API الخاصة بالسائق)
+        $wallet = Wallet::firstOrCreate(
+            ['user_id' => $item->id],
+            ['balance' => 0, 'rolename' => 'driver']
+        );
+
+        $completedOrdersQuery = $item->driverOrders()->where('status_id', 5);
+
+        $todayCompletedOrders = (clone $completedOrdersQuery)->whereDate('delivered_at', today())->count();
+        $totalCompletedOrders = (clone $completedOrdersQuery)->count();
+        $cashCollected = (clone $completedOrdersQuery)->where('payment_method', 'cash')->sum('final_price');
+        $onlineEarnings = (clone $completedOrdersQuery)->whereIn('payment_method', ['online', 'wallet'])->sum('delivery_price');
+        $totalEarnings = (clone $completedOrdersQuery)->sum('delivery_price');
 
         // تقييمات السائق ومتوسطها
         $reviews = $item->driverReviews()->with('client:id,name')->latest('id')->get();
@@ -297,13 +306,18 @@ class DriverController extends Controller
         $reviewsCount = $reviews->count();
 
         $data = [
-            'item'                       => $item,
-            'routeName'                  => $this->routeName,
-            'namesection'                => $this->namesection,
-            'totalCompletedOrdersPrice'  => $totalCompletedOrdersPrice,
-            'reviews'                    => $reviews,
-            'averageRating'              => $averageRating,
-            'reviewsCount'               => $reviewsCount,
+            'item'                      => $item,
+            'routeName'                 => $this->routeName,
+            'namesection'               => $this->namesection,
+            'walletBalance'             => (float) $wallet->balance,
+            'todayCompletedOrders'      => $todayCompletedOrders,
+            'totalCompletedOrders'      => $totalCompletedOrders,
+            'cashCollected'             => (float) $cashCollected,
+            'onlineEarnings'            => (float) $onlineEarnings,
+            'totalEarnings'             => (float) $totalEarnings,
+            'reviews'                   => $reviews,
+            'averageRating'             => $averageRating,
+            'reviewsCount'              => $reviewsCount,
         ];
         return view('dashboard.' . $this->view . '.show', $data);
     }

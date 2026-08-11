@@ -3,7 +3,7 @@
 namespace App\Http\Controllers\Dashboard;
 
 use App\Http\Controllers\Controller;
-use App\Models\{User, OrderReview};
+use App\Models\{User, OrderReview, DriverReview};
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Exception;
@@ -125,15 +125,25 @@ class ClientsController extends Controller
         if (!$item)
             return redirect()->route($this->routeName)->with(['error' => __('dashboard.ID_Not_Found')]);
 
+        // تقييمات العميل على الطلبات
         $reviews = OrderReview::where('client_id', $item->id)->get();
 
+        // ✅ تقييمات العميل للسائقين (العميل هو من يقيّم السائق)
+        $driverReviews = DriverReview::where('client_id', $item->id)
+            ->with('driver:id,name')
+            ->latest('id')
+            ->get();
 
+        // ✅ تصحيح: مجموع المشتريات يجب احتسابه فقط على الطلبات "المُسلَّمة فعلياً" (status_id = 5)،
+        // وليس status_id = 4 (قيد التوصيل) كما كان سابقاً - وهو سبب ظهور القيمة 0 دائماً.
         $totalCompletedOrdersPrice = $item->orders()
-            ->where('status_id', 4)
+            ->where('status_id', 5)
             ->sum('final_price');
+
         $data = [
             'item' => $item,
             'reviews' => $reviews,
+            'driverReviews' => $driverReviews,
             'totalCompletedOrdersPrice' => $totalCompletedOrdersPrice,
             'routeName' => $this->routeName
         ];

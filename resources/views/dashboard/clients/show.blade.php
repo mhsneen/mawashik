@@ -52,86 +52,6 @@
 
                             <h6>{{ __('dashboard.subscribed_since') }} : {{ $item->created_at->diffForHumans() }}</h6>
 
-                            {{--  	<div class="row">
-											<div class="col-md-4 col mb20">
-												<h5>947</h5>
-												<h6 class="text-small text-muted mb-0">Followers</h6>
-											</div>
-											<div class="col-md-4 col mb20">
-												<h5>583</h5>
-												<h6 class="text-small text-muted mb-0">Tweets</h6>
-											</div>
-											<div class="col-md-4 col mb20">
-												<h5>48</h5>
-												<h6 class="text-small text-muted mb-0">Posts</h6>
-											</div>
-										</div>
-										<hr class="mg-y-30">
-										<label class="main-content-label tx-13 mg-b-20">Social</label>
-										<div class="main-profile-social-list">
-											<div class="media">
-												<div class="media-icon bg-primary-transparent text-primary">
-													<i class="icon ion-logo-github"></i>
-												</div>
-												<div class="media-body">
-													<span>Github</span> <a href="">github.com/spruko</a>
-												</div>
-											</div>
-											<div class="media">
-												<div class="media-icon bg-success-transparent text-success">
-													<i class="icon ion-logo-twitter"></i>
-												</div>
-												<div class="media-body">
-													<span>Twitter</span> <a href="">twitter.com/spruko.me</a>
-												</div>
-											</div>
-											<div class="media">
-												<div class="media-icon bg-info-transparent text-info">
-													<i class="icon ion-logo-linkedin"></i>
-												</div>
-												<div class="media-body">
-													<span>Linkedin</span> <a href="">linkedin.com/in/spruko</a>
-												</div>
-											</div>
-											<div class="media">
-												<div class="media-icon bg-danger-transparent text-danger">
-													<i class="icon ion-md-link"></i>
-												</div>
-												<div class="media-body">
-													<span>My Portfolio</span> <a href="">spruko.com/</a>
-												</div>
-											</div>
-										</div>
-										<hr class="mg-y-30">
-										<h6>Skills</h6>
-										<div class="skill-bar mb-4 clearfix mt-3">
-											<span>HTML5 / CSS3</span>
-											<div class="progress mt-2">
-												<div class="progress-bar bg-primary-gradient" role="progressbar" aria-valuenow="85" aria-valuemin="0" aria-valuemax="100" style="width: 85%"></div>
-											</div>
-										</div>
-										<!--skill bar-->
-										<div class="skill-bar mb-4 clearfix">
-											<span>Javascript</span>
-											<div class="progress mt-2">
-												<div class="progress-bar bg-danger-gradient" role="progressbar" aria-valuenow="85" aria-valuemin="0" aria-valuemax="100" style="width: 89%"></div>
-											</div>
-										</div>
-										<!--skill bar-->
-										<div class="skill-bar mb-4 clearfix">
-											<span>Bootstrap</span>
-											<div class="progress mt-2">
-												<div class="progress-bar bg-success-gradient" role="progressbar" aria-valuenow="85" aria-valuemin="0" aria-valuemax="100" style="width: 80%"></div>
-											</div>
-										</div>
-										<!--skill bar-->
-										<div class="skill-bar clearfix">
-											<span>Coffee</span>
-											<div class="progress mt-2">
-												<div class="progress-bar bg-info-gradient" role="progressbar" aria-valuenow="85" aria-valuemin="0" aria-valuemax="100" style="width: 95%"></div>
-											</div>
-										</div> --}}
-                            <!--skill bar-->
                         </div><!-- main-profile-overview -->
                     </div>
                 </div>
@@ -153,10 +73,6 @@
                                 <div class="mr-auto">
                                     <h5 class="tx-13">{{ __('dashboard.number_of_orders') }}</h5>
                                     <h2 class="mb-0 tx-15 mb-1 mt-1">{{ $item->orders_count }} </h2>
-                                    {{--
-<p class="text-muted mb-0 tx-11"><i class="si si-arrow-up-circle text-success mr-1"></i>increase</p>
-
-                                                    --}}
                                 </div>
                             </div>
                         </div>
@@ -172,11 +88,7 @@
                                 </div>
                                 <div class="mr-auto">
                                     <h5 class="tx-13">{{ __('dashboard.Total_Purchases') }}</h5>
-                                    <h2 class="mb-0 tx-15 mb-1 mt-1"> {{ $totalCompletedOrdersPrice }} SAR </h2>
-                                    {{--
-<p class="text-muted mb-0 tx-11"><i class="si si-arrow-up-circle text-success mr-1"></i>increase</p>
-
-                                                    --}}
+                                    <h2 class="mb-0 tx-15 mb-1 mt-1"> {{ number_format($totalCompletedOrdersPrice, 2) }} SAR </h2>
                                 </div>
                             </div>
                         </div>
@@ -203,6 +115,11 @@
                                             class="lar la-star tx-20 mr-1"></i></span> <span
                                         class="hidden-xs">{{ __('dashboard.Evaluations') }}</span> </a>
                             </li>
+                            <li class="">
+                                <a href="#driverratings" data-toggle="tab" aria-expanded="false"> <span class="visible-xs"><i
+                                            class="las la-id-badge tx-20 mr-1"></i></span> <span
+                                        class="hidden-xs">{{ __('dashboard.Driver_Ratings') }}</span> </a>
+                            </li>
 
                         </ul>
                     </div>
@@ -228,7 +145,7 @@
                                         @foreach ($item->orders as $order)
                                             <tr id="tr_{{ $order->id }}">
 
-                                                <td>{{ $order->id }}
+                                                <td>{{ $order->order_number }}
                                                     @if ($order->read == '0')
                                                         <span class="badge bg-info me-1">{{ __('dashboard.New') }}</span>
                                                     @endif
@@ -288,10 +205,10 @@
                                         </tr>
                                     </thead>
                                     <tbody>
-                                        @foreach ($reviews as $review)
+                                        @forelse ($reviews as $review)
                                             <tr style="text-align: center">
 
-                                                <td>{{ $review->order_id }}</td>
+                                                <td>{{ $review->order?->order_number ?? $review->order_id }}</td>
                                                 <td>
 
 
@@ -330,11 +247,54 @@
 
 
                                             </tr>
-                                        @endforeach
+                                        @empty
+                                            <tr>
+                                                <td colspan="3" class="text-center text-muted">{{ __('dashboard.The_order_not_evaluated') }}</td>
+                                            </tr>
+                                        @endforelse
 
                                     </tbody>
                                 </table>
 
+                            </div>
+                        </div>
+
+                        <div class="tab-pane" id="driverratings">
+                            <div class="product-details table-responsive text-nowrap">
+                                <table class="table table-bordered table-hover mb-0 text-nowrap">
+                                    <thead>
+                                        <tr>
+                                            <th>{{ __('dashboard.Order_number') }}</th>
+                                            <th>{{ __('dashboard.Driver') }}</th>
+                                            <th>{{ __('dashboard.Evaluation') }}</th>
+                                            <th>{{ __('dashboard.Customer_Opinion') }}</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        @forelse ($driverReviews as $dReview)
+                                            <tr style="text-align: center">
+                                                <td>{{ $dReview->order?->order_number ?? $dReview->order_id }}</td>
+                                                <td>{{ $dReview->driver->name ?? '-' }}</td>
+                                                <td>
+                                                    <div class="rating-stars  ">
+                                                        <div class="rating-stars-container">
+                                                            @for ($i = 1; $i <= 5; $i++)
+                                                                <div class="rating-star @if ($dReview->rating >= $i) is--active @else nostaractive @endif">
+                                                                    <i class="fa fa-star"></i>
+                                                                </div>
+                                                            @endfor
+                                                        </div>
+                                                    </div>
+                                                </td>
+                                                <td>{{ $dReview->comment }}</td>
+                                            </tr>
+                                        @empty
+                                            <tr>
+                                                <td colspan="4" class="text-center text-muted">{{ __('dashboard.No_Driver_Ratings_Yet') }}</td>
+                                            </tr>
+                                        @endforelse
+                                    </tbody>
+                                </table>
                             </div>
                         </div>
 

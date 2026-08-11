@@ -824,5 +824,15 @@ return [
 'Assign_Driver' => 'تعيين سائق',
 'Driver_Currently_Busy' => 'السائق مشغول حالياً بطلب آخر',
 'No_Driver_Assigned' => 'لم يتم تعيين سائق',
-
+'Latest_Driver_Reviews' => 'أحدث تقييمات السائقين',
+'No_Driver_Ratings_Yet' => 'لم يقم بتقييم أي سائق بعد',
+'Driver_Ratings' => 'تقييم السائقين',
+'Wallet_Balance' => 'رصيد المحفظة',
+'Today_Completed_Orders' => 'طلبات اليوم المكتملة',
+'Total_Completed_Orders' => 'إجمالي الطلبات المكتملة',
+'Cash_Collected' => 'المبلغ المستلم كاش',
+'Online_Earnings' => 'مستحقات الطلبات الإلكترونية',
+'Total_Earnings' => 'إجمالي أرباح التوصيل',
+'Out_For_Delivery_At' => 'وقت الخروج للتوصيل',
+'Delivered_At' => 'وقت التسليم',
 ];
