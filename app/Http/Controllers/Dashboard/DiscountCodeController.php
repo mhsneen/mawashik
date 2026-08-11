@@ -216,14 +216,32 @@ class DiscountCodeController  extends Controller
     public function user_usage($id)
     {
         $discountcode = DiscountCode::find($id);
+        if (!$discountcode) {
+            return redirect()->route($this->routeName)->with(['error' => __('dashboard.ID_Not_Found')]);
+        }
+
+        // ✅ حساب عدد الاستخدامات للطلبات الموجودة فعلياً (الغير محذوفة)
+        $valid_usage_count = DiscountCodeUsage::where('discount_code_id', $id)
+            ->whereHas('order', function ($query) {
+                $query->whereNull('deleted_at'); // استبعاد الطلبات المحذوفة
+            })
+            ->count();
 
         $items = DiscountCodeUsage::where('discount_code_id', $id)
-            ->with('order')
+            ->with([
+                'user:id,name,mobile',
+                // نستخدم withTrashed لعرض السجل في الجدول، لكن سنميزه بصرياً
+                'order' => function ($q) {
+                    $q->withTrashed()->select('id', 'order_number', 'total_price', 'discount_amount', 'added_tax', 'price_after_discount', 'tax_amount', 'price_after_tax', 'deleted_at');
+                },
+            ])
             ->orderBy('id', 'DESC')
             ->paginate(PAGANATION_COUNT);
+
         $data = [
             'items' => $items,
             'discountcode' => $discountcode,
+            'valid_usage_count' => $valid_usage_count, // ✅ تمرير العدد للواجهة
             'routeName' => $this->routeName,
             'folder' => $this->folder,
             'namesection' => $this->namesection

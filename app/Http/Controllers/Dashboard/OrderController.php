@@ -38,7 +38,7 @@ class OrderController extends Controller
                 'total_price', 'discount_amount', 'coupon_id', 'added_tax', 'final_price', 'order_number',
                 'payment_status', 'delivery_type', 'delivery_price', 'payment_method', 'driver_id'
             )->latest('id')->paginate(PAGANATION_COUNT)->withQueryString();
-        
+
         $orderstatus = Orderstatus::select('id')->orderBy('id', 'asc')->get();
 
         $data = [
@@ -56,24 +56,25 @@ class OrderController extends Controller
     public function show($id)
     {
         $item = Order::with([
-            'user:id,name,mobile,image',
-            'driver:id,name,mobile,image',
-            'status:id',
-            'coupon:id,code,discount_percentage',
-            'review',
-            'cancelReason',
-            'address',
-            'items' => function ($query) {
-                $query->select('id', 'order_id', 'product_id', 'product_variant_id', 'variant_label_snapshot', 'quantity', 'unit_price', 'total_price')
-                    ->with([
-                        'product:id,image,category_id,quantity,unit_id',
-                        'product.unit',
-                        'attributes' => function ($query) {
-                            $query->select('id', 'order_item_id', 'attribute_id', 'attribute_value_id', 'attribute_name', 'value_name', 'color_code', 'price');
-                        }
-                    ]);
-            }
-        ])->find($id);
+    'user:id,name,mobile,image',
+    'driver:id,name,mobile,image',
+    'status:id',
+    'coupon:id,code,discount_percentage',
+    'review',
+    'driverReview',          // ✅ جديد: لتغذية تبويب تقييم السائق
+    'cancelReason',
+    'address',
+    'items' => function ($query) {
+        $query->select('id', 'order_id', 'product_id', 'product_variant_id', 'variant_label_snapshot', 'quantity', 'unit_price', 'total_price')
+            ->with([
+                'product:id,image,category_id,quantity,unit_id',
+                'product.unit',
+                'attributes' => function ($query) {
+                    $query->select('id', 'order_item_id', 'attribute_id', 'attribute_value_id', 'attribute_name', 'value_name', 'color_code', 'price');
+                }
+            ]);
+    }
+])->find($id);
 
         if (!$item)
             return redirect()->route($this->routeName)->with(['error' => __('dashboard.ID_Not_Found')]);
@@ -183,7 +184,7 @@ class OrderController extends Controller
         }
 
         DB::beginTransaction();
-        
+
         // تحديث حالة الطلب إلى 4 (قيد التوصيل) وتسجيل الوقت
         $item->update([
             'driver_id' => $driver->id,

@@ -71,21 +71,18 @@
                                         <tr id="tr_{{ $item->id }}">
                                             <th><input type="checkbox" class="sub_chk" data-id="{{ $item->id }}">
                                             </th>
-                                            <td> {{ $item->user->name }}
-                                                <br />
-                                                {{ $item->user->mobile }}
-                                            </td>
+                                           <td> {{ $item->user->name ?? '-' }}
+    <br />
+    {{ $item->user->mobile ?? '' }}
+</td>
 
-
-
-                                            <td> {{ $item->order->id }}</td>
-                                            <td>{{ $item->used_at->diffForHumans() }}</td>
-                                            <td> {{ $item->order->total_price }}</td>
-                                            <td> {{ $item->order->discount_amount }}</td>
-                                            <td> {{ $item->order->price_after_discount }}</td>
-                                            <td> {{ $item->order->tax_amount }} ( {{ $item->order->added_tax }} % )</td>
-                                            <td> {{ $item->order->price_after_tax }}</td>
-
+<td> {{ optional($item->order)->order_number ?? '-' }}</td>
+<td>{{ $item->used_at->diffForHumans() }}</td>
+<td> {{ optional($item->order)->total_price ?? '-' }}</td>
+<td> {{ optional($item->order)->discount_amount ?? '-' }}</td>
+<td> {{ optional($item->order)->price_after_discount ?? '-' }}</td>
+<td> {{ optional($item->order)->tax_amount ?? 0 }} ( {{ optional($item->order)->added_tax ?? 0 }} % )</td>
+<td> {{ optional($item->order)->price_after_tax ?? '-' }}</td>
                                         </tr>
                                     @endforeach
 

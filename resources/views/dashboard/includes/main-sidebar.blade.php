@@ -375,6 +375,17 @@
                     </ul>
                 </li>
             @endcan
+ <li class="side-item side-item-category">{{ __('dashboard.Wallets') }}</li>
+ @can('Clients')
+    <li class="slide">
+        <a class="side-menu__item" href="{{ route('walletsclients') }}">
+            <svg xmlns="http://www.w3.org/2000/svg" class="side-menu__icon ionicon" viewBox="0 0 512 512">
+                <path d="M448 128H80a16 16 0 010-32h304a16 16 0 000-32H80a48 48 0 00-48 48v256a48 48 0 0048 48h368a32 32 0 0032-32V160a32 32 0 00-32-32zm-64 240a32 32 0 1132-32 32 32 0 01-32 32z"/>
+            </svg>
+            <span class="side-menu__label">{{ __('dashboard.Client_Wallets') }}</span>
+        </a>
+    </li>
+@endcan
 
 
             <li class="side-item side-item-category">{{ __('dashboard.Reports') }}</li>

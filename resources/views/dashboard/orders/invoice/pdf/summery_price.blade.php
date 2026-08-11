@@ -55,9 +55,9 @@
         </tr>
     </tbody>
 </table>
-
 @if ($item->note)
-    <div style="margin-top:8px; font-size:10px; text-align:right;">
-        <strong>{{ __('dashboard.Note') }}:</strong> {{ $item->note }}
+    <div style="margin-top:8px; font-size:10px; text-align:right; direction:rtl; unicode-bidi:plaintext;">
+        <strong>{{ __('dashboard.Note') }}:</strong>
+        <span style="unicode-bidi:plaintext;">{!! nl2br(e($item->note)) !!}</span>
     </div>
 @endif

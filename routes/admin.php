@@ -31,6 +31,7 @@ use App\Http\Controllers\Dashboard\DriverController;
 use App\Http\Controllers\Dashboard\PaymentMethodsController;
 use App\Http\Controllers\Dashboard\UnitsController;
 use App\Http\Controllers\Dashboard\AdminNotificationController;
+use App\Http\Controllers\Dashboard\WalletClientController;
 
 
 
@@ -409,6 +410,17 @@ Route::group(
                 Route::post('/mark-read', 'markAllRead')->name('admin.notifications.markRead');
             });
             #################################################### End Admin Notifications route  ####################################################
+
+
+
+
+#################################################### Wallets clients route  ####################################################
+Route::prefix('walletsclients')->controller(WalletClientController::class)->group(function () {
+    Route::get('/', 'index')->name('walletsclients');
+    Route::get('{id}/transactions', 'transactions')->name('walletsclients.transactions');
+});
+#################################################### End Wallets clients route  ####################################################
+
 
         });
     },

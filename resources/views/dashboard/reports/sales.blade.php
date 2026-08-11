@@ -102,22 +102,34 @@
                 </div>
             </div>
 
-            <div class="row mt-4">
-                <div class="col-md-3">
-                    <div class="card p-3 text-center">
-                        <h5>{{ __('dashboard.number_of_orders') }} </h5>
-                        <b>{{ $summary['total_orders'] }}</b>
-                    </div>
+         <div class="row mt-4 mb-2">
+    <div class="col-md-6">
+        <div class="card overflow-hidden sales-card bg-primary-gradient">
+            <div class="card-body d-flex align-items-center">
+                <div class="ml-3" style="width:55px;height:55px;border-radius:50%;background:rgba(255,255,255,.2);display:flex;align-items:center;justify-content:center;">
+                    <i class="icon-layers text-white" style="font-size:22px;"></i>
                 </div>
-                <div class="col-md-3">
-                    <div class="card p-3 text-center">
-                        <h5> {{ __('dashboard.TOTAL_SALES') }}</h5>
-                        <b>{{ $summary['total_sales'] }}</b>
-                    </div>
+                <div>
+                    <h6 class="mb-1 text-white">{{ __('dashboard.number_of_orders') }}</h6>
+                    <h3 class="mb-0 text-white font-weight-bold">{{ $summary['total_orders'] }}</h3>
                 </div>
-
-
             </div>
+        </div>
+    </div>
+    <div class="col-md-6">
+        <div class="card overflow-hidden sales-card bg-success-gradient">
+            <div class="card-body d-flex align-items-center">
+                <div class="ml-3" style="width:55px;height:55px;border-radius:50%;background:rgba(255,255,255,.2);display:flex;align-items:center;justify-content:center;">
+                    <i class="icon-rocket text-white" style="font-size:22px;"></i>
+                </div>
+                <div>
+                    <h6 class="mb-1 text-white">{{ __('dashboard.TOTAL_SALES') }}</h6>
+                    <h3 class="mb-0 text-white font-weight-bold">{{ number_format($summary['total_sales'], 2) }}</h3>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
             @include('dashboard.includes.alerts.errors')
             @include('dashboard.includes.alerts.success')
             <div class="card mg-b-20">
@@ -136,37 +148,32 @@
 
 
 
-                        <div class="table-responsive border-top userlist-table">
-                            <table class="table card-table table-striped table-vcenter text-nowrap mb-0">
-                                <thead>
-                                    <tr>
-
-
-                                        <th>#</th>
-                                        <th>{{ __('dashboard.Order_Number') }}</th>
-                                        <th>{{ __('dashboard.Client') }}</th>
-                                        <th>{{ __('dashboard.TOTAL_DUE') }}</th>
-                                        <th>{{ __('dashboard.Status') }}</th>
-                                        <th>{{ __('dashboard.Created_at') }}</th>
-
-                                    </tr>
-                                </thead>
-                                @foreach ($orders as $order)
-                                    <tbody>
-
-
-                                        <td>{{ $loop->iteration }}</td>
-                                        <td>{{ $order->order_number }}</td>
-                                        <td>{{ $order->user->name ?? '-' }}</td>
-                                        <td>{{ $order->final_price }} {{ $order->currency }}</td>
-                                        <td>{{ $order->status->name ?? '-' }}</td>
-                                        <td>{{ $order->created_at->diffForHumans() }}</td>
-
-                                    </tbody>
-                                @endforeach
-                            </table>
-
-                        </div>
+<div class="table-responsive border-top userlist-table">
+    <table class="table card-table table-striped table-vcenter text-nowrap mb-0">
+        <thead>
+            <tr>
+                <th>#</th>
+                <th>{{ __('dashboard.Order_Number') }}</th>
+                <th>{{ __('dashboard.Client') }}</th>
+                <th>{{ __('dashboard.TOTAL_DUE') }}</th>
+                <th>{{ __('dashboard.Status') }}</th>
+                <th>{{ __('dashboard.Created_at') }}</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach ($orders as $order)
+                <tr>
+                    <td>{{ $loop->iteration }}</td>
+                    <td>{{ $order->order_number }}</td>
+                    <td>{{ $order->user->name ?? '-' }}</td>
+                    <td class="font-weight-bold text-success">{{ number_format($order->final_price, 2) }} {{ $order->currency }}</td>
+                    <td><span class="badge bg-success">{{ $order->status->name ?? '-' }}</span></td>
+                    <td>{{ $order->created_at->diffForHumans() }}</td>
+                </tr>
+            @endforeach
+        </tbody>
+    </table>
+</div>
                         <br />
                         {{ $orders->withQueryString()->links() }}
                     </div>
