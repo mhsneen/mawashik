@@ -891,4 +891,13 @@ return array(
     'Amount_Exceeds_Driver_Debt' => 'The entered amount is greater than the driver\'s debt. The outstanding debt is: :debt',
     'Store_Not_Owes_Driver' => 'Cannot pay dues, the store does not currently owe the driver.',
     'Amount_Exceeds_Driver_Balance' => 'The entered amount exceeds the driver\'s available balance. The available balance is: :balance',
+	  'order_delivered_notification_title' => 'Order Delivered',
+    'order_delivered_notification_body' => 'Order #:order_id has been delivered successfully',
+
+    'withdrawal_request_notification_title' => 'New Withdrawal Request',
+    'withdrawal_request_notification_body' => 'Driver :driver has requested a withdrawal of :amount',
+
+ 'order_cancelled_notification_title' => 'Order Cancelled',
+    'order_cancelled_notification_body' => 'Order #:order_id has been cancelled',
+    'reason' => 'Reason',
 );

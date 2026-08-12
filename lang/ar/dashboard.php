@@ -885,5 +885,13 @@ return [
     'Amount_Exceeds_Driver_Debt' => 'المبلغ المدخل أكبر من دين السائق. المبلغ المتبقي للسائق هو: :debt',
     'Store_Not_Owes_Driver' => 'لا يمكن دفع مستحقات، المتجر ليس مديوناً للسائق حالياً.',
     'Amount_Exceeds_Driver_Balance' => 'المبلغ المدخل أكبر من رصيد السائق المستحق. الرصيد هو: :balance',
+ 'order_delivered_notification_title' => 'تم توصيل الطلب',
+    'order_delivered_notification_body' => 'تم توصيل الطلب رقم #:order_id بنجاح',
 
+    'withdrawal_request_notification_title' => 'طلب سحب جديد',
+    'withdrawal_request_notification_body' => 'قام السائق :driver بطلب سحب مبلغ :amount',
+
+'order_cancelled_notification_title' => 'إلغاء طلب',
+    'order_cancelled_notification_body' => 'تم إلغاء الطلب رقم #:order_id',
+    'reason' => 'السبب',
 ];

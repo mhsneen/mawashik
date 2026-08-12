@@ -42,13 +42,15 @@ class WalletSettlementService
                 throw new InvalidArgumentException(__('api.Pending_Withdrawal_Request_Exists'));
             }
 
-            return WalletWithdrawalRequest::create([
+            $withdrawalRequest = WalletWithdrawalRequest::create([
                 'wallet_id'    => $locked->id,
                 'user_id'      => $locked->user_id,
                 'amount'       => $amount,
                 'status'       => 'pending',
                 'driver_note'  => $note,
             ]);
+            AdminNotifier::withdrawalRequested($withdrawalRequest);
+return $withdrawalRequest;
         });
     }
 

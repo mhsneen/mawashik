@@ -29,79 +29,90 @@
 <!-- Sticky js -->
 <script src="{{URL::asset('assets/dashboard/js/sticky.js')}}"></script>
 <!-- custom js -->
-<script src="{{URL::asset('assets/dashboard/js/custom.js')}}"></script><!-- Left-menu js-->
+<script src="{{URL::asset('assets/dashboard/js/custom.js')}}"></script>
+<!-- Left-menu js-->
 <script src="{{URL::asset('assets/dashboard/plugins/side-menu/sidemenu.js')}}"></script>
 
 
 <script>
-    // ✅ نمرر نصاً وهمياً (PLACEHOLDER) بدل فراغ لتجنب خطأ Missing parameter
-    const orderShowBaseUrl = "{{ route('orders.show', ['id' => 'PLACEHOLDER']) }}";
-
-    // ✅ إعداد ملف الصوت (تأكد من وضع ملف صوتي في المسار public/sounds/notification.mp3)
+    // ✅ إعداد ملف الصوت (تأكد أن الملف موجود في public/sounds/notification.mp3)
     const notifSound = new Audio('/sounds/notification.mp3');
     let lastNotifId = 0;
     let isFirstLoad = true;
+    let audioUnlocked = false;
 
     // دالة تشغيل الصوت
     function playNotificationSound() {
-        notifSound.currentTime = 0; // إعادة التشغيل من البداية إذا تم تشغيله مؤخراً
-        notifSound.play().catch(e => {
-            console.log("المتصفح منع تشغيل الصوت تلقائياً. يجب أن يتفاعل المستخدم مع الصفحة أولاً.");
+        notifSound.currentTime = 0;
+        notifSound.play().then(() => {
+            audioUnlocked = true; // ✅ إذا اشتغل، نسجل أنه مفكوك الحظر
+        }).catch(e => {
+            // المتصفح منعه (لأن المستخدم لم يتفاعل بعد)
         });
     }
 
-   function loadNotifications() {
-    $.get("{{ route('admin.notifications.fetch') }}", function (data) {
-        if (data.unread_count > 0) {
-            $('#notifCount').text(data.unread_count).show();
-        } else {
-            $('#notifCount').hide();
-        }
-
-        let html = '';
-        let currentMaxId = lastNotifId;
-
-        data.items.forEach(item => {
-            if (item.id > currentMaxId) {
-                currentMaxId = item.id;
+    function loadNotifications() {
+        $.get("{{ route('admin.notifications.fetch') }}", function (data) {
+            if (data.unread_count > 0) {
+                $('#notifCount').text(data.unread_count).show();
+            } else {
+                $('#notifCount').hide();
             }
 
-            let orderUrl = orderShowBaseUrl.replace('PLACEHOLDER', item.order_id);
-            let orderLabel = item.order_number ? ('#' + item.order_number) : '';
+            let html = '';
+            let currentMaxId = lastNotifId;
 
-            html += `<a class="d-flex p-3 border-bottom ${item.is_read ? '' : 'bg-light'}" href="${orderUrl}">
-                <div class="mr-3 w-100">
-                    <h6 class="mb-1">${item.title} ${orderLabel}</h6>
-                    <p class="mb-1 tx-13 text-muted">${item.body ?? ''}</p>
-                    <div class="notification-subtext">${item.time}</div>
-                </div>
-            </a>`;
+            data.items.forEach(item => {
+                if (item.id > currentMaxId) {
+                    currentMaxId = item.id;
+                }
+
+                html += `<a class="d-flex p-3 border-bottom ${item.is_read ? '' : 'bg-light'}" href="${item.url ?? '#'}">
+                    <div class="mr-3">
+                        <span class="avatar avatar-sm brround bg-${item.color}"><i class="bx ${item.icon}"></i></span>
+                    </div>
+                    <div class="w-100">
+                        <h6 class="mb-1">${item.title}</h6>
+                        <p class="mb-1 tx-13 text-muted">${item.body ?? ''}</p>
+                        <div class="notification-subtext">${item.time}</div>
+                    </div>
+                </a>`;
+            });
+
+            $('#notifList').html(html || '<p class="p-3 text-muted">{{ __('dashboard.No_Data_in_this_category') }}</p>');
+
+            if (currentMaxId > lastNotifId && !isFirstLoad) {
+                playNotificationSound();
+            }
+
+            lastNotifId = currentMaxId;
+
+            if (isFirstLoad) {
+                isFirstLoad = false;
+            }
         });
+    }
 
-        $('#notifList').html(html || '<p class="p-3 text-muted">{{ __('dashboard.No_Data_in_this_category') }}</p>');
-
-        if (currentMaxId > lastNotifId && !isFirstLoad) {
-            playNotificationSound();
-        }
-
-        lastNotifId = currentMaxId;
-
-        if (isFirstLoad) {
-            isFirstLoad = false;
-        }
-    });
-}
-
-    // ✅ فك حظر الصوت في المتصفحات (Chrome يتطلب تفاعل من المستخدم أولاً)
-    // هذه الدالة ستشغل الصوت بصمت 0 عند أول نقرة بالماوس لتسمح بتشغيله لاحقاً تلقائياً
-    $(document).one('click', function() {
+    // ✅ فك حظر الصوت في المتصفحات عند أول تفاعل (نقرة، لمس، أو كتابة)
+    function unlockAudio() {
+        if (audioUnlocked) return;
         notifSound.volume = 0;
         notifSound.play().then(() => {
             notifSound.pause();
             notifSound.currentTime = 0;
             notifSound.volume = 1;
+            audioUnlocked = true;
         }).catch(() => {});
-    });
+        
+        // إزالة المستمعين بعد أول تفاعل لتخفيف الحمل
+        document.removeEventListener('click', unlockAudio);
+        document.removeEventListener('touchstart', unlockAudio);
+        document.removeEventListener('keydown', unlockAudio);
+    }
+
+    document.addEventListener('click', unlockAudio);
+    document.addEventListener('touchstart', unlockAudio);
+    document.addEventListener('keydown', unlockAudio);
 
     loadNotifications();
     setInterval(loadNotifications, 20000); // كل 20 ثانية
