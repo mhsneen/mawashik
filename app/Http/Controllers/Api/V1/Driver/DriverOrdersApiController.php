@@ -344,6 +344,9 @@ public function deliver_Order(Request $request)
             'coupon_code'     => $order->coupon_code ?? '',
             'added_tax'       => (float) $order->added_tax,
             'tax_amount'      => (float) $order->tax_amount,
+              // ✅ إضافة حقول النقاط لإرسالها للتطبيق
+            'redeemed_points'       => (int) $order->redeemed_points,
+            'redeemed_points_value' => (float) $order->redeemed_points_value,
             
             'items' => $order->relationLoaded('items')
                 ? $order->items->map(fn($item) => [

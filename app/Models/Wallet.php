@@ -14,21 +14,18 @@ class Wallet extends Model
         return $this->belongsTo(User::class);
     }
 
-
-
     public function transactions()
     {
         return $this->hasMany(WalletTransaction::class);
     }
 
-
-
+    public function withdrawalRequests()
+    {
+        return $this->hasMany(WalletWithdrawalRequest::class);
+    }
 
     public function ScopeFilterDashbord($query, array $filters)
     {
-
-
-
         $query->when($filters['search_mobile'] ?? false, function ($query, $search) {
             return $query->whereHas('user', function ($q) use ($search) {
                 $q->where('mobile', 'LIKE', "%$search%");

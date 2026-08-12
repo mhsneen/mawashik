@@ -35,84 +35,104 @@ app/Services/Payments/
    resources/, routes/, lang/) - لن تحذف أي شيء موجود عندك، فقط تضيف/تعدّل ما يخص الدفع.
 
 2. شغّل الميجريشن:
-   ```
-   php artisan migrate
-   ```
-   هذا سينشئ جدول `payment_methods` ويضيف أعمدة الدفع لجدول `orders`
-   (payment_gateway_code, payment_status, payment_reference, paid_at, payment_gateway_response).
+
+    ```
+    php artisan migrate
+    ```
+
+    هذا سينشئ جدول `payment_methods` ويضيف أعمدة الدفع لجدول `orders`
+    (payment_gateway_code, payment_status, payment_reference, paid_at, payment_gateway_response).
 
 3. سجّل صفوف البوابات الثمانية (كلها معطّلة افتراضياً حتى يفعّلها الأدمن):
-   ```
-   php artisan db:seed --class=PaymentMethodSeeder
-   ```
-   ملاحظة: أول فتح لصفحة "طرق الدفع" بلوحة التحكم يقوم بنفس المزامنة تلقائياً حتى لو نسيت هذه الخطوة.
+
+    ```
+    php artisan db:seed --class=PaymentMethodSeeder
+    ```
+
+    ملاحظة: أول فتح لصفحة "طرق الدفع" بلوحة التحكم يقوم بنفس المزامنة تلقائياً حتى لو نسيت هذه الخطوة.
 
 4. أضف صلاحية `Payment_Methods` للأدمن (تمت إضافتها تلقائياً في PermissionSeeder، شغّلها إذا
    المشروع شغّال مسبقاً):
-   ```
-   php artisan db:seed --class=PermissionSeeder
-   ```
-   ثم فعّل هذه الصلاحية لدور الأدمن/الموظف من شاشة الأدوار كالمعتاد.
+
+    ```
+    php artisan db:seed --class=PermissionSeeder
+    ```
+
+    ثم فعّل هذه الصلاحية لدور الأدمن/الموظف من شاشة الأدوار كالمعتاد.
 
 5. امسح الكاش:
-   ```
-   php artisan config:clear && php artisan route:clear && php artisan view:clear
-   ```
+    ```
+    php artisan config:clear && php artisan route:clear && php artisan view:clear
+    ```
 
 ---
 
 ## 3) لوحة التحكم
 
 - **طرق الدفع** (تظهر تحت قسم الإعدادات في القائمة الجانبية بعد منح الصلاحية):
-  - جدول بكل البوابات الثمانية + مفتاح تفعيل/تعطيل سريع (AJAX) لكل بوابة.
-  - زر "إعدادات" يفتح نموذج يحتوي فقط على الحقول التي تحتاجها تلك البوابة تحديداً
-    (Entity ID لهايبر باي، Secret Key لسترايب... إلخ) + اختيار وضع تجريبي/حقيقي (Test/Live).
-  - أي بوابة لا يمكن تفعيلها إلا بعد إدخال بياناتها (تحقق في الكونترولر).
-  - المفاتيح السرية تُخزَّن **مشفّرة** في قاعدة البيانات (Laravel `encrypted:array` cast).
+    - جدول بكل البوابات الثمانية + مفتاح تفعيل/تعطيل سريع (AJAX) لكل بوابة.
+    - زر "إعدادات" يفتح نموذج يحتوي فقط على الحقول التي تحتاجها تلك البوابة تحديداً
+      (Entity ID لهايبر باي، Secret Key لسترايب... إلخ) + اختيار وضع تجريبي/حقيقي (Test/Live).
+    - أي بوابة لا يمكن تفعيلها إلا بعد إدخال بياناتها (تحقق في الكونترولر).
+    - المفاتيح السرية تُخزَّن **مشفّرة** في قاعدة البيانات (Laravel `encrypted:array` cast).
 
 ---
 
 ## 4) الربط مع تطبيق الموبايل (API)
 
 ### أ) عرض طرق الدفع المفعّلة (شاشة الدفع في السلة)
+
 ```
 POST /api/get_payment_methods      (Header: Authorization: Bearer {token})
 ```
+
 الرد:
+
 ```json
 {
-  "status": true, "code": 200, "message": "...",
-  "data": [
-    {"code": "stripe", "name": "Stripe", "mode": "test"},
-    {"code": "tabby",  "name": "Tabby",  "mode": "live"}
-  ]
+    "status": true,
+    "code": 200,
+    "message": "...",
+    "data": [
+        { "code": "stripe", "name": "Stripe", "mode": "test" },
+        { "code": "tabby", "name": "Tabby", "mode": "live" }
+    ]
 }
 ```
+
 اعرض هذه القائمة فقط - أي بوابة غير مفعّلة من لوحة التحكم لن تظهر هنا تلقائياً.
 
 ### ب) بدء عملية الدفع
+
 بعد إنشاء الطلب بالـ API الحالي عندك (AddCart/إنشاء Order) بنفس آلية `payment_method` الموجودة سابقاً:
+
 ```
 POST /api/initiate_payment      (Header: Authorization: Bearer {token})
 Body: order_id=123&gateway=stripe
 ```
+
 الرد:
+
 ```json
 {
-  "status": true, "code": 200, "message": "...",
-  "data": {
-    "checkout_url": "https://checkout.stripe.com/pay/cs_test_...",
-    "reference": "cs_test_...",
-    "extra": {}
-  }
+    "status": true,
+    "code": 200,
+    "message": "...",
+    "data": {
+        "checkout_url": "https://checkout.stripe.com/pay/cs_test_...",
+        "reference": "cs_test_...",
+        "extra": {}
+    }
 }
 ```
+
 - **الحالة العامة (Stripe/PayPal/PayTabs/Moyasar/MyFatoorah/Tabby/Tamara):** افتح `checkout_url` في WebView داخل التطبيق مباشرة.
 - **حالة HyperPay فقط:** `checkout_url` يكون `null`، وتجد بدلاً منه في `extra`:
   `checkout_id` و `widget_script` - يفتح التطبيق صفحة HTML بسيطة تحمّل هذا السكربت وتعرض
   ويدجت إدخال البطاقة (هذا هو أسلوب عمل HyperPay الرسمي "Copy&Pay"، وليس رابط استضافة جاهز).
 
 ### ج) معرفة نتيجة الدفع
+
 بعد إتمام العميل للدفع، البوابة تُرجعه لصفحة داخلية (`/api/payments/return/{gateway}`) تعرض له
 رسالة نجاح/فشل بسيطة (resources/views/site/payment/result.blade.php) - راقب التطبيق تغيّر الصفحة
 أو النص الظاهر بها، ثم أغلق الـ WebView واستدعِ API تفاصيل الطلب الحالي عندك لعرض الحالة النهائية
@@ -125,6 +145,7 @@ Body: order_id=123&gateway=stripe
 ```
 {APP_URL}/api/payments/webhook/{gateway}
 ```
+
 مثال: `https://yourdomain.com/api/payments/webhook/stripe`
 
 هذا الرابط عام (بدون توكن) لأن البوابة نفسها من يستدعيه، والتحقق من الأمان يتم داخل كل Driver
@@ -135,16 +156,16 @@ Notification Token في Tamara).
 
 ## 5) إدخال بيانات كل بوابة - ملخص الحقول المطلوبة
 
-| البوابة     | الحقول                                            |
-|-------------|-----------------------------------------------------|
-| HyperPay    | Entity ID, Access Token, API Base URL (test/live)   |
-| PayTabs     | Profile ID, Server Key, Region Base URL             |
-| Moyasar     | Secret Key, Publishable Key                         |
-| MyFatoorah  | Api Token                                            |
-| Stripe      | Publishable Key, Secret Key, Webhook Signing Secret |
-| PayPal      | Client ID, Client Secret                            |
-| Tabby       | Secret Key, Public Key, Merchant Code               |
-| Tamara      | API Token, Notification Token                       |
+| البوابة    | الحقول                                              |
+| ---------- | --------------------------------------------------- |
+| HyperPay   | Entity ID, Access Token, API Base URL (test/live)   |
+| PayTabs    | Profile ID, Server Key, Region Base URL             |
+| Moyasar    | Secret Key, Publishable Key                         |
+| MyFatoorah | Api Token                                           |
+| Stripe     | Publishable Key, Secret Key, Webhook Signing Secret |
+| PayPal     | Client ID, Client Secret                            |
+| Tabby      | Secret Key, Public Key, Merchant Code               |
+| Tamara     | API Token, Notification Token                       |
 
 كل هذه القيم تُدخَل من لوحة التحكم مباشرة (طرق الدفع → إعدادات كل بوابة)، **وليس من ملف .env** -
 هذا هو ما يجعل النظام "بلجن" فعلياً: أي مشرف يقدر يفعّل/يعدّل بياناته بدون وصول للسيرفر.
@@ -182,13 +203,6 @@ Notification Token في Tamara).
 
 https://docs.myfatoorah.com/docs/test-cards
 
-
-
-
-
-
-
-
 تمام، هلق بالقيم الصحيحة (earn_rate = 1, redeem_value = 0.01)، خلينا نحسب خطوة خطوة:
 
 1. حساب عدد النقاط المكتسبة:
@@ -197,7 +211,7 @@ php
 $base = max(0, $order->total_price - $order->discount_amount);
 // $base = 674.4000 - 0 = 674.4000
 
-$points = (int) floor($base * $earnRate);
+$points = (int) floor($base \* $earnRate);
 // $points = floor(674.4000 × 1) = floor(674.4) = 674
 
 ➡️ عدد النقاط = 674 نقطة
@@ -207,7 +221,7 @@ $points = (int) floor($base * $earnRate);
 2. حساب القيمة المالية لهاي النقاط لو استبدلها العميل:
 
 php
-$value = round($points * $redeemValue, 2);
+$value = round($points \* $redeemValue, 2);
 // $value = round(674 × 0.01, 2)
 // $value = round(6.74, 2)
 
@@ -215,10 +229,26 @@ $value = round($points * $redeemValue, 2);
 
 الخلاصة بالجدول:
 
-البند	القيمة
-إجمالي الطلبية	674.40 ريال
-النقاط المكتسبة	674 نقطة
-قيمتها عند الاستبدال	6.74 ريال
-نسبة الكاش باك الفعلية	≈ 1%
+البند القيمة
+إجمالي الطلبية 674.40 ريال
+النقاط المكتسبة 674 نقطة
+قيمتها عند الاستبدال 6.74 ريال
+نسبة الكاش باك الفعلية ≈ 1%
 
 هيك صار النظام منطقي: العميل بياخد تقريباً 1% من قيمة مشترياته كنقاط ولاء قابلة للاستبدال — رقم معقول تجارياً، وليس 100 ضعف متل قبل.
+
+نظام محافظ السائقين + آلية طلب السحب والتسوية
+
+هيك السيناريو الاحترافي المستخدم فعليًا بمعظم تطبيقات التوصيل:
+
+الفكرة الأساسية: محفظة السائق تمثل رصيد صافي (Net Balance) بين السائق والمتجر:
+
+رصيد سالب (اللي عندك فعليًا بالكود الحالي عند خصم الكاش) = السائق مديون للمتجر (استلم كاش من العميل لازم يسلمه للمتجر)
+رصيد موجب = المتجر مديون للسائق (تجمّعت له أجور توصيل من طلبات إلكترونية)
+
+الآليتان المطلوبتان:
+
+طلب سحب (Withdrawal Request) — يبادر فيه السائق عبر الـ API لما يكون رصيده موجب، وتنتظر موافقة الأدمن
+تسوية يدوية (Manual Settlement) — يبادر فيها الأدمن من لوحة التحكم لتسجيل استلام كاش من السائق أو تحويل فلوس له، بدون ما يحتاج السائق يطلب
+
+كلاهما يسجَّلان كـ WalletTransaction عادية عشان يبقى عندك سجل تدقيق (audit trail) واحد موحّد.

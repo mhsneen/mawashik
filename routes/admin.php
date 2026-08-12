@@ -32,7 +32,7 @@ use App\Http\Controllers\Dashboard\PaymentMethodsController;
 use App\Http\Controllers\Dashboard\UnitsController;
 use App\Http\Controllers\Dashboard\AdminNotificationController;
 use App\Http\Controllers\Dashboard\WalletClientController;
-
+use App\Http\Controllers\Dashboard\WalletDriverController;
 
 
 Route::group(['middleware' => ['auth:admin', 'AutoLogoutEmployeeInactive', 'dashboardAccess']], function () {
@@ -411,6 +411,18 @@ Route::group(
             });
             #################################################### End Admin Notifications route  ####################################################
 
+
+
+            #################################################### Wallets drivers route  ####################################################
+Route::prefix('walletsdrivers')->controller(WalletDriverController::class)->group(function () {
+    Route::get('/', 'index')->name('walletsdrivers');
+    Route::get('{id}/transactions', 'transactions')->name('walletsdrivers.transactions');
+    Route::get('withdrawal-requests', 'withdrawalRequests')->name('walletsdrivers.withdrawalRequests');
+    Route::post('withdrawal-requests/{id}/approve', 'approveWithdrawal')->name('walletsdrivers.approveWithdrawal');
+    Route::post('withdrawal-requests/{id}/reject', 'rejectWithdrawal')->name('walletsdrivers.rejectWithdrawal');
+    Route::post('{id}/settle', 'manualSettlement')->name('walletsdrivers.settle');
+});
+#################################################### End Wallets drivers route  ####################################################
 
 
 

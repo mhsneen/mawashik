@@ -137,4 +137,10 @@ return [
 'Order_rejected_successfully' => 'تم رفض الطلب بنجاح.',
     'driver_cash_collected' => 'استلام مبلغ كاش من العميل - طلب #:order_id',
     'driver_delivery_fee' => 'أجر التوصيل - طلب #:order_id',
+    'Invalid_Withdrawal_Amount' => 'المبلغ المطلوب سحبه غير صالح',
+'Insufficient_Wallet_Balance_For_Withdrawal' => 'رصيد المحفظة غير كافٍ لهذا السحب',
+'Pending_Withdrawal_Request_Exists' => 'لديك طلب سحب قيد الانتظار مسبقاً',
+'Withdrawal_Request_Sent_Success' => 'تم إرسال طلب السحب بنجاح، بانتظار موافقة الإدارة',
+'Withdrawal_Request_Cancelled_Success' => 'تم إلغاء طلب السحب بنجاح',
+'Withdrawal_Request_Not_Pending' => 'هذا الطلب تمت معالجته مسبقاً ولا يمكن إلغاؤه',
 ];

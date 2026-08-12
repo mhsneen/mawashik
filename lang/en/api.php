@@ -137,4 +137,10 @@ return [
 'Order_rejected_successfully' => 'Order rejected successfully.',
     'driver_cash_collected' => 'Cash collected from customer - Order #:order_id',
     'driver_delivery_fee' => 'Delivery fee - Order #:order_id',
+    'Invalid_Withdrawal_Amount' => 'The requested withdrawal amount is invalid',
+'Insufficient_Wallet_Balance_For_Withdrawal' => 'Wallet balance is insufficient for this withdrawal',
+'Pending_Withdrawal_Request_Exists' => 'You already have a pending withdrawal request',
+'Withdrawal_Request_Sent_Success' => 'Withdrawal request sent successfully, awaiting admin approval',
+'Withdrawal_Request_Cancelled_Success' => 'Withdrawal request cancelled successfully',
+'Withdrawal_Request_Not_Pending' => 'This request has already been processed and cannot be cancelled',
 ];

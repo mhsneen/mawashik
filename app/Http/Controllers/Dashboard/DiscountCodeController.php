@@ -230,9 +230,10 @@ class DiscountCodeController  extends Controller
         $items = DiscountCodeUsage::where('discount_code_id', $id)
             ->with([
                 'user:id,name,mobile',
-                // نستخدم withTrashed لعرض السجل في الجدول، لكن سنميزه بصرياً
                 'order' => function ($q) {
-                    $q->withTrashed()->select('id', 'order_number', 'total_price', 'discount_amount', 'added_tax', 'price_after_discount', 'tax_amount', 'price_after_tax', 'deleted_at');
+                    // ✅ جلب الأعمدة الحقيقية فقط (تم حذف tax_amount و price_after_discount)
+                    // الموديل سيقوم بحسابها تلقائياً كـ Accessors عند الحاجة لها في الـ View
+                    $q->withTrashed()->select('id', 'order_number', 'total_price', 'discount_amount', 'added_tax', 'final_price', 'deleted_at');
                 },
             ])
             ->orderBy('id', 'DESC')
@@ -241,7 +242,7 @@ class DiscountCodeController  extends Controller
         $data = [
             'items' => $items,
             'discountcode' => $discountcode,
-            'valid_usage_count' => $valid_usage_count, // ✅ تمرير العدد للواجهة
+            'valid_usage_count' => $valid_usage_count,
             'routeName' => $this->routeName,
             'folder' => $this->folder,
             'namesection' => $this->namesection

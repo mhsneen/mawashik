@@ -25,7 +25,7 @@ use App\Http\Controllers\Api\V1\Client\PaymentApiController;
 use App\Http\Controllers\Api\V1\BrandsApiController;
 use App\Http\Controllers\Api\V1\SalesApiController;
 use App\Http\Controllers\Api\V1\OrderStatusApiController;
-
+use App\Http\Controllers\Api\V1\Driver\DriverWalletApiController;
 
 
 Route::group(['middleware' => ['guest:sanctum', 'api', 'apiChangeLanguage', 'apiCheckUse', 'checkMaintenance']], function () {
@@ -213,6 +213,13 @@ Route::group([
     // سجل الطلبيات المنتهية
     Route::post('order_History',          [DriverOrdersApiController::class, 'order_History']);
     #################################################### End Driver ####################################################
+
+    #################################################### Wallet Withdrawals ####################################################
+    Route::post('requestWithdrawal',        [DriverWalletApiController::class, 'requestWithdrawal']);
+    Route::post('getWithdrawalRequests',     [DriverWalletApiController::class, 'getWithdrawalRequests']);
+    Route::post('cancelWithdrawalRequest',   [DriverWalletApiController::class, 'cancelWithdrawalRequest']);
+    #################################################### End Wallet Withdrawals ####################################################
+
 });
 
 // ============================================================
