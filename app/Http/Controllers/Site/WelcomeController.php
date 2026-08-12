@@ -5,6 +5,8 @@ namespace App\Http\Controllers\Site;
 use App\Http\Controllers\Controller;
 use App\Models\Setting;
 use App\Models\Socialmedialink;
+use App\Models\Product;
+use App\Models\Category;
 
 class WelcomeController extends Controller
 {
@@ -21,6 +23,16 @@ class WelcomeController extends Controller
 
         $socialLinks = Socialmedialink::select('id', 'icon', 'link', 'name')->get();
 
-        return view('site.welcome', compact('settings', 'socialLinks'));
+        // ✅ جلب الأقسام المفعلة
+        $categories = Category::whereNull('parent_id')->where('is_active', 1)->take(6)->get();
+
+        // ✅ جلب المنتجات المفعلة وتتبع المخزون
+        $products = Product::where('is_active', 1)
+                        ->where('quantity', '>', 0)
+                        ->latest()
+                        ->take(8)
+                        ->get();
+
+        return view('site.welcome', compact('settings', 'socialLinks', 'categories', 'products'));
     }
 }
