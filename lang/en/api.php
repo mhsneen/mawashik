@@ -194,6 +194,12 @@ return [
     'Availability_Updated_Success'       => 'Order availability updated successfully.',
     'Location_Updated_Success'           => 'Your location updated successfully.',
     'Trader_Location_Not_Available' => 'Trader Location Not Available',
+    'Cart_Single_Trader_Only' => 'You cannot combine products from more than one trader in a single order',
+    'Api_Driver_Role_Required' => 'This service is available to drivers only.',
+    'Api_Driver_Pending' => 'Your account is under review by the administration.',
+    'Api_Driver_Suspended' => 'Your account is suspended. Please contact the administration.',
+    'Api_Driver_Rejected' => 'Your driver registration request was rejected.',
+    'Api_Driver_Unknown_Status' => 'Your account status is unknown. Please contact the administration.',
 
     // === Cart & Delivery Keys ===
 'Trader_ID_Required'          => 'Trader ID is required to calculate delivery price.',

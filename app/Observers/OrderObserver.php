@@ -11,8 +11,8 @@ class OrderObserver
 {
     public function created(Order $order): void
     {
-        // === مواشي وسيط: حساب العربون والعمولات + الذبح قبل الإشعارات ===
-        $this->applyDepositAndCommissions($order);
+        // ملاحظة: العربون والعمولة لا يُحسبان هنا لأن الإجماليات تكون صفراً عند created.
+        // يُحسبان عبر DepositService::applyToOrder بعد تثبيت الإجماليات (CartApiController::store).
 
         // ✅ نرسل إشعار "استلام الطلب" فقط للطلبات الكاش (التي تُنشأ بـ status_id = 1)
         if ($order->payment_method === 'cash' && $order->status_id == 1) {
@@ -24,17 +24,17 @@ class OrderObserver
                 __('notifications.order_received_title'),
                 __('notifications.order_received_message', ['order_id' => $order->order_number])
             );
-
-            // 3. حجز العربون
-            app(DepositService::class)->reserve($order);
         }
 
-        // ✅ إشعار التاجر بوجود طلب جديد
-        $this->notifyTrader($order,
-            __('notifications.trader_new_order_title'),
-            __('notifications.trader_new_order_message', ['order_id' => $order->order_number]),
-            ['type' => 'new_trader_order', 'order_id' => (string) $order->id]
-        );
+        // ✅ إشعار التاجر بوجود طلب جديد — فقط للطلبات الجاهزة للتنفيذ (status 1).
+        // الطلب الإلكتروني (status 7) لا يصل للتاجر قبل نجاح الدفع (انظر updated()).
+        if ((int) $order->status_id === 1) {
+            $this->notifyTrader($order,
+                __('notifications.trader_new_order_title'),
+                __('notifications.trader_new_order_message', ['order_id' => $order->order_number]),
+                ['type' => 'new_trader_order', 'order_id' => (string) $order->id]
+            );
+        }
     }
 
     public function updated(Order $order): void
@@ -67,6 +67,17 @@ class OrderObserver
             $order->driver_at_trader_at = now();
         }
 
+        // === 2.5) نجاح الدفع الإلكتروني (7 → 1): تسجيل العربون وإشعار التاجر ===
+        if ($newStatus === 1 && $oldStatus === 7 && $order->payment_status === 'paid') {
+            app(DepositService::class)->reserve($order);
+
+            $this->notifyTrader($order,
+                __('notifications.trader_new_order_title'),
+                __('notifications.trader_new_order_message', ['order_id' => $order->order_number]),
+                ['type' => 'new_trader_order', 'order_id' => (string) $order->id]
+            );
+        }
+
         // === 3) منطق خاص بكل حالة ===
         switch ($newStatus) {
             case 3: // جاهز للاستلام
@@ -85,10 +96,11 @@ class OrderObserver
                     $order->paid_at = now();
                 }
 
-                // عمولة المندوب + تسوية المحفظة + إطلاق العربون
+                // عمولة المندوب + إطلاق العربون للتاجر ثم تسوية باقي المستحقات
+                // (الترتيب مهم: الإطلاق أولاً حتى تخصم التسوية ما أُطلق مسبقاً)
                 $order->commission_driver = app(CommissionService::class)->calculateForDriver($order);
-                app(CommissionService::class)->settleOnDelivery($order);
                 app(DepositService::class)->releaseToTrader($order);
+                app(CommissionService::class)->settleOnDelivery($order);
 
                 // نقاط الولاء
                 if (is_null($order->points_awarded_at)) {
@@ -97,9 +109,16 @@ class OrderObserver
                 break;
 
             case 6: // ملغي
+                // فشل الدفع الإلكتروني (7 → 6 بحالة دفع failed): الطلب لم يُدفع ولم يصل للتاجر،
+                // فلا عربون يُستردّ/يُصادَر ولا مبلغ يُرجَع ولا إشعار إلغاء للإدارة.
+                $paymentFailed = $oldStatus === 7 && $order->payment_status !== 'paid';
+                if ($paymentFailed) {
+                    break;
+                }
+
                 AdminNotifier::orderCancelled($order);
 
-                // معالجة العربون
+                // معالجة العربون (الدوال تتجاهل الطلب إن لم يكن عربونه مدفوعاً فعلاً)
                 $depositService = app(DepositService::class);
                 if ($order->isDepositRefundable()) {
                     $depositService->refundToCustomer($order);
@@ -107,8 +126,8 @@ class OrderObserver
                     $depositService->forfeitToPlatform($order);
                 }
 
-                // استرداد المبلغ إذا كان مدفوعاً مسبقاً
-                if ($order->payment_status === 'paid') {
+                // استرداد المبلغ المتبقي إذا كان الطلب مدفوعاً مسبقاً (محفظة/إلكتروني)
+                if ($order->payment_status === 'paid' && $order->payment_method !== 'cash') {
                     $this->refundRemainingToClient($order);
                 }
                 break;
@@ -150,8 +169,11 @@ class OrderObserver
         }
 
         // ===== 2) إشعار التاجر =====
-        // الحالة 1 (جديد) تُعالج في created() — هنا نعالج باقي الحالات
-        if (in_array($newStatus, [2, 3, 4, 5, 6])) {
+        // الحالة 1 (جديد) تُعالج في created() / عند نجاح الدفع — هنا نعالج باقي الحالات.
+        // الطلب الذي فشل دفعه (7 → 6) لم يصل للتاجر أصلاً فلا نشعره بإلغائه.
+        $neverReachedTrader = $newStatus === 6 && $oldStatus === 7 && $order->payment_status !== 'paid';
+
+        if (!$neverReachedTrader && in_array($newStatus, [2, 3, 4, 5, 6])) {
             $traderTitle = match ($newStatus) {
                 2 => __('notifications.trader_order_accepted_title'),
                 3 => __('notifications.trader_order_preparing_title'),
@@ -310,25 +332,6 @@ class OrderObserver
                 'description'      => __('dashboard.order_refund_description', ['order_number' => $order->order_number]),
             ]);
         });
-    }
-
-    /**
-     * مواشي وسيط: حساب العربون + العمولات + إجمالي الذبح.
-     */
-    private function applyDepositAndCommissions(Order $order): void
-    {
-        $deposit = app(DepositService::class)->calculate($order);
-        $order->deposit_amount   = $deposit['amount'];
-        $order->remaining_amount = $deposit['remaining'];
-
-        $order->slaughter_total    = $order->load('items')->items->sum('slaughter_total');
-        $order->commission_trader  = app(CommissionService::class)->calculateForTrader($order);
-
-        if ($order->pickup_type === 'pickup' && !$order->trader_pin) {
-            $order->trader_pin = str_pad(random_int(0, 9999), 4, '0', STR_PAD_LEFT);
-        }
-
-        $order->saveQuietly();
     }
 
     public function deleted(Order $order): void {}
