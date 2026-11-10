@@ -1,0 +1,19 @@
+
+
+.fileinput-remove-button:focus {
+	color:#737f9e !important;
+}
+.fileinput-remove-button:focus {
+	color:white !important;
+}
+.fileinput-upload-button:focus {
+	color:#737f9e !important;
+}
+
+.fileinput-upload-button:hover {
+	color:white !important;
+}
+
+.file-caption.icon-visible .file-caption-icon {
+    display: inline-block !important;
+}

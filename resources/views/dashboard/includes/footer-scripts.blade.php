@@ -1,0 +1,123 @@
+<!-- Back-to-top -->
+<a href="#top" id="back-to-top"><i class="las la-angle-double-up"></i></a>
+<!-- JQuery min js -->
+<script src="{{URL::asset('assets/dashboard/plugins/jquery/jquery.min.js')}}"></script>
+<!-- Bootstrap Bundle js -->
+<script src="{{URL::asset('assets/dashboard/plugins/bootstrap/js/bootstrap.bundle.min.js')}}"></script>
+<!-- Ionicons js -->
+<script src="{{URL::asset('assets/dashboard/plugins/ionicons/ionicons.js')}}"></script>
+<!-- Moment js -->
+<script src="{{URL::asset('assets/dashboard/plugins/moment/moment.js')}}"></script>
+
+<!-- Rating js-->
+<script src="{{URL::asset('assets/dashboard/plugins/rating/jquery.rating-stars.js')}}"></script>
+<script src="{{URL::asset('assets/dashboard/plugins/rating/jquery.barrating.js')}}"></script>
+
+<!--Internal  Perfect-scrollbar js -->
+<script src="{{URL::asset('assets/dashboard/plugins/perfect-scrollbar/perfect-scrollbar.min.js')}}"></script>
+<script src="{{URL::asset('assets/dashboard/plugins/perfect-scrollbar/p-scroll.js')}}"></script>
+<!--Internal Sparkline js -->
+<script src="{{URL::asset('assets/dashboard/plugins/jquery-sparkline/jquery.sparkline.min.js')}}"></script>
+<!-- Custom Scroll bar Js-->
+<script src="{{URL::asset('assets/dashboard/plugins/mscrollbar/jquery.mCustomScrollbar.concat.min.js')}}"></script>
+<!-- right-sidebar js -->
+<script src="{{URL::asset('assets/dashboard/plugins/sidebar/'.getSidebarfooter().'.js')}}"></script>
+<script src="{{URL::asset('assets/dashboard/plugins/sidebar/sidebar-custom.js')}}"></script>
+<!-- Eva-icons js -->
+<script src="{{URL::asset('assets/dashboard/js/eva-icons.min.js')}}"></script>
+@yield('js')
+<!-- Sticky js -->
+<script src="{{URL::asset('assets/dashboard/js/sticky.js')}}"></script>
+<!-- custom js -->
+<script src="{{URL::asset('assets/dashboard/js/custom.js')}}"></script>
+<!-- Left-menu js-->
+<script src="{{URL::asset('assets/dashboard/plugins/side-menu/sidemenu.js')}}"></script>
+
+
+<script>
+    // ✅ إعداد ملف الصوت (تأكد أن الملف موجود في public/sounds/notification.mp3)
+    const notifSound = new Audio('/sounds/notification.mp3');
+    let lastNotifId = 0;
+    let isFirstLoad = true;
+    let audioUnlocked = false;
+
+    // دالة تشغيل الصوت
+    function playNotificationSound() {
+        notifSound.currentTime = 0;
+        notifSound.play().then(() => {
+            audioUnlocked = true; // ✅ إذا اشتغل، نسجل أنه مفكوك الحظر
+        }).catch(e => {
+            // المتصفح منعه (لأن المستخدم لم يتفاعل بعد)
+        });
+    }
+
+    function loadNotifications() {
+        $.get("{{ route('admin.notifications.fetch') }}", function (data) {
+            if (data.unread_count > 0) {
+                $('#notifCount').text(data.unread_count).show();
+            } else {
+                $('#notifCount').hide();
+            }
+
+            let html = '';
+            let currentMaxId = lastNotifId;
+
+            data.items.forEach(item => {
+                if (item.id > currentMaxId) {
+                    currentMaxId = item.id;
+                }
+
+                html += `<a class="d-flex p-3 border-bottom ${item.is_read ? '' : 'bg-light'}" href="${item.url ?? '#'}">
+                    <div class="mr-3">
+                        <span class="avatar avatar-sm brround bg-${item.color}"><i class="bx ${item.icon}"></i></span>
+                    </div>
+                    <div class="w-100">
+                        <h6 class="mb-1">${item.title}</h6>
+                        <p class="mb-1 tx-13 text-muted">${item.body ?? ''}</p>
+                        <div class="notification-subtext">${item.time}</div>
+                    </div>
+                </a>`;
+            });
+
+            $('#notifList').html(html || '<p class="p-3 text-muted">{{ __('dashboard.No_Data_in_this_category') }}</p>');
+
+            if (currentMaxId > lastNotifId && !isFirstLoad) {
+                playNotificationSound();
+            }
+
+            lastNotifId = currentMaxId;
+
+            if (isFirstLoad) {
+                isFirstLoad = false;
+            }
+        });
+    }
+
+    // ✅ فك حظر الصوت في المتصفحات عند أول تفاعل (نقرة، لمس، أو كتابة)
+    function unlockAudio() {
+        if (audioUnlocked) return;
+        notifSound.volume = 0;
+        notifSound.play().then(() => {
+            notifSound.pause();
+            notifSound.currentTime = 0;
+            notifSound.volume = 1;
+            audioUnlocked = true;
+        }).catch(() => {});
+        
+        // إزالة المستمعين بعد أول تفاعل لتخفيف الحمل
+        document.removeEventListener('click', unlockAudio);
+        document.removeEventListener('touchstart', unlockAudio);
+        document.removeEventListener('keydown', unlockAudio);
+    }
+
+    document.addEventListener('click', unlockAudio);
+    document.addEventListener('touchstart', unlockAudio);
+    document.addEventListener('keydown', unlockAudio);
+
+    loadNotifications();
+    setInterval(loadNotifications, 20000); // كل 20 ثانية
+
+    $('#notifBell').on('click', function () {
+        $.post("{{ route('admin.notifications.markRead') }}", { _token: "{{ csrf_token() }}" }, loadNotifications);
+    });
+</script>
