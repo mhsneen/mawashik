@@ -122,6 +122,40 @@ class DriverOrdersApiController extends Controller
         }
     }
 
+    /**
+     * مراحل التوصيل: heading_to_trader (التوجه للتاجر) → picked_up (استلام الطلب)
+     * → out_for_delivery (الخروج للتوصيل، ويُرسل كود التسليم للعميل).
+     * التسليم النهائي عبر deliver_Order بكود التسليم.
+     */
+    public function order_Stage(Request $request, \App\Services\DeliveryStageService $stages)
+    {
+        $validator = Validator::make($request->all(), [
+            'order_id' => 'required|integer|exists:orders,id',
+            'stage'    => 'required|string|in:' . implode(',', \App\Services\DeliveryStageService::ADVANCE_STAGES),
+        ]);
+
+        if ($validator->fails()) {
+            return $this->returnError($validator->errors()->first());
+        }
+
+        try {
+            $order = Order::find($request->order_id);
+
+            $updated = $stages->advance($order, $request->user(), $request->stage);
+
+            return $this->returnData('data', [
+                'order_id'       => $updated->id,
+                'status_id'      => $updated->status_id,
+                'delivery_stage' => $updated->delivery_stage,
+            ], __('api.Api_Update_Success'));
+        } catch (\InvalidArgumentException $ex) {
+            return $this->returnError($ex->getMessage());
+        } catch (Exception $ex) {
+            Log::error('driver order_Stage: ' . $ex->getMessage(), ['trace' => $ex->getTraceAsString()]);
+            return $this->returnError(__('api.Api_Error_Contact_Programmer'));
+        }
+    }
+
     public function reject_Order(Request $request, \App\Services\DriverAssignmentService $assignmentService)
     {
         $validator = Validator::make($request->all(), [
@@ -232,6 +266,7 @@ public function deliver_Order(Request $request)
         $order->update([
             'status_id'          => 5,
             'delivered_at'       => now(),
+            'delivery_stage'     => 'delivered',
             'driver_note'        => $request->driver_note,
         ]);
 
@@ -320,6 +355,7 @@ public function deliver_Order(Request $request)
             'id'              => $order->id,
             'order_number'    => $order->order_number, // ✅ أضف هذا السطر هنا
             'status_id'       => $order->status_id,
+            'delivery_stage'  => $order->delivery_stage,
             'status_name'     => $order->status?->name,
             'delivery_type'   => $order->delivery_type,
             'payment_method'  => $order->payment_method,

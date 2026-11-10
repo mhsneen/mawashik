@@ -35,6 +35,10 @@ class TraderRegisterRequest extends FormRequest
                Rule::unique('users', 'mobile')->whereNull('deleted_at'),
            ],
             'password'             => 'required|string|min:6|max:30',
+            'id_number'            => [
+                'required', 'string', 'regex:/^[0-9]{10}$/',
+                Rule::unique('users', 'id_number')->whereNull('deleted_at'),
+            ],
             'commercial_register'  => 'nullable|string|max:100',
             'store_lat'            => 'required|numeric|between:-90,90',
             'store_lng'            => 'required|numeric|between:-180,180',
@@ -51,6 +55,9 @@ class TraderRegisterRequest extends FormRequest
     {
         return [
             'mobile.unique'          => __('api.Mobile_Already_Registered'),
+            'id_number.required'     => __('api.ID_Number_Required'),
+            'id_number.regex'        => __('api.ID_Number_Invalid'),
+            'id_number.unique'       => __('api.ID_Number_Already_Registered'),
             'store_lat.between'      => __('api.Invalid_Latitude'),
             'store_lng.between'      => __('api.Invalid_Longitude'),
             'city_id.exists'         => __('api.City_Not_Found'),

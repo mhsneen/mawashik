@@ -45,6 +45,8 @@ class ProductCardResource extends JsonResource
                 'id'            => $t->id,
                 'name'          => $t->name,
                 'store_address' => $t->store_address ?? "",
+                'rating'        => \App\Models\User::traderRatingStats($t->id)['average'],
+                'reviews_count' => \App\Models\User::traderRatingStats($t->id)['count'],
             ]),
         ];
     }

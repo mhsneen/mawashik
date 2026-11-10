@@ -41,6 +41,7 @@ class TraderAuthApiController extends Controller
                 'name'                => $data['name'],
                 'mobile'              => $data['mobile'],
                 'password'            => $data['password'],
+                'id_number'           => $data['id_number'],
                 'commercial_register' => $data['commercial_register'] ?? null,
                 'store_lat'           => $data['store_lat'],
                 'store_lng'           => $data['store_lng'],
@@ -91,6 +92,7 @@ class TraderAuthApiController extends Controller
                 'image'               => $trader->image_url,
                 'banner'              => $trader->banner_url,        // ✅ جديد
                 'trader_status'       => $trader->trader_status,
+                'id_number'           => $trader->id_number,
                 'commercial_register' => $trader->commercial_register,
                 'store_address'       => $trader->store_address,
                 'store_lat'           => $trader->store_lat,

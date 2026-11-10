@@ -85,6 +85,11 @@ class OrderObserver
                 if ($order->delivery_type === 'delivery' && is_null($order->driver_id)) {
                     (new DriverAssignmentService())->broadcastToAvailableDrivers($order);
                 }
+
+                // طلب استلام من التاجر: كود التسليم يصل جوال العميل ليعطيه للتاجر
+                if ($order->delivery_type === 'pickup') {
+                    app(\App\Services\DeliveryStageService::class)->sendPickupCode($order);
+                }
                 break;
 
             case 5: // تم التسليم

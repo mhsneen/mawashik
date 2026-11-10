@@ -144,6 +144,8 @@ class ProductDetailsResource extends JsonResource
                 'area_id'         => $t->area_id,
                 'neighborhood_id' => $t->neighborhood_id,
                 'is_approved'     => $t->isApprovedTrader(),
+                'rating'          => \App\Models\User::traderRatingStats($t->id)['average'],
+                'reviews_count'   => \App\Models\User::traderRatingStats($t->id)['count'],
             ]),
         ];
     }

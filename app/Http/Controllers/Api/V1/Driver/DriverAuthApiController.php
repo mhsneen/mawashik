@@ -54,6 +54,7 @@ class DriverAuthApiController extends Controller
                 'area_id'          => $data['area_id'] ?? null,
                 'neighborhood_id'  => $data['neighborhood_id'] ?? null,
                 'device_token'     => $data['device_token'] ?? null,
+                'id_number'        => $data['id_number'],
                 'driver_status'    => 'pending',
                 'is_active'         => 0,  // يُفعّل عند الاعتماد
                 'terms_accepted'   => true,
@@ -136,6 +137,7 @@ class DriverAuthApiController extends Controller
                 'mobile'            => $driver->mobile,
                 'email'             => $driver->email,
                 'image'             => $driver->image_url,
+                'id_number'         => $driver->id_number,
                 'id_image'          => $driver->id_image ? url('uploads/users/' . $driver->id_image) : null,
                 'license_image'     => $driver->license_image ? url('uploads/users/' . $driver->license_image) : null,
                 'driver_status'     => $driver->driver_status,

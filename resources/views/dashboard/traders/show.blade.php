@@ -41,6 +41,10 @@
                             <span>{{ __('dashboard.Mobile') }}:</span> <strong style="direction: ltr">{{ $trader->mobile }}</strong>
                         </li>
                         <li class="list-group-item d-flex justify-content-between">
+                            <span>{{ __('dashboard.ID_Number') }}:</span>
+                            <strong>{{ $trader->id_number }}</strong>
+                        </li>
+                        <li class="list-group-item d-flex justify-content-between">
                             <span>{{ __('dashboard.Commercial_Register') }}:</span>
                             <strong>{{ $trader->commercial_register }}</strong>
                         </li>

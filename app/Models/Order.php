@@ -68,6 +68,7 @@ class Order extends Model
         'deposit_refunded_at',
         'driver_at_trader_at',
         'driver_picked_up_at',
+        'delivery_stage',
         'trader_pin',
     ];
 

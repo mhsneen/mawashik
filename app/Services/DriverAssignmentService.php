@@ -105,10 +105,11 @@ class DriverAssignmentService
                 throw new InvalidArgumentException(__('api.Offer_Not_Found_Or_Expired'));
             }
 
+            // قبول الطلب: يُعيَّن المندوب وتبقى الحالة 3 (جاهز) حتى يستلم الطلب من التاجر
+            // ويضغط "الخروج للتوصيل" (انظر DeliveryStageService) فتصير 4.
             $lockedOrder->update([
-                'driver_id' => $driver->id,
-                'status_id' => 4,
-                'out_for_delivery_at' => now(),
+                'driver_id'      => $driver->id,
+                'delivery_stage' => 'accepted',
             ]);
 
             $offer->update(['status' => 'accepted', 'responded_at' => now()]);
@@ -119,6 +120,13 @@ class DriverAssignmentService
                 ->where('status', 'pending')
                 ->update(['status' => 'expired', 'responded_at' => now()]);
         });
+
+        // إشعار العميل بقبول الطلب (خارج الـ transaction)
+        try {
+            app(DeliveryStageService::class)->notifyClient($order->fresh('user'), 'accepted');
+        } catch (\Throwable $e) {
+            \Illuminate\Support\Facades\Log::error("Accepted notification failed: order={$order->id} error={$e->getMessage()}");
+        }
     }
 
     /**

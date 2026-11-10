@@ -26,6 +26,7 @@ class User extends Authenticatable
         'email',
         'password',
         'mobile',
+        'id_number',
         'whatsapp_number',
         'image',
         'banner_image',
@@ -273,6 +274,39 @@ class User extends Authenticatable
         $query->when($filters['search_is_blocked'] ?? false, function ($query, $search) {
             return $query->where('is_blocked', $search);
         });
+    }
+
+    /**
+     * تقييمات التاجر (من تقييمات الطلبات المسلّمة).
+     */
+    public function traderReviews()
+    {
+        return $this->hasMany(OrderReview::class, 'trader_id');
+    }
+
+    /**
+     * متوسط تقييم التاجر وعدد التقييمات الظاهرة (بدون المخفية).
+     * يُخزَّن مؤقتاً على الطلب الواحد كي لا يتكرر الاستعلام لنفس التاجر في القوائم.
+     *
+     * @return array{average: float, count: int}
+     */
+    public static function traderRatingStats(int $traderId): array
+    {
+        static $memo = [];
+
+        if (!isset($memo[$traderId])) {
+            $row = OrderReview::where('trader_id', $traderId)
+                ->visible()
+                ->selectRaw('COALESCE(AVG(rating), 0) as avg_rating, COUNT(*) as c')
+                ->first();
+
+            $memo[$traderId] = [
+                'average' => round((float) ($row->avg_rating ?? 0), 1),
+                'count'   => (int) ($row->c ?? 0),
+            ];
+        }
+
+        return $memo[$traderId];
     }
 
     public function wallet()

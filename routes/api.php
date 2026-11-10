@@ -31,6 +31,7 @@ use App\Http\Controllers\Api\V1\Driver\DriverWalletApiController;
 use App\Http\Controllers\Api\V1\Trader\TraderAuthApiController;
 use App\Http\Controllers\Api\V1\Trader\TraderProductsApiController;
 use App\Http\Controllers\Api\V1\Trader\TraderOrdersApiController;
+use App\Http\Controllers\Api\V1\Trader\TraderDashboardApiController;
 use App\Http\Controllers\Api\V1\Trader\TraderWalletApiController;
 
 // === مواشي وسيط: Controllers المناطق الجغرافية ===
@@ -246,6 +247,8 @@ Route::group([
     Route::post('accept_Order',           [DriverOrdersApiController::class, 'accept_Order']);
     Route::post('pending_Offers', [DriverOrdersApiController::class, 'pending_Offers']);
     Route::post('reject_Order',   [DriverOrdersApiController::class, 'reject_Order']);
+    // مراحل التوصيل: heading_to_trader → picked_up → out_for_delivery (3 → 4 عند الخروج)
+    Route::post('order_Stage',    [DriverOrdersApiController::class, 'order_Stage']);
 
     // تأكيد التسليم بكود (4 → 5)
     Route::post('deliver_Order',          [DriverOrdersApiController::class, 'deliver_Order']);
@@ -291,6 +294,11 @@ Route::group([
     Route::post('order_Confirm',         [TraderOrdersApiController::class, 'confirm']);      // 1 → 2
     Route::post('order_MarkReady',       [TraderOrdersApiController::class, 'markReady']);     // 2 → 3
     Route::post('order_Reject',          [TraderOrdersApiController::class, 'reject']);        // 1 → 6
+    Route::post('order_Deliver',         [TraderOrdersApiController::class, 'deliver']);       // 3 → 5 (استلام من التاجر بالكود)
+
+    #################################################### Dashboard ####################################################
+    Route::post('summary',               [TraderDashboardApiController::class, 'summary']);
+    Route::post('earnings',              [TraderDashboardApiController::class, 'earnings']);
 
     #################################################### Wallet ####################################################
     Route::post('getWalletBalance',        [TraderWalletApiController::class, 'balance']);

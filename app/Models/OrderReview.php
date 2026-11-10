@@ -13,8 +13,24 @@ class OrderReview extends Model
         'client_id',
         'rating',
         'comment',
-        'order_id'
+        'order_id',
+        'trader_id',
+        'is_hidden',
     ];
+
+    protected $casts = [
+        'is_hidden' => 'boolean',
+    ];
+
+    public function scopeVisible($query)
+    {
+        return $query->where('is_hidden', false);
+    }
+
+    public function trader()
+    {
+        return $this->belongsTo(User::class, 'trader_id');
+    }
 
     public function client()
     {
