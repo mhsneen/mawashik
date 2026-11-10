@@ -10,6 +10,7 @@ use App\Traits\ApiTrait;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Validator;
 
 /**
  * TraderOrdersApiController — إدارة الطلبات من منظور التاجر.
@@ -119,6 +120,56 @@ class TraderOrdersApiController extends Controller
     public function reject(TraderUpdateOrderStatusRequest $request)
     {
         return $this->updateStatus($request, targetStatus: 6);
+    }
+
+    /**
+     * تسليم طلب "استلام من التاجر" بكود التسليم الذي وصل جوال العميل (status 3 → 5).
+     */
+    public function deliver(Request $request)
+    {
+        $validator = Validator::make($request->all(), [
+            'order_id'   => 'required|integer|exists:orders,id',
+            'trader_pin' => 'required|string|max:6',
+        ]);
+
+        if ($validator->fails()) {
+            return $this->returnError($validator->errors()->first());
+        }
+
+        try {
+            $order = Order::where('trader_id', $request->user()->id)->find($request->order_id);
+
+            if (!$order) {
+                return $this->returnError(__('api.Order_Not_Found'));
+            }
+
+            if ($order->delivery_type !== 'pickup') {
+                return $this->returnError(__('api.Order_Not_Pickup'));
+            }
+
+            if ((int) $order->status_id !== 3 || !$order->canChangeStatusTo(5)) {
+                return $this->returnError(__('api.Order_Status_Not_Ready'));
+            }
+
+            if (!$order->trader_pin || !hash_equals((string) $order->trader_pin, (string) $request->trader_pin)) {
+                return $this->returnError(__('api.Invalid_trader_pin'));
+            }
+
+            DB::transaction(function () use ($order) {
+                $order->status_id    = 5;
+                $order->delivered_at = now();
+                $order->save();
+            });
+
+            return $this->returnData('data', [
+                'order_id'  => $order->id,
+                'status_id' => $order->status_id,
+            ], __('api.Api_Update_Success'));
+
+        } catch (\Exception $ex) {
+            Log::error('Trader order deliver: ' . $ex->getMessage());
+            return $this->returnError(__('api.Api_Error_Contact_Programmer'));
+        }
     }
 
     private function updateStatus(TraderUpdateOrderStatusRequest $request, int $targetStatus)

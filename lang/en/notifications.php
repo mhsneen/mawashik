@@ -61,6 +61,12 @@ return [
 'driver_order_cancelled_title'            => 'Order Cancelled',
 'driver_order_cancelled_message'          => 'Order #:order_id has been cancelled',
 
+// ===== Delivery stages (client notifications) =====
+'client_driver_accepted_message'          => 'Your order #:order_id has been accepted by a driver',
+'client_driver_heading_message'           => 'The driver is heading to the trader to pick up your order #:order_id',
+'client_order_picked_up_message'          => 'The driver has picked up your order #:order_id from the trader',
+'client_delivery_code_message'            => 'Delivery code for order #:order_id is :pin — give it only when you receive the order',
+
 // ===== Products =====
 'no_reason_provided'                      => 'No reason provided',
 ];

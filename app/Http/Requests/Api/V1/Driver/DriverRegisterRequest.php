@@ -41,6 +41,10 @@ class DriverRegisterRequest extends FormRequest
             'email'            => 'nullable|email|max:255|unique:users,email',
             'password'         => 'required|string|min:6|max:30',
             'image'            => 'nullable|image|max:5120',
+            'id_number'        => [
+                'required', 'string', 'regex:/^[0-9]{10}$/',
+                Rule::unique('users', 'id_number')->whereNull('deleted_at'),
+            ],
             'id_image'         => 'required|image|max:5120',
             'license_image'    => 'required|image|max:5120',
             'country_id'       => 'nullable|exists:countries,id',
@@ -57,6 +61,9 @@ class DriverRegisterRequest extends FormRequest
     {
         return [
             'mobile.unique'          => __('api.Mobile_Already_Registered'),
+            'id_number.required'     => __('api.ID_Number_Required'),
+            'id_number.regex'        => __('api.ID_Number_Invalid'),
+            'id_number.unique'       => __('api.ID_Number_Already_Registered'),
             'email.unique'           => __('api.Email_Already_Registered'),
             'city_id.exists'         => __('api.City_Not_Found'),
             'area_id.exists'         => __('api.Area_Not_Found'),

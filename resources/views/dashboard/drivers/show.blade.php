@@ -395,6 +395,9 @@
                                             <h6 class="mb-0"><i class="fa fa-id-card text-warning mr-2"></i>{{ __('dashboard.ID_Image') }}</h6>
                                         </div>
                                         <div class="card-body text-center">
+                                            @if (!empty($item->id_number))
+                                                <p class="mb-2"><strong>{{ __('dashboard.ID_Number') }}:</strong> <span style="direction: ltr; display: inline-block">{{ $item->id_number }}</span></p>
+                                            @endif
                                             @if (!empty($item->id_image))
                                                 <a href="{{ URL::asset('uploads/users/' . $item->id_image) }}" target="_blank">
                                                     <img src="{{ URL::asset('uploads/users/thumbnail/' . $item->id_image) }}"

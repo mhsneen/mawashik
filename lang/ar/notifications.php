@@ -61,6 +61,12 @@ return [
     'driver_order_cancelled_title'            => 'تم إلغاء الطلب',
     'driver_order_cancelled_message'         => 'تم إلغاء الطلب #:order_id',
 
+    // ===== مراحل التوصيل (إشعارات العميل) =====
+    'client_driver_accepted_message'          => 'تم قبول طلبك #:order_id من أحد المندوبين',
+    'client_driver_heading_message'           => 'المندوب في الطريق إلى التاجر لاستلام طلبك #:order_id',
+    'client_order_picked_up_message'          => 'استلم المندوب طلبك #:order_id من التاجر',
+    'client_delivery_code_message'            => 'كود تسليم الطلب #:order_id هو :pin — أعطه للمستلم عند التسليم فقط',
+
     // ===== المنتجات =====
     'no_reason_provided'                      => 'لم يتم تحديد سبب',
 ];

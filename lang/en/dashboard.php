@@ -1022,6 +1022,7 @@ return array(
 'Driver_Documents'             => 'Driver Documents',
 'Driver_Documents_Hint'        => 'ID image and license image — required for driver approval',
 'ID_Image'                     => 'ID Image',
+'ID_Number'                    => 'ID Number',
 'License_Image'                => 'License Image',
 'ID_Image_Required'            => 'ID image is required when creating a new driver',
 'License_Image_Required'       => 'License image is required when creating a new driver',

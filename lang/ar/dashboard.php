@@ -1079,6 +1079,7 @@ return [
 'Driver_Documents'             => 'وثائق المندوب',
 'Driver_Documents_Hint'        => 'صورة الهوية وصورة الرخصة — متطلب أساسي لاعتماد المندوب',
 'ID_Image'                     => 'صورة الهوية',
+'ID_Number'                    => 'رقم الهوية',
 'License_Image'                => 'صورة الرخصة',
 'ID_Image_Required'            => 'صورة الهوية مطلوبة عند إنشاء مندوب جديد',
 'License_Image_Required'       => 'صورة الرخصة مطلوبة عند إنشاء مندوب جديد',

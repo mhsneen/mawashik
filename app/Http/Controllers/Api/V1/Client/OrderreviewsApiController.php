@@ -28,6 +28,11 @@ class OrderreviewsApiController extends Controller
                 return $this->returnError(__('api.Order_Not_Found'));
             }
 
+            // ما يقدر يقيّم قبل ما يتسلّم الطلب فعلياً
+            if ((int) $order->status_id !== 5) {
+                return $this->returnError(__('api.Order_Review_Not_Delivered'));
+            }
+
             // فحص إذا المستخدم قيم مسبقاً
             $existingReview = OrderReview::where('order_id', $request->order_id)
                 ->where('client_id', $user->id)
@@ -38,7 +43,8 @@ class OrderreviewsApiController extends Controller
             }
 
             $item_data = [
-                'order_id' => $request->order_id,
+                'order_id' => $order->id,
+                'trader_id' => $order->trader_id, // التقييم يخص تاجر الطلب
                 'rating' => $request->rating,
                 'client_id' => $user->id,
                 'comment' => $request->comment,
