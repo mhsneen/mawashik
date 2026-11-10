@@ -200,6 +200,12 @@ return [
     'Availability_Updated_Success'       => 'تم تحديث حالة استقبال الطلبات بنجاح.',
     'Location_Updated_Success'           => 'تم تحديث موقعك بنجاح.',
     'Trader_Location_Not_Available' => 'موقع التاجر غير متاح',
+    'Cart_Single_Trader_Only' => 'لا يمكن الجمع بين منتجات من أكثر من تاجر في طلب واحد',
+    'Api_Driver_Role_Required' => 'هذه الخدمة متاحة للمندوبين فقط.',
+    'Api_Driver_Pending' => 'حسابك قيد المراجعة من الإدارة.',
+    'Api_Driver_Suspended' => 'حسابك موقوف، يرجى التواصل مع الإدارة.',
+    'Api_Driver_Rejected' => 'تم رفض طلب تسجيلك كمندوب.',
+    'Api_Driver_Unknown_Status' => 'حالة حسابك غير معروفة، يرجى التواصل مع الإدارة.',
 
     // === مفاتيح السلة والتوصيل ===
 'Trader_ID_Required'          => 'معرف التاجر مطلوب لحساب سعر التوصيل.',

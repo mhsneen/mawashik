@@ -98,10 +98,30 @@ class Order extends Model
         return $this->belongsTo(User::class, 'trader_id');
     }
 
-    // المبلغ المستحق للتاجر = المتبقي - عمولة المنصة من التاجر
+    // قيمة المنتجات + الذبح بعد الخصم (حصة التاجر قبل العمولة) — بدون التوصيل والضريبة
+    public function getTraderGrossAmountAttribute(): float
+    {
+        return max(0.0, (float) $this->total_price - (float) $this->discount_amount);
+    }
+
+    // المبلغ المستحق للتاجر = قيمة المنتجات بعد الخصم - عمولة المنصة من التاجر
+    // (رسوم التوصيل تذهب للمندوب، لذلك لا تدخل في حصة التاجر)
     public function getTraderNetAmountAttribute(): float
     {
-        return (float) ($this->remaining_amount - $this->commission_trader);
+        return max(0.0, $this->trader_gross_amount - (float) $this->commission_trader);
+    }
+
+    // المبلغ الذي يجب على المندوب تحصيله نقداً من العميل:
+    // الإجمالي ناقص العربون إن كان قد دُفع فعلاً مسبقاً. غير الكاش = 0.
+    public function getCashToCollectAttribute(): float
+    {
+        if ($this->payment_method !== 'cash') {
+            return 0.0;
+        }
+
+        $prepaidDeposit = $this->deposit_status === 'paid' ? (float) $this->deposit_amount : 0.0;
+
+        return max(0.0, (float) $this->final_price - $prepaidDeposit);
     }
 
     // هل العربون قابل للاسترداد؟ (قبل بدء التجهيز فقط — حسب الإعداد deposit_refund_before)

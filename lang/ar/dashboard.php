@@ -954,6 +954,7 @@ return [
     'Deposit_Released'               => 'مُطلق للتاجر',
     'deposit_reserved_for_order'    => 'عربون محجوز للطلب #:order',
     'deposit_refunded_for_order'    => 'استرداد عربون الطلب #:order',
+    'deposit_released_for_order'    => 'إطلاق عربون الطلب #:order للتاجر',
 
     // العمولات
     'Commissions'                   => 'العمولات',

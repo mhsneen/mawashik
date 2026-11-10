@@ -14,6 +14,7 @@ use App\Http\Requests\Api\V1\CalculateCartRequest;
 use App\Services\DeliveryPriceCalculator;
 use App\Services\ProductPriceCalculator;
 use App\Services\LoyaltyPointsService;
+use App\Services\DepositService;
 use InvalidArgumentException;
 use App\Http\Resources\Api\V1\CartItemResource;
 
@@ -38,14 +39,14 @@ class CartApiController extends Controller
             $deliveryPrice = 0;
             $address = null;
 
+            // ✅ الطلب الواحد = تاجر واحد: نتحقق أن كل منتجات السلة لنفس التاجر
+            // ونحدد التاجر مرة واحدة ليُربط بالطلب (trader_id).
+            $trader = $this->resolveSingleTrader($request->cart);
+
             if ($deliveryType === 'delivery') {
                 $address = $this->resolveAddress($request);
 
-                // ✅ جلب التاجر من أول منتج في السلة
-                $firstProduct = Product::with('trader')->find($request->cart[0]['product_id']);
-                $trader = $firstProduct?->trader;
-
-                if (!$trader || !$trader->store_lat || !$trader->store_lng) {
+                if (!$trader->store_lat || !$trader->store_lng) {
                     throw new InvalidArgumentException(__('api.Trader_Location_Not_Available'));
                 }
 
@@ -88,8 +89,11 @@ class CartApiController extends Controller
 
             $order = Order::create([
                 'user_id' => $user->id,
+                'trader_id' => $trader->id,
                 'address_id' => $address['id'] ?? null,
                 'delivery_type' => $deliveryType,
+                // pickup_type يطابق خيار العميل (استلام من التاجر أو توصيل)
+                'pickup_type' => $deliveryType,
                 'payment_method' => $paymentMethod,
                 'delivery_price' => $deliveryPrice,
                 'delivery_date' => $request->delivery_date,
@@ -107,6 +111,8 @@ class CartApiController extends Controller
                 'longitude' => $address['longitude'] ?? null,
                 'added_tax' => (float) Setting::where('key', 'added_tax')->value('plain_value') ?? 0,
                 'delivery_pin' => $deliveryType === 'delivery' ? Order::generateDeliveryPin() : null,
+                // كود تسليم من التاجر عند الاستلام من المتجر
+                'trader_pin' => $deliveryType === 'pickup' ? Order::generateDeliveryPin() : null,
             ]);
 
             foreach ($request->cart as $item) {
@@ -308,12 +314,28 @@ class CartApiController extends Controller
                 ]);
             }
 
+            // ✅ العربون والعمولة يُحسبان بعد تثبيت الإجماليات (عند created كانت القيم صفراً)
+            app(DepositService::class)->applyToOrder($order);
+
+            // الطلب الجديد المدفوع مسبقاً (محفظة/مجاني) يُسجَّل عربونه فوراً.
+            // الدفع الإلكتروني يُسجَّل عند نجاح التحقق من البوابة، والكاش لا يُحصَّل مسبقاً.
+            if ((int) $order->status_id === 1) {
+                app(DepositService::class)->reserve($order);
+            }
+
             DB::commit();
 
             return $this->returnData('data', [
-                'order_id'    => $order->id,
-                'final_price' => $order->final_price,
-                'message'     => __('api.order_received_success', ['order_id' => $order->id])
+                'order_id'         => $order->id,
+                'order_number'     => $order->order_number,
+                'final_price'      => $order->final_price,
+                'deposit_amount'   => (float) $order->deposit_amount,
+                'remaining_amount' => (float) $order->remaining_amount,
+                'slaughter_total'  => (float) $order->slaughter_total,
+                'delivery_type'    => $order->delivery_type,
+                'payment_method'   => $order->payment_method,
+                'trader_id'        => $order->trader_id,
+                'message'          => __('api.order_received_success', ['order_id' => $order->id])
             ], __('api.order_received_success'));
 
         } catch (InvalidArgumentException $ex) {
@@ -328,6 +350,35 @@ class CartApiController extends Controller
             ]);
             return $this->returnError(__('api.Api_Error_Contact_Programmer'));
         }
+    }
+
+    /**
+     * يتحقق أن كل منتجات السلة تابعة لتاجر واحد ويرجعه.
+     * (الطلب الواحد = تاجر واحد؛ دعم تجار متعددين يحتاج تقسيم الطلب.)
+     */
+    protected function resolveSingleTrader(array $cart): \App\Models\User
+    {
+        $productIds = collect($cart)->pluck('product_id')->unique()->values();
+
+        $products = Product::with('trader')->whereIn('id', $productIds)->get();
+
+        if ($products->count() !== $productIds->count()) {
+            throw new InvalidArgumentException(__('api.ID_Not_Found'));
+        }
+
+        $traderIds = $products->pluck('trader_id')->unique();
+
+        if ($traderIds->count() !== 1 || is_null($traderIds->first())) {
+            throw new InvalidArgumentException(__('api.Cart_Single_Trader_Only'));
+        }
+
+        $trader = $products->first()->trader;
+
+        if (!$trader) {
+            throw new InvalidArgumentException(__('api.Trader_Location_Not_Available'));
+        }
+
+        return $trader;
     }
 
     protected function resolveAddress(AddCartRequest $request): array
@@ -501,6 +552,16 @@ class CartApiController extends Controller
                 ];
             }
 
+            $grandTotal = round($subtotalBeforePoints - ($pointsData['discount_value'] ?? 0), 2);
+
+            // ✅ العربون والمتبقي لعرضهما في شاشة السلة (نفس معادلة إنشاء الطلب، بدون حفظ)
+            $preview = new Order([
+                'total_price'     => $totalPrice,
+                'discount_amount' => 0,
+                'final_price'     => $grandTotal,
+            ]);
+            $deposit = app(DepositService::class)->calculate($preview);
+
             return $this->returnData('data', [
                 'items' => $lines,
                 'total_items' => $totalItems,
@@ -509,7 +570,9 @@ class CartApiController extends Controller
                 'delivery_distance_km' => $distance,
                 'delivery_price' => $deliveryPrice,
                 'loyalty_points' => $pointsData,
-                'grand_total' => round($subtotalBeforePoints - ($pointsData['discount_value'] ?? 0), 2),
+                'grand_total' => $grandTotal,
+                'deposit_amount' => (float) $deposit['amount'],
+                'remaining_amount' => (float) $deposit['remaining'],
             ], __('api.Api_Return_Data'));
 
         } catch (InvalidArgumentException $ex) {

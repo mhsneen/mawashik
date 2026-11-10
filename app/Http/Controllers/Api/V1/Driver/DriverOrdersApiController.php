@@ -58,8 +58,14 @@ class DriverOrdersApiController extends Controller
         try {
             $driver = $request->user();
 
+            // ✅ المندوب يرى الطلب فقط إذا كان معيّناً له، أو معروضاً عليه (عرض معلّق)
             $order = Order::where('id', $request->order_id)
-               // ->where('driver_id', $driver->id)
+                ->where(function ($q) use ($driver) {
+                    $q->where('driver_id', $driver->id)
+                      ->orWhereHas('driverOffers', function ($o) use ($driver) {
+                          $o->where('driver_id', $driver->id)->where('status', 'pending');
+                      });
+                })
                 ->with([
                     'user:id,name,mobile,image',
                     'status:id',
@@ -338,11 +344,9 @@ public function deliver_Order(Request $request)
             'commission_driver'   => (float) ($order->commission_driver ?? 0),
             'commission_trader'   => (float) ($order->commission_trader ?? 0),
 
-            // Cash amount the driver must collect from the client (cash on delivery)
-            // = remaining only (deposit is paid electronically)
-            'cash_to_collect'     => $order->payment_method === 'cash'
-                ? (float) ($order->remaining_amount ?? 0)
-                : 0,
+            // Cash amount the driver must collect from the client (cash on delivery):
+            // final price minus any deposit already paid up-front.
+            'cash_to_collect'     => (float) $order->cash_to_collect,
 
             'client' => $order->user ? [
                 'id'        => $order->user->id,
@@ -408,12 +412,13 @@ public function deliver_Order(Request $request)
 
         $deliveryFee = $order->delivery_price ?? 0;
 
-        // 1. إذا كان الدفع كاش، السائق استلم المبلغ الكامل من العميل (final_price)
+        // 1. إذا كان الدفع كاش، السائق استلم من العميل المبلغ المطلوب تحصيله فقط
+        //    (الإجمالي ناقص أي عربون دُفع مسبقاً) — وليس final_price كاملاً دائماً.
         if ($collectionMethod === 'cash') {
-            $cashCollected = $order->final_price ?? 0;
+            $cashCollected = (float) $order->cash_to_collect;
 
             if ($cashCollected > 0) {
-                // خصم المبلغ الكامل من محفظة السائق (لأنه استلمها نقداً ويجب تسليمها للمتجر)
+                // خصم المبلغ المحصَّل من محفظة السائق (استلمه نقداً ويجب تسليمه)
                 $wallet->decrement('balance', $cashCollected);
 
                 WalletTransaction::create([

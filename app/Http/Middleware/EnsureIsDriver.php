@@ -8,8 +8,12 @@ use Symfony\Component\HttpFoundation\Response;
 use App\Traits\ApiTrait;
 
 /**
- * التحقق أن المستخدم المسجّل له دور "driver"
- * يُستخدم لحماية endpoints الخاصة بالسائق
+ * EnsureIsDriver — يسمح فقط للمندوبين المعتمدين بالوصول لمسارات التوصيل.
+ *
+ * المنطق (البند 11 من المتطلبات: المندوب يخضع للاعتماد قبل استخدام وظائف التوصيل):
+ *  - يجب أن يمتلك المستخدم دور "driver".
+ *  - يجب أن تكون حالة driver_status = "approved".
+ *  - pending / suspended / rejected → 403 برسالة مناسبة.
  */
 class EnsureIsDriver
 {
@@ -19,14 +23,20 @@ class EnsureIsDriver
     {
         $user = $request->user();
 
-        if (!$user || !$user->hasRole('driver')) {
-            return response()->json([
-                'status'  => false,
-                'code'    => 403,
-                'message' => __('api.Api_Unauthenticated'),
-            ], 403);
+        if (!$user) {
+            return $this->returnError(__('api.Api_Unauthenticated'), 401);
         }
 
-        return $next($request);
+        if (!$user->hasRole('driver', 'web')) {
+            return $this->returnError(__('api.Api_Driver_Role_Required'), 403);
+        }
+
+        return match ($user->driver_status) {
+            'approved'  => $next($request),
+            'pending'   => $this->returnError(__('api.Api_Driver_Pending'), 403),
+            'suspended' => $this->returnError(__('api.Api_Driver_Suspended'), 403),
+            'rejected'  => $this->returnError(__('api.Api_Driver_Rejected'), 403),
+            default     => $this->returnError(__('api.Api_Driver_Unknown_Status'), 403),
+        };
     }
 }

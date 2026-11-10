@@ -10,21 +10,18 @@ use Illuminate\Support\Facades\Log;
  * DepositService — خدمة العربون (Deposit).
  *
  * المسؤوليات:
- *  - حساب قيمة العربون لطلب جديد (نسبة من الإجمالي بعد الخصم).
+ *  - حساب قيمة العربون لطلب (نسبة مئوية من قيمة الطلب بعد الخصم).
  *  - التحقق من تفعيل النظام.
- *  - حجز العربون عند إنشاء الطلب.
- *  - استرداد العربون عند الإلغاء.
+ *  - تسجيل العربون كمدفوع عندما يكون المبلغ محصَّلاً فعلاً (محفظة/دفع إلكتروني).
+ *  - استرداد العربون عند الإلغاء المبكر.
  *  - إطلاق العربون للتاجر عند التسليم الناجح.
  *  - مصادرة العربون للمنصة عند الإلغاء المتأخر.
  *
- * ❗ إصلاحات هذا الملف:
- *  1) خطأ إملائي: transaction_transaction_type → transaction_type (السطر 87).
- *  2) إزالة $user->model->wallet() الإشارة لـ model غير الموجودة (السطر 75).
- *  3) إصلاح $wallet->setting->save() → $wallet->save() (السطر 119).
- *  4) إصلاح WalletTransaction::create الناقص في refundToCustomer (كانت تنشئ حركة بـ wallet_id فقط!).
- *  5) تحديث deposit_status للطلب بعد الاسترداد.
- *  6) إضافة transaction_type لكل حركة عربون.
- *  7) إضافة related_user_id للربط بالعميل صاحب العربون.
+ * قواعد مهمة:
+ *  - العربون يُسجَّل "مدفوعاً" فقط إذا كان الطلب مدفوعاً فعلاً (payment_status = paid).
+ *    في الدفع النقدي لا يُحصَّل أي مبلغ مسبقاً، فلا يُسجَّل عربون ولا يُسترد ولا يُصادَر.
+ *  - كل عملية (إطلاق/مصادرة/استرداد) idempotent: لا تُنفَّذ مرتين لنفس الطلب.
+ *  - أساس الحساب: total_price (المنتجات + الذبح) - discount_amount.
  */
 class DepositService
 {
@@ -41,7 +38,7 @@ class DepositService
     /**
      * حساب قيمة العربون لطلب.
      *
-     * الأساس: المبلغ المتبقي بعد الخصم (لا يشمل التوصيل ولا الضريبة ولا الذبح).
+     * الأساس: قيمة الطلب بعد الخصم (المنتجات + خدمة الذبح، بدون التوصيل ولا الضريبة).
      * لو deposit_active=false، القيمة = 0.
      *
      * @return array{amount: float, remaining: float}
@@ -54,7 +51,6 @@ class DepositService
 
         $base = max(0, $order->total_price - $order->discount_amount);
 
-        // ✅ إلغاء الحد الأدنى والأقصى - العربون = نسبة مئوية فقط
         $amount = round($base * ($this->percentage() / 100), 2);
 
         $remaining = max(0, $order->final_price - $amount);
@@ -63,53 +59,42 @@ class DepositService
     }
 
     /**
-     * حجز العربون من محفظة العميل.
-     * أو تسجيله كمدفوع نقداً (cash) عند استلام المنتج.
+     * يحسب ويثبّت العربون والمتبقي وعمولة التاجر على الطلب.
+     * يجب استدعاؤه بعد تثبيت الإجماليات (total_price / final_price) وليس عند created.
+     */
+    public function applyToOrder(Order $order): void
+    {
+        $deposit = $this->calculate($order);
+
+        $order->deposit_amount   = $deposit['amount'];
+        $order->remaining_amount = $deposit['remaining'];
+        $order->slaughter_total  = $order->items()->sum('slaughter_total');
+        $order->commission_trader = app(CommissionService::class)->calculateForTrader($order);
+
+        $order->saveQuietly();
+    }
+
+    /**
+     * تسجيل العربون كمدفوع (محجوز لدى المنصة).
+     *
+     * يُستدعى فقط بعد أن يكون المبلغ قد حُصِّل فعلاً:
+     *  - الدفع من المحفظة: خُصم الإجمالي كاملاً عند إنشاء الطلب.
+     *  - الدفع الإلكتروني: حُصِّل عبر البوابة وتم التحقق منه.
+     * لذلك لا نخصم من المحفظة هنا مرة ثانية. الدفع النقدي لا يُسجَّل له عربون.
      */
     public function reserve(Order $order): void
     {
-        if ($order->deposit_amount <= 0) {
+        if ($order->deposit_amount <= 0 || $order->deposit_status === 'paid') {
             return;
         }
 
-        DB::transaction(function () use ($order) {
-            $order->deposit_status = 'paid';
-            $order->deposit_paid_at = now();
-            $order->saveQuietly();
+        if ($order->payment_status !== 'paid') {
+            return;
+        }
 
-            // إذا الدفع من المحفظة، نخصم من رصيد العميل ونُسجّل الحركة
-            if (in_array($order->payment_method, ['wallet', 'wallet_and_cash'], true)) {
-                $user = $order->user;
-                if ($user) {
-                    // ✅ إصلاح: كان $user->model->wallet() — model غير موجودة
-                    $wallet = $user->wallet()->lockForUpdate()->first()
-                        ?? Wallet::firstOrCreate(
-                            ['user_id' => $user->id],
-                            ['balance' => 0, 'rolename' => 'client']
-                        );
-
-                    if ($wallet && $wallet->balance >= $order->deposit_amount) {
-                        $wallet->balance -= $order->deposit_amount;
-                        $wallet->save();
-
-                        WalletTransaction::create([
-                            'wallet_id'        => $wallet->id,
-                            'order_id'         => $order->id,
-                            'type'             => 'debit',
-                            'amount'           => $order->deposit_amount,
-                            // ✅ إصلاح: كان transaction_transaction_type (typo) فكان يُتجاهل بصمت
-                            'transaction_type' => 'deposit_paid',
-                            'related_user_id'  => $user->id, // ✅ ربط بالعميل
-                            'description'      => __('dashboard.deposit_reserved_for_order', ['order' => $order->order_number]),
-                        ]);
-                    } else {
-                        throw new \RuntimeException("Insufficient wallet balance for deposit.");
-                    }
-                }
-            }
-            // للدفع الإلكتروني (بوابة): العربون يأتي مع العملية، لا حاجة لحركة محفظة هنا.
-            // للدفع كاش عند الاستلام: العربون يُسجّل فقط كـ "مستحق"، يُحصّل عند التسليم.
-        });
+        $order->deposit_status  = 'paid';
+        $order->deposit_paid_at = now();
+        $order->saveQuietly();
     }
 
     /**
@@ -123,36 +108,97 @@ class DepositService
 
         DB::transaction(function () use ($order) {
             $user = $order->user;
-            if ($user) {
-                $wallet = $user->wallet()->lockForUpdate()->first()
-                    ?? Wallet::firstOrCreate(
-                        ['user_id' => $user->id],
-                        ['balance' => 0, 'rolename' => 'client']
-                    );
+            if (!$user) {
+                return;
+            }
 
-                $wallet->balance += $order->deposit_amount;
-                // ✅ إصلاح: كان $wallet->setting->save() — setting ليست علاقة على Wallet
+            $wallet = $this->walletFor($user->id, 'client');
+
+            $wallet->balance += $order->deposit_amount;
+            $wallet->save();
+
+            WalletTransaction::create([
+                'wallet_id'        => $wallet->id,
+                'order_id'         => $order->id,
+                'type'             => 'credit',
+                'amount'           => $order->deposit_amount,
+                'transaction_type' => 'deposit_refunded',
+                'related_user_id'  => $user->id,
+                'description'      => __('dashboard.deposit_refunded_for_order', [
+                    'order' => $order->order_number,
+                ]),
+            ]);
+
+            $order->deposit_status      = 'refunded';
+            $order->deposit_refunded_at = now();
+            $order->saveQuietly();
+        });
+    }
+
+    /**
+     * إطلاق العربون لمحفظة التاجر عند التسليم الناجح.
+     *
+     * يُحوَّل للتاجر الأقل من (العربون، صافي مستحقاته) — صافي المستحقات = قيمة المنتجات بعد الخصم
+     * ناقص عمولة المنصة. الباقي من المستحقات يُسوّى في CommissionService::settleOnDelivery.
+     */
+    public function releaseToTrader(Order $order): void
+    {
+        if ($order->deposit_amount <= 0 || $order->deposit_status !== 'paid' || !$order->trader_id) {
+            return;
+        }
+
+        $amount = min((float) $order->deposit_amount, (float) $order->trader_net_amount);
+
+        DB::transaction(function () use ($order, $amount) {
+            if ($amount > 0) {
+                $wallet = $this->walletFor($order->trader_id, 'trader');
+
+                $wallet->balance += $amount;
                 $wallet->save();
 
-                // ✅ إصلاح حرج: الكود القديم كان ينشئ حركة بـ wallet_id فقط!
-                // كانت تُخزَّن كحركة بلا type, amount, description — بيانات مكسورة.
                 WalletTransaction::create([
                     'wallet_id'        => $wallet->id,
                     'order_id'         => $order->id,
                     'type'             => 'credit',
-                    'amount'           => $order->deposit_amount,
-                    'transaction_type' => 'deposit_refunded',
-                    'related_user_id'  => $user->id,
-                    'description'      => __('dashboard.deposit_refunded_for_order', [
+                    'amount'           => $amount,
+                    'transaction_type' => 'deposit_released',
+                    'related_user_id'  => $order->trader_id,
+                    'description'      => __('dashboard.deposit_released_for_order', [
                         'order' => $order->order_number,
                     ]),
                 ]);
-
-                // ✅ تحديث حالة العربون في الطلب
-                $order->deposit_status = 'refunded';
-                $order->deposit_refunded_at = now();
-                $order->saveQuietly();
             }
+
+            $order->deposit_status = 'released';
+            $order->saveQuietly();
         });
+    }
+
+    /**
+     * مصادرة العربون لصالح المنصة (إلغاء بعد بدء التجهيز).
+     * المبلغ محتجز أصلاً لدى المنصة، فلا حركة محفظة؛ نغيّر الحالة إلى forfeited ونسجّل في اللوج.
+     */
+    public function forfeitToPlatform(Order $order): void
+    {
+        if ($order->deposit_amount <= 0 || $order->deposit_status !== 'paid') {
+            return;
+        }
+
+        $order->deposit_status = 'forfeited';
+        $order->saveQuietly();
+
+        Log::info('Deposit forfeited to platform', [
+            'order_id' => $order->id,
+            'amount'   => $order->deposit_amount,
+        ]);
+    }
+
+    private function walletFor(int $userId, string $role): Wallet
+    {
+        return Wallet::where('user_id', $userId)->lockForUpdate()->first()
+            ?? Wallet::firstOrCreate(
+                ['user_id' => $userId],
+                ['balance' => 0, 'rolename' => $role]
+            );
     }
 }

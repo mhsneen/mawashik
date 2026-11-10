@@ -8,9 +8,9 @@ use Illuminate\Support\Facades\DB;
 /**
  * CommissionService — خدمة العمولات.
  *
- * نوعا العمولة في المنصة:
- *  1) عمولة التاجر: نسبة مئوية من قيمة المنتجات (بعد الخصم، بدون التوصيل والضريبة).
- *  2) عمولة المندوب: نسبة مئوية من رسوم التوصيل (لأن المندوب يُكافأ على خدمة التوصيل).
+ * العمولات هنا هي عمولات المنصة المفروضة على الطرفين (البند 8 من المتطلبات):
+ *  1) عمولة التاجر: نسبة مئوية من قيمة المنتجات + الذبح بعد الخصم (بدون التوصيل والضريبة).
+ *  2) عمولة المندوب: نسبة مئوية من رسوم التوصيل، تُخصم من أجر المندوب.
  *
  * مصدر النسبة:
  *  - أولوية 1: عمود commission_rate على المستخدم (لو محدد).
@@ -106,9 +106,16 @@ class CommissionService
 
     /**
      * تسوية العمولات عند التسليم الناجح (status_id = 5):
-     *  - تحويل صافي المتبقي - عمولة التاجر لمحفظة التاجر.
-     *  - تحويل عمولة المندوب لمحفظة المندوب.
-     *  - تسجيل حركات wallet_transactions للشفافية.
+     *
+     *  التاجر:
+     *   - طلب مدفوع عبر المنصة (إلكتروني/محفظة): المنصة تحتفظ بالمبلغ، فيُضاف لمحفظة التاجر
+     *     صافي مستحقاته (المنتجات بعد الخصم - العمولة) ناقص ما أُطلق له مسبقاً كعربون.
+     *   - طلب نقدي: التاجر/المندوب استلم المبلغ نقداً، فتُخصم عمولة المنصة فقط من محفظة التاجر.
+     *
+     *  المندوب:
+     *   - عمولة المنصة تُخصم من محفظته (أجر التوصيل يُضاف في DriverOrdersApiController::recordDriverEarning).
+     *
+     * ملاحظة: يجب استدعاء DepositService::releaseToTrader قبل هذه الدالة.
      */
     public function settleOnDelivery(Order $order): void
     {
@@ -116,44 +123,55 @@ class CommissionService
             // 1) التاجر
             if ($order->trader_id) {
                 $trader = User::find($order->trader_id);
-                $netAmount = $order->getTraderNetAmountAttribute();
 
-                if ($trader && $netAmount > 0) {
+                if ($trader) {
                     $wallet = $trader->wallet()->lockForUpdate()->first()
                         ?? Wallet::firstOrCreate(
                             ['user_id' => $trader->id],
                             ['balance' => 0, 'rolename' => 'trader']
                         );
 
-                    $wallet->balance += $netAmount;
-                    $wallet->save();
+                    $net = (float) $order->trader_net_amount;
 
-                    WalletTransaction::create([
-                        'wallet_id' => $wallet->id,
-                        'order_id' => $order->id,
-                        'type' => 'credit',
-                        'amount' => $netAmount,
-                        'transaction_type' => 'commission_trader',
-                        'related_user_id' => $trader->id,
-                        'description' => __('dashboard.trader_net_for_order', ['order' => $order->order_number]),
-                    ]);
+                    if ($order->payment_method !== 'cash') {
+                        $alreadyReleased = $order->deposit_status === 'released'
+                            ? min((float) $order->deposit_amount, $net)
+                            : 0.0;
 
-                    // تسجيل العمولة المخصومة (للمحاسبة)
-                    if ($order->commission_trader > 0) {
+                        $credit = round($net - $alreadyReleased, 2);
+
+                        if ($credit > 0) {
+                            $wallet->balance += $credit;
+                            $wallet->save();
+
+                            WalletTransaction::create([
+                                'wallet_id'        => $wallet->id,
+                                'order_id'         => $order->id,
+                                'type'             => 'credit',
+                                'amount'           => $credit,
+                                'transaction_type' => 'settlement',
+                                'related_user_id'  => $trader->id,
+                                'description'      => __('dashboard.trader_net_for_order', ['order' => $order->order_number]),
+                            ]);
+                        }
+                    } elseif ($order->commission_trader > 0) {
+                        $wallet->balance -= $order->commission_trader;
+                        $wallet->save();
+
                         WalletTransaction::create([
-                            'wallet_id' => $wallet->id,
-                            'order_id' => $order->id,
-                            'type' => 'debit',
-                            'amount' => $order->commission_trader,
+                            'wallet_id'        => $wallet->id,
+                            'order_id'         => $order->id,
+                            'type'             => 'debit',
+                            'amount'           => $order->commission_trader,
                             'transaction_type' => 'commission_trader',
-                            'related_user_id' => $trader->id,
-                            'description' => __('dashboard.platform_commission_for_order', ['order' => $order->order_number]),
+                            'related_user_id'  => $trader->id,
+                            'description'      => __('dashboard.platform_commission_for_order', ['order' => $order->order_number]),
                         ]);
                     }
                 }
             }
 
-            // 2) المندوب
+            // 2) المندوب: خصم عمولة المنصة من أجر التوصيل
             if ($order->driver_id && $order->commission_driver > 0) {
                 $driver = User::find($order->driver_id);
                 if ($driver) {
@@ -163,17 +181,17 @@ class CommissionService
                             ['balance' => 0, 'rolename' => 'driver']
                         );
 
-                    $wallet->balance += $order->commission_driver;
+                    $wallet->balance -= $order->commission_driver;
                     $wallet->save();
 
                     WalletTransaction::create([
-                        'wallet_id' => $wallet->id,
-                        'order_id' => $order->id,
-                        'type' => 'credit',
-                        'amount' => $order->commission_driver,
+                        'wallet_id'        => $wallet->id,
+                        'order_id'         => $order->id,
+                        'type'             => 'debit',
+                        'amount'           => $order->commission_driver,
                         'transaction_type' => 'commission_driver',
-                        'related_user_id' => $driver->id,
-                        'description' => __('dashboard.driver_commission_for_order', ['order' => $order->order_number]),
+                        'related_user_id'  => $driver->id,
+                        'description'      => __('dashboard.driver_commission_for_order', ['order' => $order->order_number]),
                     ]);
                 }
             }
