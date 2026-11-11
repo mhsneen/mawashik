@@ -32,6 +32,8 @@ class AddCartRequest extends FormRequest
 
             'delivery_type' => 'nullable|in:delivery,pickup',
             'payment_method' => 'nullable|string|max:50',
+            // طريقة دفع العربون (للطلبات النقدية): نقدي | بنكي/إلكتروني | من المحفظة
+            'deposit_method' => 'nullable|in:cash,online,wallet',
 
             // إما عنوان محفوظ (address_id) أو عنوان لمرة وحدة (address/latitude/longitude)
             // — التحقق الفعلي من وجود واحد منهم عند delivery_type=delivery بدالة withValidator تحت.
@@ -113,6 +115,7 @@ class AddCartRequest extends FormRequest
             'longitude' => __('dashboard.longitude'),
             'delivery_type' => __('dashboard.delivery_type'),
             'payment_method' => __('dashboard.payment_method'),
+            'deposit_method' => __('dashboard.deposit_method'),
             'coupon_code' => __('dashboard.Code'),
             'transaction_id' => __('dashboard.Transaction_Number'),
             'cart' => __('dashboard.Cart'),

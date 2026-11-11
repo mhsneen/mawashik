@@ -25,7 +25,7 @@ class MyFatoorahGateway extends AbstractPaymentGateway
             ->post($this->baseUrl() . '/v2/SendPayment', [
                 'CustomerName'      => $order->user->name ?? 'Customer',
                 'NotificationOption' => 'LNK',
-                'InvoiceValue'      => $order->final_price,
+                'InvoiceValue'      => $order->online_amount,
                 'CustomerReference' => (string) $order->id,
                 'CallBackUrl'       => $this->returnUrl($order->id) . '&status=success',
                 'ErrorUrl'          => $this->returnUrl($order->id) . '&status=error',

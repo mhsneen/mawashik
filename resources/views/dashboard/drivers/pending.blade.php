@@ -33,7 +33,7 @@
                                     <th>{{ __('dashboard.Name') }}</th>
                                     <th>{{ __('dashboard.Mobile') }}</th>
                                     <th>{{ __('dashboard.Image') }}</th>
-                                    <th>{{ __('dashboard.ID_Image') }}</th>
+                                    <th>{{ __('dashboard.ID_Number') }}</th>
                                     <th>{{ __('dashboard.License_Image') }}</th>
                                     <th>{{ __('dashboard.subscribed_since') }}</th>
                                     <th>{{ __('dashboard.Action') }}</th>
@@ -58,17 +58,7 @@
                                         </td>
 
 
-                                        <td>
-                                            @if (!empty($item->id_image))
-                                                <a href="{{ URL::asset('uploads/users/' . $item->id_image) }}" target="_blank">
-                                                    <img src="{{ URL::asset('uploads/users/thumbnail/' . $item->id_image) }}"
-                                                         alt="ID" class="img-fluid"
-                                                         style="max-height: 50px; border-radius: 4px;">
-                                                </a>
-                                            @else
-                                                <span class="text-muted">—</span>
-                                            @endif
-                                        </td>
+                                        <td dir="ltr">{{ $item->id_number ?: '—' }}</td>
                                         <td>
                                             @if (!empty($item->license_image))
                                                 <a href="{{ URL::asset('uploads/users/' . $item->license_image) }}" target="_blank">

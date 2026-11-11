@@ -33,7 +33,7 @@ class DriverAssignmentService
             }])
             // ✅ الترتيب الأساسي: متوسط التقييم (إذا لم يكن لديه تقييم، نعتبره 5.0 ليأخذ فرصة)
             // ✅ الترتيب الثانوي: الأقل ازدحاماً بالطلبات النشطة
-            ->orderByRaw('COALESCE((SELECT AVG(rating) FROM driver_reviews WHERE driver_id = users.id), 5.0) DESC')
+            ->orderByRaw('COALESCE((SELECT AVG(rating) FROM driver_reviews WHERE driver_id = users.id AND is_hidden = 0 AND deleted_at IS NULL), 5.0) DESC')
             ->orderBy('driver_orders_count', 'asc')
             ->orderBy('id', 'asc')
             ->limit(self::BATCH_SIZE)

@@ -70,16 +70,6 @@ class DriverAuthApiController extends Controller
                 );
             }
 
-            // رفع صورة الهوية (مطلوبة)
-            if ($request->hasFile('id_image')) {
-                $driver->id_image = $imageService->uploadAndProcess(
-                    image: $request->file('id_image'),
-                    folder: 'users',
-                    thumbnailWidth: 400,
-                    thumbnailHeight: 300
-                );
-            }
-
             // رفع صورة الرخصة (مطلوبة)
             if ($request->hasFile('license_image')) {
                 $driver->license_image = $imageService->uploadAndProcess(
@@ -138,7 +128,6 @@ class DriverAuthApiController extends Controller
                 'email'             => $driver->email,
                 'image'             => $driver->image_url,
                 'id_number'         => $driver->id_number,
-                'id_image'          => $driver->id_image ? url('uploads/users/' . $driver->id_image) : null,
                 'license_image'     => $driver->license_image ? url('uploads/users/' . $driver->license_image) : null,
                 'driver_status'     => $driver->driver_status,
                 'is_active'         => (bool) $driver->is_active,
@@ -169,7 +158,6 @@ class DriverAuthApiController extends Controller
                 'email'            => 'sometimes|nullable|email|max:255|unique:users,email,' . $driver->id,
                 'password'         => 'sometimes|nullable|string|min:6|max:30',
                 'image'            => 'sometimes|image|max:5120',
-                'id_image'         => 'sometimes|image|max:5120',
                 'license_image'    => 'sometimes|image|max:5120',
                 'device_token'     => 'sometimes|nullable|string|max:255',
                 'city_id'          => 'sometimes|nullable|exists:cities,id',
@@ -180,7 +168,6 @@ class DriverAuthApiController extends Controller
                 'email'           => __('dashboard.Email'),
                 'password'        => __('dashboard.Password'),
                 'image'           => __('dashboard.Image'),
-                'id_image'        => __('dashboard.ID_Image'),
                 'license_image'   => __('dashboard.License_Image'),
             ]);
 
@@ -204,16 +191,6 @@ class DriverAuthApiController extends Controller
                     thumbnailWidth: 300,
                     thumbnailHeight: 300,
                     oldFilename: $driver->image
-                );
-            }
-
-            if ($request->hasFile('id_image')) {
-                $updateData['id_image'] = $imageService->uploadAndProcess(
-                    image: $request->file('id_image'),
-                    folder: 'users',
-                    thumbnailWidth: 400,
-                    thumbnailHeight: 300,
-                    oldFilename: $driver->id_image
                 );
             }
 

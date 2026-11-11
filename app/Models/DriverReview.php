@@ -15,8 +15,16 @@ class DriverReview extends Model
         'driver_id',
         'rating',
         'comment',
+        'is_hidden',
         'order_id',
     ];
+
+    protected $casts = ['is_hidden' => 'boolean'];
+
+    public function scopeVisible($query)
+    {
+        return $query->where('is_hidden', false);
+    }
 
     public function client()
     {

@@ -44,6 +44,8 @@ class AppServiceProvider extends ServiceProvider
        Product::observe(ProductObserver::class);
 
 
+        \App\Models\NotificationTemplate::applyToTranslator();
+
         Paginator::useBootstrap();
         view()->composer('*', function ($view) {
             $storeLogo = null;

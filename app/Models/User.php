@@ -334,13 +334,13 @@ class User extends Authenticatable
     // متوسط تقييم السائق (بيرجع null لو ماله تقييمات لسا)
     public function getAverageRatingAttribute()
     {
-        return $this->driverReviews()->avg('rating');
+        return $this->driverReviews()->visible()->avg('rating');
     }
 
     // عدد تقييمات السائق
     public function getReviewsCountAttribute()
     {
-        return $this->driverReviews()->count();
+        return $this->driverReviews()->visible()->count();
     }
 
     public function addresses()

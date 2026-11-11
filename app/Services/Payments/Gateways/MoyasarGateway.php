@@ -17,7 +17,7 @@ class MoyasarGateway extends AbstractPaymentGateway
     {
         $response = Http::withBasicAuth($this->config('secret_key'), '')
             ->post($this->baseUrl . '/invoices', [
-                'amount'       => $this->toMinorUnits($order->final_price),
+                'amount'       => $this->toMinorUnits($order->online_amount),
                 'currency'     => strtoupper($order->currency ?? 'SAR'),
                 'description'  => 'Order #' . $order->id,
                 'callback_url' => $this->returnUrl($order->id),

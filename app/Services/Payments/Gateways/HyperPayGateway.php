@@ -27,7 +27,7 @@ class HyperPayGateway extends AbstractPaymentGateway
             ->withToken($this->config('access_token'))
             ->post($this->baseUrl() . '/v1/checkouts', [
                 'entityId'              => $this->config('entity_id'),
-                'amount'                => number_format($order->final_price, 2, '.', ''),
+                'amount'                => number_format($order->online_amount, 2, '.', ''),
                 'currency'              => $order->currency ?? 'SAR',
                 'paymentType'           => 'DB',
                 'merchantTransactionId' => (string) $order->id,

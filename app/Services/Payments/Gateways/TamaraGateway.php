@@ -28,7 +28,7 @@ class TamaraGateway extends AbstractPaymentGateway
                 'order_reference_id' => (string) $order->id,
                 'order_number'       => (string) $order->id,
                 'total_amount' => [
-                    'amount'   => number_format($order->final_price, 2, '.', ''),
+                    'amount'   => number_format($order->online_amount, 2, '.', ''),
                     'currency' => $order->currency ?? 'SAR',
                 ],
                 'description'  => 'Order #' . $order->id,

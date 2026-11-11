@@ -66,7 +66,7 @@ class DriverController extends Controller
     public function pending(Request $request)
     {
         $items = User::pendingDrivers()
-            ->select('id', 'name','image', 'mobile', 'is_active', 'driver_status', 'created_at','id_image','license_image')
+            ->select('id', 'name','image', 'mobile', 'is_active', 'driver_status', 'created_at','id_number','license_image')
             ->oldest('id')
             ->paginate(15)
             ->withQueryString();
@@ -102,6 +102,7 @@ class DriverController extends Controller
                 'name'        => $request->name,
                 'is_active'   => $request->is_active ?? 1,
                 'mobile'      => $request->mobile,
+                'id_number'   => $request->id_number,
                 'email'       => $request->email,
               //  'password'    => Hash::make($request->password),
                 // === حقول مندوب التوصيل (PDF — البند الرابع) ===
@@ -117,16 +118,6 @@ class DriverController extends Controller
                     folder: $this->folder,
                     thumbnailWidth: 128,
                     thumbnailHeight: 128
-                );
-            }
-
-            // صورة الهوية
-            if ($request->hasFile('id_image')) {
-                $item_data['id_image'] = $imageService->uploadAndProcess(
-                    image: $request->file('id_image'),
-                    folder: $this->folder,
-                    thumbnailWidth: 300,
-                    thumbnailHeight: 200
                 );
             }
 
@@ -204,6 +195,7 @@ class DriverController extends Controller
                 'name'      => $request->name,
                 'is_active' => $request->is_active ?? 1,
                 'mobile'    => $request->mobile,
+                'id_number' => $request->id_number,
                 'email'     => $request->email,
 
                 // === حقول مندوب التوصيل (قابلة للتعديل من الأدمن) ===
@@ -226,17 +218,6 @@ class DriverController extends Controller
                     thumbnailWidth: 128,
                     thumbnailHeight: 128,
                     oldFilename: $item->image
-                );
-            }
-
-            // صورة الهوية
-            if ($request->hasFile('id_image')) {
-                $item_data['id_image'] = $imageService->uploadAndProcess(
-                    image: $request->file('id_image'),
-                    folder: $this->folder,
-                    thumbnailWidth: 300,
-                    thumbnailHeight: 200,
-                    oldFilename: $item->id_image
                 );
             }
 

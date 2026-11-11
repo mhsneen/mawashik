@@ -75,7 +75,6 @@ class DriverProfileApiController extends Controller
                 Rule::unique('users', 'email')->whereNull('deleted_at')->ignore($driver->id),
             ],
             'image'            => 'sometimes|nullable|image|max:5120',
-            'id_image'         => 'sometimes|nullable|image|max:5120',
             'license_image'    => 'sometimes|nullable|image|max:5120',
             'device_token'     => 'sometimes|nullable|string|max:255',
             'city_id'          => 'sometimes|nullable|exists:cities,id',
@@ -104,16 +103,6 @@ class DriverProfileApiController extends Controller
                     thumbnailWidth: 300,
                     thumbnailHeight: 300,
                     oldFilename: $driver->image
-                );
-            }
-
-            if ($request->hasFile('id_image')) {
-                $data['id_image'] = $imageService->uploadAndProcess(
-                    image: $request->file('id_image'),
-                    folder: $this->folder,
-                    thumbnailWidth: 400,
-                    thumbnailHeight: 300,
-                    oldFilename: $driver->id_image
                 );
             }
 

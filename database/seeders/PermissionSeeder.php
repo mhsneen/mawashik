@@ -36,6 +36,9 @@ class PermissionSeeder extends Seeder
             'Reports_Commissions',
             'Reports_Slaughter',
             'Reports_Traders',
+            'Admin_Wallet',
+            'Reviews',
+            'Notification_Templates',
 
             // === الطلبات والمتجر ===
             'Orders',

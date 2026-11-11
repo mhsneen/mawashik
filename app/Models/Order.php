@@ -64,6 +64,7 @@ class Order extends Model
         'commission_trader',
         'commission_driver',
         'deposit_status',
+        'deposit_method',
         'deposit_paid_at',
         'deposit_refunded_at',
         'driver_at_trader_at',
@@ -123,6 +124,28 @@ class Order extends Model
         $prepaidDeposit = $this->deposit_status === 'paid' ? (float) $this->deposit_amount : 0.0;
 
         return max(0.0, (float) $this->final_price - $prepaidDeposit);
+    }
+
+    // عربون فقط يُدفع إلكترونياً (الطلب نقدي والمتبقي عند الاستلام)
+    public function getIsDepositOnlyOnlineAttribute(): bool
+    {
+        return $this->payment_method === 'cash'
+            && $this->deposit_method === 'online'
+            && (float) $this->deposit_amount > 0;
+    }
+
+    // المبلغ الذي تحصّله بوابة الدفع: العربون فقط أو الإجمالي
+    public function getOnlineAmountAttribute(): float
+    {
+        return $this->is_deposit_only_online
+            ? (float) $this->deposit_amount
+            : (float) $this->final_price;
+    }
+
+    // العربون مدفوع أو الطلب مدفوع بالكامل (أي وصل التاجر مبلغ مضمون)
+    public function hasSecuredPayment(): bool
+    {
+        return $this->payment_status === 'paid' || $this->deposit_status === 'paid';
     }
 
     // هل العربون قابل للاسترداد؟ (قبل بدء التجهيز فقط — حسب الإعداد deposit_refund_before)

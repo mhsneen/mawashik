@@ -25,7 +25,7 @@ class PayTabsGateway extends AbstractPaymentGateway
                 'tran_class'      => 'ecom',
                 'cart_id'         => (string) $order->id,
                 'cart_currency'   => $order->currency ?? 'SAR',
-                'cart_amount'     => (float) $order->final_price,
+                'cart_amount'     => (float) $order->online_amount,
                 'cart_description' => 'Order #' . $order->id,
                 'return'          => $this->returnUrl($order->id),
                 'callback'        => $this->webhookUrl(),
