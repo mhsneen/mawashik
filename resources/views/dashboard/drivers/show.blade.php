@@ -392,30 +392,11 @@
                                 <div class="col-md-6">
                                     <div class="card">
                                         <div class="card-header bg-light">
-                                            <h6 class="mb-0"><i class="fa fa-id-card text-warning mr-2"></i>{{ __('dashboard.ID_Image') }}</h6>
+                                            <h6 class="mb-0"><i class="fa fa-id-card text-warning mr-2"></i>{{ __('dashboard.ID_Number') }}</h6>
                                         </div>
                                         <div class="card-body text-center">
                                             @if (!empty($item->id_number))
                                                 <p class="mb-2"><strong>{{ __('dashboard.ID_Number') }}:</strong> <span style="direction: ltr; display: inline-block">{{ $item->id_number }}</span></p>
-                                            @endif
-                                            @if (!empty($item->id_image))
-                                                <a href="{{ URL::asset('uploads/users/' . $item->id_image) }}" target="_blank">
-                                                    <img src="{{ URL::asset('uploads/users/thumbnail/' . $item->id_image) }}"
-                                                         alt="{{ __('dashboard.ID_Image') }}"
-                                                         class="img-fluid doc-image-thumb"
-                                                         style="max-height: 300px;">
-                                                </a>
-                                                <div class="mt-2">
-                                                    <a href="{{ URL::asset('uploads/users/' . $item->id_image) }}"
-                                                       class="btn btn-info btn-sm" target="_blank">
-                                                        <i class="fa fa-download mr-1"></i>{{ __('dashboard.View_Full_Size') }}
-                                                    </a>
-                                                </div>
-                                            @else
-                                                <div class="text-muted py-5">
-                                                    <i class="fa fa-image fa-3x mb-2 d-block"></i>
-                                                    <span>{{ __('dashboard.No_ID_Image_Uploaded') }}</span>
-                                                </div>
                                             @endif
                                         </div>
                                     </div>

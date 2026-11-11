@@ -11,7 +11,7 @@ use App\Rules\SaudiMobileRule;
  *
  * الحقول المطلوبة حسب البند الرابع من مواصفات "وسيط المواشي":
  *  - البيانات الشخصية: name, mobile, email, image (الصورة الشخصية)
- *  - رخصة السائق: id_image (صورة الهوية), license_image (صورة الرخصة)
+ *  - رخصة السائق: id_number (رقم الهوية), license_image (صورة الرخصة)
  *  - الموافقة على الشروط: terms_accepted
  *  - حالة الاعتماد الإدارية: driver_status (pending/approved/rejected/suspended)
  *  - نسبة عمولة السائق: driver_commission_rate
@@ -60,11 +60,10 @@ $isUpdate = $this->filled('id');
 
             // === حقول مندوب التوصيل الجديدة (حسب الـ PDF) ===
 
-            // صورة الهوية
-            'id_image' => [
-                $isUpdate ? 'nullable' : 'required',
-                'image',
-                'max:5120', // 5MB
+            // رقم الهوية (بدون صورة هوية حسب المتطلبات)
+            'id_number' => [
+                'required', 'string', 'regex:/^[0-9]{10}$/',
+                \Illuminate\Validation\Rule::unique('users', 'id_number')->whereNull('deleted_at')->ignore($this->id),
             ],
 
             // صورة الرخصة
@@ -100,7 +99,7 @@ $isUpdate = $this->filled('id');
             'mobile'                  => __('dashboard.Mobile'),
             'email'                   => __('dashboard.Email'),
          //   'password'                => __('dashboard.Password'),
-            'id_image'                => __('dashboard.ID_Image'),
+            'id_number'               => __('dashboard.ID_Number'),
             'license_image'           => __('dashboard.License_Image'),
             'terms_accepted'          => __('dashboard.Terms_Accepted'),
             'driver_status'           => __('dashboard.Driver_Status'),
@@ -114,7 +113,6 @@ $isUpdate = $this->filled('id');
     {
         return [
             'terms_accepted.accepted' => __('dashboard.Terms_Must_Be_Accepted'),
-            'id_image.required'       => __('dashboard.ID_Image_Required'),
             'license_image.required'  => __('dashboard.License_Image_Required'),
         ];
     }

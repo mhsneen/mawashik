@@ -98,6 +98,55 @@ class DepositService
     }
 
     /**
+     * تسجيل العربون كمدفوع بعد تحصيله فعلاً خارج المحفظة (بوابة دفع/تحويل بنكي مؤكَّد).
+     */
+    public function markPaid(Order $order): void
+    {
+        if ($order->deposit_amount <= 0 || $order->deposit_status === 'paid') {
+            return;
+        }
+
+        $order->deposit_status  = 'paid';
+        $order->deposit_paid_at = now();
+        $order->saveQuietly();
+    }
+
+    /**
+     * دفع العربون من محفظة العميل (طلب نقدي + deposit_method=wallet).
+     * يجب استدعاؤه داخل DB::transaction. يرمي InvalidArgumentException عند عدم كفاية الرصيد.
+     */
+    public function payFromWallet(Order $order, User $user): void
+    {
+        $amount = (float) $order->deposit_amount;
+        if ($amount <= 0 || $order->deposit_status === 'paid') {
+            return;
+        }
+
+        $wallet = Wallet::where('user_id', $user->id)->lockForUpdate()->first();
+
+        if (!$wallet || (float) $wallet->balance < $amount) {
+            throw new \InvalidArgumentException(__('api.Insufficient_wallet_balance'));
+        }
+
+        $wallet->balance -= $amount;
+        $wallet->save();
+
+        WalletTransaction::create([
+            'wallet_id'        => $wallet->id,
+            'order_id'         => $order->id,
+            'type'             => 'debit',
+            'amount'           => $amount,
+            'transaction_type' => 'deposit_paid',
+            'related_user_id'  => $user->id,
+            'description'      => __('dashboard.deposit_paid_for_order', [
+                'order' => $order->order_number,
+            ]),
+        ]);
+
+        $this->markPaid($order);
+    }
+
+    /**
      * استرداد العربون للعميل عند الإلغاء المبكر.
      */
     public function refundToCustomer(Order $order): void

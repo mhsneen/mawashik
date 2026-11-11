@@ -160,6 +160,33 @@
                     </a>
                 </li>
             @endcan
+            @can('Admin_Wallet')
+                <li class="slide">
+                    <a class="side-menu__item" href="{{ route('adminwallet') }}">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="side-menu__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M3 7h18v12H3zM3 7l3-4h12l3 4M16 13h2"/>
+                        </svg><span class="side-menu__label">{{ __('dashboard.Admin_Wallet') }}</span>
+                    </a>
+                </li>
+            @endcan
+            @can('Reviews')
+                <li class="slide">
+                    <a class="side-menu__item" href="{{ route('reviews') }}">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="side-menu__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M12 2l3 7h7l-5.5 4.5L18 21l-6-4-6 4 1.5-7.5L2 9h7z"/>
+                        </svg><span class="side-menu__label">{{ __('dashboard.Reviews_Management') }}</span>
+                    </a>
+                </li>
+            @endcan
+            @can('Notification_Templates')
+                <li class="slide">
+                    <a class="side-menu__item" href="{{ route('notificationtemplates') }}">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="side-menu__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M18 8a6 6 0 10-12 0c0 7-3 9-3 9h18s-3-2-3-9M13.7 21a2 2 0 01-3.4 0"/>
+                        </svg><span class="side-menu__label">{{ __('dashboard.Notification_Templates') }}</span>
+                    </a>
+                </li>
+            @endcan
             @can('Deposits_Settings')
                 <li class="slide">
                     <a class="side-menu__item" href="{{ route('deposits.settings') }}">

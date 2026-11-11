@@ -68,7 +68,7 @@ class OrderObserver
         }
 
         // === 2.5) نجاح الدفع الإلكتروني (7 → 1): تسجيل العربون وإشعار التاجر ===
-        if ($newStatus === 1 && $oldStatus === 7 && $order->payment_status === 'paid') {
+        if ($newStatus === 1 && $oldStatus === 7 && $order->hasSecuredPayment()) {
             app(DepositService::class)->reserve($order);
 
             $this->notifyTrader($order,
@@ -116,7 +116,7 @@ class OrderObserver
             case 6: // ملغي
                 // فشل الدفع الإلكتروني (7 → 6 بحالة دفع failed): الطلب لم يُدفع ولم يصل للتاجر،
                 // فلا عربون يُستردّ/يُصادَر ولا مبلغ يُرجَع ولا إشعار إلغاء للإدارة.
-                $paymentFailed = $oldStatus === 7 && $order->payment_status !== 'paid';
+                $paymentFailed = $oldStatus === 7 && !$order->hasSecuredPayment();
                 if ($paymentFailed) {
                     break;
                 }
@@ -176,7 +176,7 @@ class OrderObserver
         // ===== 2) إشعار التاجر =====
         // الحالة 1 (جديد) تُعالج في created() / عند نجاح الدفع — هنا نعالج باقي الحالات.
         // الطلب الذي فشل دفعه (7 → 6) لم يصل للتاجر أصلاً فلا نشعره بإلغائه.
-        $neverReachedTrader = $newStatus === 6 && $oldStatus === 7 && $order->payment_status !== 'paid';
+        $neverReachedTrader = $newStatus === 6 && $oldStatus === 7 && !$order->hasSecuredPayment();
 
         if (!$neverReachedTrader && in_array($newStatus, [2, 3, 4, 5, 6])) {
             $traderTitle = match ($newStatus) {

@@ -85,7 +85,14 @@ class CartApiController extends Controller
             $user = $request->user();
             $couponId = null;
 
-            $initialStatus = $paymentMethod === 'online' ? 7 : 1;
+            // طريقة العربون: للطلب النقدي يختارها العميل (cash افتراضي)، وغير ذلك تتبع طريقة الدفع
+            $depositMethod = $paymentMethod === 'cash'
+                ? ($request->deposit_method ?? 'cash')
+                : $paymentMethod;
+
+            // دفع العربون إلكترونياً لطلب نقدي = ينتظر الدفع (7) حتى تأكيد البوابة
+            $initialStatus = ($paymentMethod === 'online'
+                || ($paymentMethod === 'cash' && $depositMethod === 'online')) ? 7 : 1;
 
             $order = Order::create([
                 'user_id' => $user->id,
@@ -95,6 +102,7 @@ class CartApiController extends Controller
                 // pickup_type يطابق خيار العميل (استلام من التاجر أو توصيل)
                 'pickup_type' => $deliveryType,
                 'payment_method' => $paymentMethod,
+                'deposit_method' => $depositMethod,
                 'delivery_price' => $deliveryPrice,
                 'delivery_date' => $request->delivery_date,
                 'delivery_time' => $request->delivery_time,
@@ -317,6 +325,16 @@ class CartApiController extends Controller
             // ✅ العربون والعمولة يُحسبان بعد تثبيت الإجماليات (عند created كانت القيم صفراً)
             app(DepositService::class)->applyToOrder($order);
 
+            // طلب نقدي: العربون من المحفظة يُخصم الآن، والإلكتروني ينتظر البوابة، والنقدي يُحصَّل مع الطلب.
+            if ($paymentMethod === 'cash' && $depositMethod === 'wallet' && (float) $order->deposit_amount > 0) {
+                app(DepositService::class)->payFromWallet($order, $user);
+            }
+            // عربون صفري لا يحتاج دفعاً: لا ننتظر البوابة
+            if ($paymentMethod === 'cash' && $depositMethod === 'online' && (float) $order->deposit_amount <= 0) {
+                $order->status_id = 1;
+                $order->saveQuietly();
+            }
+
             // الطلب الجديد المدفوع مسبقاً (محفظة/مجاني) يُسجَّل عربونه فوراً.
             // الدفع الإلكتروني يُسجَّل عند نجاح التحقق من البوابة، والكاش لا يُحصَّل مسبقاً.
             if ((int) $order->status_id === 1) {
@@ -330,6 +348,10 @@ class CartApiController extends Controller
                 'order_number'     => $order->order_number,
                 'final_price'      => $order->final_price,
                 'deposit_amount'   => (float) $order->deposit_amount,
+                'deposit_method'   => $order->deposit_method,
+                'deposit_status'   => $order->deposit_status,
+                'requires_payment' => (int) $order->status_id === 7,
+                'online_amount'    => (float) $order->online_amount,
                 'remaining_amount' => (float) $order->remaining_amount,
                 'slaughter_total'  => (float) $order->slaughter_total,
                 'delivery_type'    => $order->delivery_type,
@@ -573,6 +595,10 @@ class CartApiController extends Controller
                 'grand_total' => $grandTotal,
                 'deposit_amount' => (float) $deposit['amount'],
                 'remaining_amount' => (float) $deposit['remaining'],
+                'deposit_methods' => $deposit['amount'] > 0 ? ['cash', 'online', 'wallet'] : [],
+                'wallet_balance' => (float) (optional($request->user()->wallet)->balance ?? 0),
+                'can_pay_deposit_from_wallet' => $deposit['amount'] > 0
+                    && (float) (optional($request->user()->wallet)->balance ?? 0) >= (float) $deposit['amount'],
             ], __('api.Api_Return_Data'));
 
         } catch (InvalidArgumentException $ex) {

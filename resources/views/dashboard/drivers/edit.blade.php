@@ -248,22 +248,18 @@
                         <br />
 
                         <div class="row row-xs formgroup-wrapper">
-                            {{-- صورة الهوية --}}
+                            {{-- رقم الهوية --}}
                             <div class="col-md-6">
                                 <div class="form-group">
                                     <div class="row">
                                         <div class="col-md-3">
-                                            <label class="form-label pd-t-10">{{ __('dashboard.ID_Image') }} : </label>
+                                            <label class="form-label pd-t-10">{{ __('dashboard.ID_Number') }} : <span class="tx-danger">*</span></label>
                                         </div>
                                         <div class="col-md-8">
-                                            <input type="file" class="dropify" data-height="200" name="id_image" id="id_image" data-max-file-size="5M"
-                                                data-parsley-errors-container="#slErrorContainerIdImage"
-                                                @if (!empty($item->id_image)) data-default-file="{{ URL::asset('uploads/' . $folder . '/thumbnail/' . $item->id_image) }}" @endif />
-                                            <div id="slErrorContainerIdImage">
-                                                @error('id_image')
-                                                    <span class="tx-danger">{{ $message }} </span>
-                                                @enderror
-                                            </div>
+                                            <input type="text" class="form-control" name="id_number" value="{{ old('id_number', $item->id_number) }}" maxlength="10" required dir="ltr">
+                                            @error('id_number')
+                                                <span class="tx-danger">{{ $message }} </span>
+                                            @enderror
                                         </div>
                                     </div>
                                 </div>

@@ -24,7 +24,7 @@ class StripeGateway extends AbstractPaymentGateway
                 'cancel_url'                    => $this->returnUrl($order->id) . '&status=cancel',
                 'line_items[0][price_data][currency]'                => strtolower($order->currency ?? 'sar'),
                 'line_items[0][price_data][product_data][name]'      => 'Order #' . $order->id,
-                'line_items[0][price_data][unit_amount]'             => $this->toMinorUnits($order->final_price),
+                'line_items[0][price_data][unit_amount]'             => $this->toMinorUnits($order->online_amount),
                 'line_items[0][quantity]'                            => 1,
                 'metadata[order_id]'           => $order->id,
             ]);

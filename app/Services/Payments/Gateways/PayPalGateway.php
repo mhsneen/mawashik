@@ -43,7 +43,7 @@ class PayPalGateway extends AbstractPaymentGateway
                     'reference_id' => (string) $order->id,
                     'amount' => [
                         'currency_code' => strtoupper($order->currency ?? 'USD'),
-                        'value'         => number_format($order->final_price, 2, '.', ''),
+                        'value'         => number_format($order->online_amount, 2, '.', ''),
                     ],
                 ]],
                 // application_context مُعلَّم Deprecated من PayPal؛ البديل الحالي الموصى به هو

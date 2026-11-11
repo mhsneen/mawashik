@@ -20,7 +20,7 @@ class TabbyGateway extends AbstractPaymentGateway
         $response = Http::withToken($this->config('secret_key'))
             ->post($this->baseUrl . '/api/v2/checkout', [
                 'payment' => [
-                    'amount'      => number_format($order->final_price, 2, '.', ''),
+                    'amount'      => number_format($order->online_amount, 2, '.', ''),
                     'currency'    => $order->currency ?? 'SAR',
                     'description' => 'Order #' . $order->id,
                     'buyer' => [

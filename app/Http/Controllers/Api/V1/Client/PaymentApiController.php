@@ -56,7 +56,7 @@ class PaymentApiController extends Controller
                 return $this->returnError(__('api.Order_Not_Found'));
             }
 
-            if ($order->payment_status === 'paid') {
+            if ($order->payment_status === 'paid' || $order->deposit_status === 'paid') {
                 DB::rollBack();
                 return $this->returnError(__('api.Payment_Already_Paid'));
             }
@@ -64,6 +64,12 @@ class PaymentApiController extends Controller
             $code = $request->gateway;
 
             if (!$this->gateways->isEnabled($code)) {
+                DB::rollBack();
+                return $this->returnError(__('api.Payment_Method_Not_Enabled'));
+            }
+
+            // التقسيط (تابي/تمارا) لا يصلح لدفع عربون فقط
+            if ($order->is_deposit_only_online && in_array($code, ['tabby', 'tamara'], true)) {
                 DB::rollBack();
                 return $this->returnError(__('api.Payment_Method_Not_Enabled'));
             }
@@ -169,11 +175,18 @@ class PaymentApiController extends Controller
 
        protected function applyVerifyResult(Order $order, $result): void
     {
-        if ($order->payment_status === 'paid') {
+        if ($order->payment_status === 'paid' || $order->deposit_status === 'paid') {
             return; // لا نكرر إضافة نقاط الولاء أو أي منطق مرتبط بالدفع
         }
 
-        if ($result->paid) {
+        if ($result->paid && $order->is_deposit_only_online) {
+            // ✅ نجح دفع العربون فقط: الطلب نقدي والمتبقي يُحصَّل عند الاستلام
+            app(\App\Services\DepositService::class)->markPaid($order);
+            $order->update([
+                'status_id'                => 1,
+                'payment_gateway_response' => json_encode($result->raw),
+            ]);
+        } elseif ($result->paid) {
             // ✅ نجح الدفع
             $order->update([
                 'payment_status'            => 'paid',

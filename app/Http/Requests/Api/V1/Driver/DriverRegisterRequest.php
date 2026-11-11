@@ -45,7 +45,6 @@ class DriverRegisterRequest extends FormRequest
                 'required', 'string', 'regex:/^[0-9]{10}$/',
                 Rule::unique('users', 'id_number')->whereNull('deleted_at'),
             ],
-            'id_image'         => 'required|image|max:5120',
             'license_image'    => 'required|image|max:5120',
             'country_id'       => 'nullable|exists:countries,id',
             'city_id'          => 'nullable|exists:cities,id',
@@ -69,7 +68,6 @@ class DriverRegisterRequest extends FormRequest
             'area_id.exists'         => __('api.Area_Not_Found'),
             'neighborhood_id.exists' => __('api.Neighborhood_Not_Found'),
             'agreement.accepted'     => __('api.Agreement_Required'),
-            'id_image.required'      => __('api.ID_Image_Required'),
             'license_image.required' => __('api.License_Image_Required'),
         ];
     }
@@ -82,7 +80,6 @@ class DriverRegisterRequest extends FormRequest
             'email'            => __('dashboard.Email'),
             'password'         => __('dashboard.Password'),
             'image'            => __('dashboard.Image'),
-            'id_image'         => __('dashboard.ID_Image'),
             'license_image'    => __('dashboard.License_Image'),
             'city_id'          => __('dashboard.City'),
             'area_id'          => __('dashboard.Area'),

@@ -29,6 +29,7 @@ class OrderResource extends JsonResource
             'distance'            => $this->distance ?? '',
 
             'payment_method'       => $this->payment_method,
+            'deposit_method'       => $this->deposit_method,
             'payment_method_label' => $this->payment_method_label,
             'payment_status'       => $this->payment_status,
             'payment_status_label' => $this->payment_status_label,

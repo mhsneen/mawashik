@@ -39,6 +39,9 @@ use App\Http\Controllers\Dashboard\WalletTraderController;
 use App\Http\Controllers\Dashboard\TradersController;
 use App\Http\Controllers\Dashboard\CommissionsController;
 use App\Http\Controllers\Dashboard\DepositsController;
+use App\Http\Controllers\Dashboard\ReviewsController;
+use App\Http\Controllers\Dashboard\AdminWalletController;
+use App\Http\Controllers\Dashboard\NotificationTemplatesController;
 use App\Http\Controllers\Dashboard\SlaughtersController;
 use App\Http\Controllers\Dashboard\GeoAreasController;
 use App\Http\Controllers\Dashboard\ProductsApprovalsController;
@@ -507,6 +510,23 @@ Route::prefix('walletstraders')->controller(WalletTraderController::class)->grou
             Route::get('/settings', 'settings')->name('deposits.settings');
             Route::post('/updateSettings', 'updateSettings')->name('deposits.updateSettings');
             Route::get('/report', 'report')->name('deposits.report');
+        });
+
+        // ====== التقييمات ======
+        Route::prefix('reviews')->controller(ReviewsController::class)->group(function () {
+            Route::get('/', 'index')->name('reviews');
+            Route::post('{type}/{id}/toggle', 'toggle')->whereIn('type', ['order', 'driver'])->name('reviews.toggle');
+            Route::post('{type}/{id}/delete', 'destroy')->whereIn('type', ['order', 'driver'])->name('reviews.delete');
+        });
+
+        // ====== محفظة الإدارة ======
+        Route::get('admin-wallet', [AdminWalletController::class, 'index'])->name('adminwallet');
+
+        // ====== قوالب الإشعارات ======
+        Route::prefix('notification-templates')->controller(NotificationTemplatesController::class)->group(function () {
+            Route::get('/', 'index')->name('notificationtemplates');
+            Route::post('{key}', 'update')->name('notificationtemplates.update');
+            Route::post('{key}/reset', 'reset')->name('notificationtemplates.reset');
         });
 
         // ====== خدمة الذبح ======
