@@ -49,6 +49,22 @@ class OtpService
     }
 
     /**
+     * وضع الاختبار (الكود الثابت 1111 بدون إرسال): مسموح خارج الإنتاج فقط.
+     * بالإنتاج يُتجاهل إعداد test_mode حتى لو فُعِّل من لوحة التحكم،
+     * وإلا يستطيع أي شخص يعرف رقم جوال أن يدخل بحسابه بالكود 1111.
+     */
+    public function isTestMode(mixed $settingValue = null): bool
+    {
+        if (app()->environment('production')) {
+            return false;
+        }
+
+        $value = $settingValue ?? Setting::where('key', 'test_mode')->value('plain_value');
+
+        return filter_var($value ?? false, FILTER_VALIDATE_BOOLEAN);
+    }
+
+    /**
      * توليد وإرسال رمز التحقق
      */
     public function generateAndSend(User $user, string $purpose): void
@@ -58,8 +74,9 @@ class OtpService
         ])->pluck('plain_value', 'key');
 
         $verificationMethod = $generalSettings['verification_method'] ?? 'sms';
-        $testMode = filter_var($generalSettings['test_mode'] ?? false, FILTER_VALIDATE_BOOLEAN);
-        $directMode = ($generalSettings['registration_activation_mode'] ?? 'verification') === 'direct';
+        $testMode = $this->isTestMode($generalSettings['test_mode'] ?? false);
+        // isDirectMode() يرجع false دائماً في الإنتاج
+        $directMode = $this->isDirectMode();
 
         // بوضع "مباشر": التسجيل يفعّل الحساب فورًا بدون كود.
         // تسجيل الدخول بهالوضع يُعالَج من الكونترولر نفسه عبر isDirectMode() قبل ما يوصل لهون أصلاً.
@@ -73,7 +90,7 @@ class OtpService
             throw new Exception("Contact info is missing for OTP.");
         }
 
-        $code = $testMode ? 1111 : mt_rand(1000, 9999);
+        $code = $testMode ? 1111 : random_int(1000, 9999);
 
         try {
             OtpCode::where('verifiable_id', $user->id)
