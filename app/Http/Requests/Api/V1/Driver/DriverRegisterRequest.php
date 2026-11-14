@@ -39,7 +39,6 @@ class DriverRegisterRequest extends FormRequest
                Rule::unique('users', 'mobile')->whereNull('deleted_at'),
            ],
             'email'            => 'nullable|email|max:255|unique:users,email',
-            'password'         => 'required|string|min:6|max:30',
             'image'            => 'nullable|image|max:5120',
             'id_number'        => [
                 'required', 'string', 'regex:/^[0-9]{10}$/',
@@ -52,7 +51,6 @@ class DriverRegisterRequest extends FormRequest
             'neighborhood_id'  => 'nullable|exists:neighborhoods,id',
             'agreement'        => 'required|boolean|accepted',
             'device_token'     => 'nullable|string|max:255',
-            'api_password'     => 'required|string',
         ];
     }
 
@@ -78,7 +76,6 @@ class DriverRegisterRequest extends FormRequest
             'name'             => __('dashboard.Name'),
             'mobile'           => __('dashboard.Mobile'),
             'email'            => __('dashboard.Email'),
-            'password'         => __('dashboard.Password'),
             'image'            => __('dashboard.Image'),
             'license_image'    => __('dashboard.License_Image'),
             'city_id'          => __('dashboard.City'),

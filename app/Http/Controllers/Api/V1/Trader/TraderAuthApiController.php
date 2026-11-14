@@ -40,7 +40,6 @@ class TraderAuthApiController extends Controller
             $trader = User::create([
                 'name'                => $data['name'],
                 'mobile'              => $data['mobile'],
-                'password'            => $data['password'],
                 'id_number'           => $data['id_number'],
                 'commercial_register' => $data['commercial_register'] ?? null,
                 'store_lat'           => $data['store_lat'],

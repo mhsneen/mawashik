@@ -24,6 +24,7 @@ class OrderResource extends JsonResource
 
             'delivery_type'       => $this->delivery_type,
             'delivery_type_label' => $this->delivery_type_label,
+            'delivery_stage'      => $this->delivery_stage,
             'delivery_date'       => $this->delivery_date?->format('Y-m-d') ?? '',
             'delivery_time'       => $this->delivery_time ?? '',
             'distance'            => $this->distance ?? '',

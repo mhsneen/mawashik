@@ -10,9 +10,9 @@ class AdminNotificationController extends Controller
 {
     public function fetch()
     {
-        // لا نحتاج لجلب الـ order لأن الرابط أصبح مخزن في حقل url
-        $items = AdminNotification::latest()->take(15)->get();
-        $unreadCount = AdminNotification::unread()->count();
+        // جلب التنبيهات غير المقروءة فقط بحيث التنبيه المفتوح يختفي من القائمة
+        $items = AdminNotification::unread()->latest()->take(15)->get();
+        $unreadCount = $items->count();
 
         return response()->json([
             'unread_count' => $unreadCount,
@@ -21,12 +21,30 @@ class AdminNotificationController extends Controller
                 'title'    => $n->title,
                 'body'     => $n->body,
                 'is_read'  => $n->is_read,
-                'url'      => $n->url ?? '#', // الرابط الجاهز
-                'icon'     => $n->icon ?? 'bx bx-bell', // الأيقونة
-                'color'    => $n->color ?? 'primary', // اللون
+                'url'      => route('admin.notifications.open', $n->id),
+                'icon'     => $n->icon ?? 'bx bx-bell',
+                'color'    => $n->color ?? 'primary',
                 'time'     => $n->created_at->diffForHumans(),
             ]),
         ]);
+    }
+
+    public function open($id)
+    {
+        $notification = AdminNotification::find($id);
+
+        if ($notification) {
+            $notification->update([
+                'is_read' => true,
+                'read_at' => now(),
+            ]);
+
+            if (!empty($notification->url) && $notification->url !== '#') {
+                return redirect($notification->url);
+            }
+        }
+
+        return redirect()->back();
     }
 
     public function markAllRead()

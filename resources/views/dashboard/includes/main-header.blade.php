@@ -121,8 +121,11 @@
           style="display:none; position:absolute; top:0; right:0; border-radius:50%; font-size:10px; min-width:18px; padding:2px 5px;">0</span>
 </a>
     <div class="dropdown-menu">
-        <div class="menu-header-content bg-primary text-right">
-            <h6 class="dropdown-title mb-1 tx-15 text-white font-weight-semibold">{{ __('dashboard.Alerts') }}</h6>
+        <div class="menu-header-content bg-primary text-right d-flex justify-content-between align-items-center">
+            <h6 class="dropdown-title mb-0 tx-15 text-white font-weight-semibold">{{ __('dashboard.Alerts') }}</h6>
+            <a href="javascript:void(0);" id="markAllReadBtn" class="badge badge-warning text-dark px-2 py-1 tx-11" style="display: none; cursor: pointer; text-decoration: none;">
+                {{ __('dashboard.Mark_All_Read') }}
+            </a>
         </div>
         <div class="main-notification-list Notification-scroll" id="notifList">
             <!-- يتعبى عبر JS -->

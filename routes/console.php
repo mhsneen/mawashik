@@ -15,7 +15,7 @@ Artisan::command('inspire', function () {
 })->purpose('Display an inspiring quote');
 
 // تنظيف الطلبات المعلّقة (بانتظار الدفع الإلكتروني status_id = 7) الأقدم من ساعة
-Schedule::call(function () {
+/*Schedule::call(function () {
     $orders = Order::with('items')
         ->where('status_id', 7)
         ->where('created_at', '<', now()->subHour())
@@ -74,7 +74,7 @@ Schedule::call(function () {
     }
 })->hourly()
   ->name('cleanup:pending-orders')
-  ->withoutOverlapping();
+  ->withoutOverlapping();*/
 
 // إعادة تعيين الطلبات للسائقين إذا لم يردوا خلال 20 دقيقة
 Schedule::call(function () {

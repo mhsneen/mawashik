@@ -432,6 +432,7 @@ Route::group(
             Route::prefix('admin-notifications')->controller(AdminNotificationController::class)->group(function () {
                 Route::get('/', 'fetch')->name('admin.notifications.fetch');
                 Route::post('/mark-read', 'markAllRead')->name('admin.notifications.markRead');
+                Route::get('/{id}/open', 'open')->name('admin.notifications.open');
             });
             #################################################### End Admin Notifications route  ####################################################
 

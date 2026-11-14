@@ -55,8 +55,10 @@
         $.get("{{ route('admin.notifications.fetch') }}", function (data) {
             if (data.unread_count > 0) {
                 $('#notifCount').text(data.unread_count).show();
+                $('#markAllReadBtn').show();
             } else {
                 $('#notifCount').hide();
+                $('#markAllReadBtn').hide();
             }
 
             let html = '';
@@ -117,7 +119,11 @@
     loadNotifications();
     setInterval(loadNotifications, 20000); // كل 20 ثانية
 
-    $('#notifBell').on('click', function () {
-        $.post("{{ route('admin.notifications.markRead') }}", { _token: "{{ csrf_token() }}" }, loadNotifications);
+    $(document).on('click', '#markAllReadBtn', function (e) {
+        e.preventDefault();
+        e.stopPropagation();
+        $.post("{{ route('admin.notifications.markRead') }}", { _token: "{{ csrf_token() }}" }, function () {
+            loadNotifications();
+        });
     });
 </script>

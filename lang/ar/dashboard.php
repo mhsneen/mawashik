@@ -1,6 +1,7 @@
 <?php
 return [
     'Drivers' => 'السائقين',
+    'Mark_All_Read' => 'تعيين الكل كمقروء',
     'Driver' => 'السائق',
     'Assign_Driver' => 'تعيين سائق',
     'Unassign_Driver' => 'إلغاء تعيين السائق',

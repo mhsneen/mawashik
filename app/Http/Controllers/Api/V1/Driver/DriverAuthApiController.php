@@ -48,7 +48,6 @@ class DriverAuthApiController extends Controller
                 'name'             => $data['name'],
                 'mobile'           => $data['mobile'],
                 'email'            => $data['email'] ?? null,
-                'password'         => Hash::make($data['password']),
                 'country_id'       => $data['country_id'] ?? null,
                 'city_id'          => $data['city_id'] ?? null,
                 'area_id'          => $data['area_id'] ?? null,

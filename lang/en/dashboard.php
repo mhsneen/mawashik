@@ -1,6 +1,7 @@
 <?php
 return array(
     'Drivers' => 'Drivers',
+    'Mark_All_Read' => 'Mark All Read',
     'Driver' => 'Driver',
     'Assign_Driver' => 'Assign Driver',
     'Unassign_Driver' => 'Unassign Driver',

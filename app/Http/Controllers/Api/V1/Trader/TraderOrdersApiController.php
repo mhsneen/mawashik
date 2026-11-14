@@ -217,6 +217,7 @@ class TraderOrdersApiController extends Controller
             'client_mobile'  => $o->user?->mobile,
             'pickup_type'    => $o->pickup_type,
             'delivery_type'  => $o->delivery_type,
+            'delivery_stage' => $o->delivery_stage,
             'total_price'    => $o->total_price,
             'discount_amount' => $o->discount_amount,
             'delivery_price' => $o->delivery_price,

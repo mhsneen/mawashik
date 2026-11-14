@@ -34,7 +34,6 @@ class TraderRegisterRequest extends FormRequest
                  SaudiMobileRule::make(),
                Rule::unique('users', 'mobile')->whereNull('deleted_at'),
            ],
-            'password'             => 'required|string|min:6|max:30',
             'id_number'            => [
                 'required', 'string', 'regex:/^[0-9]{10}$/',
                 Rule::unique('users', 'id_number')->whereNull('deleted_at'),
@@ -47,7 +46,6 @@ class TraderRegisterRequest extends FormRequest
             'area_id'              => 'nullable|exists:areas,id',
             'neighborhood_id'      => 'nullable|exists:neighborhoods,id',
             'agreement'            => 'required|boolean|accepted',
-            'api_password'         => 'required|string',
         ];
     }
 
@@ -72,7 +70,6 @@ class TraderRegisterRequest extends FormRequest
         return [
             'name'                => __('dashboard.Trader_Name'),
             'mobile'              => __('dashboard.Mobile'),
-            'password'            => __('dashboard.Password'),
             'commercial_register' => __('dashboard.Commercial_Register'),
             'store_lat'           => __('dashboard.Store_Lat'),
             'store_lng'           => __('dashboard.Store_Lng'),
