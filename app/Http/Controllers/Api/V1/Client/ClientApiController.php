@@ -124,6 +124,11 @@ class ClientApiController extends Controller
             // يبقى بانتظار اعتماد الإدارة ولا يدخل إلا بعد الاعتماد.
             if ($user->approvalBlockKey() === 'api.Api_Trader_Pending'
                 || $user->approvalBlockKey() === 'api.Api_Driver_Pending') {
+                // نحفظ توكن الجهاز ليصله إشعار الاعتماد لاحقاً (بدون تفعيل الحساب)
+                if ($request->filled('device_token')) {
+                    $user->update(['device_token' => $request->device_token]);
+                }
+
                 return $this->returnData('data', [
                     'user_id'       => $user->id,
                     'mobile'        => $user->mobile,

@@ -234,6 +234,7 @@ class DriverController extends Controller
 
             // === إذا تم تغيير الحالة إلى approved/rejected/suspended — نحدّث التواريخ ===
             $newStatus = $item_data['driver_status'] ?? $item->driver_status;
+            $justApproved = $newStatus === 'approved' && $item->driver_status !== 'approved';
             if ($newStatus === 'approved' && $item->driver_status !== 'approved') {
                 $item_data['driver_approved_at']  = now();
                 $item_data['driver_rejected_at']  = null;
@@ -245,6 +246,11 @@ class DriverController extends Controller
             }
 
             $item->update($item_data);
+
+            // الاعتماد من نموذج التعديل أيضاً يرسل إشعار الاعتماد للمندوب (مثل زر "اعتماد")
+            if ($justApproved) {
+                $this->fcm->sendMsg($item->id, $item->device_token, __('dashboard.Driver_Approved_Title'), __('dashboard.Driver_Approved_Body'));
+            }
 
             DB::commit();
             return redirect()->route($this->routeName . '.edit', $id)
