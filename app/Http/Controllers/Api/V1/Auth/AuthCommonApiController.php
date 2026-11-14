@@ -47,11 +47,19 @@ class AuthCommonApiController extends Controller
             return $this->returnError(__('api.account_blocked'));
         }
 
+        // تاجر/مندوب غير معتمد من الإدارة: لا دخول (ولا إرسال كود دخول)
+        if ($blockKey = $user->approvalBlockKey()) {
+            return $this->returnError(__($blockKey), 403);
+        }
+
         // 3. ✅ لو الحساب مفعّل وبنفس جهاز الدخول السابق (نفس device_token) → دخول مباشر بدون OTP
+        // device_token هو توكن FCM (سرّي وطويل)؛ نقارنه بزمن ثابت ونرفض القيم القصيرة/المخمَّنة.
         if (
             $user->is_active &&
-            $request->filled('device_token') &&
-            $user->device_token === $request->device_token
+            is_string($request->device_token) &&
+            strlen($request->device_token) >= 40 &&
+            is_string($user->device_token) &&
+            hash_equals($user->device_token, $request->device_token)
         ) {
             // تحديث التوكن وإصدار Token للمصادقة
             $user->update(['device_token' => $request->device_token]);
@@ -105,6 +113,10 @@ class AuthCommonApiController extends Controller
                 return $this->returnError(__('api.account_blocked'));
             }
 
+            if ($blockKey = $user->approvalBlockKey()) {
+                return $this->returnError(__($blockKey), 403);
+            }
+
             try {
                 $isValid = $otpService->verify($user, $request->code, OtpCode::PURPOSE_LOGIN);
             } catch (Exception $e) {
@@ -149,6 +161,10 @@ class AuthCommonApiController extends Controller
 
             if ($user->is_blocked) {
                 return $this->returnError(__('api.account_blocked'));
+            }
+
+            if ($blockKey = $user->approvalBlockKey()) {
+                return $this->returnError(__($blockKey), 403);
             }
 
             $otpService->generateAndSend($user, OtpCode::PURPOSE_LOGIN);

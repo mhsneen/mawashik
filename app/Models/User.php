@@ -175,6 +175,25 @@ class User extends Authenticatable
     }
 
     // === مواشي وسيط ===
+    /**
+     * رسالة (مفتاح lang) تمنع الدخول لو الحساب تاجر/مندوب وغير معتمد من الإدارة، وإلا null.
+     * التاجر والمندوب لا يدخلون إلا بعد اعتماد الإدارة (حالة approved).
+     */
+    public function approvalBlockKey(): ?string
+    {
+        foreach (['trader' => $this->trader_status, 'driver' => $this->driver_status] as $role => $status) {
+            if ($this->hasRole($role, 'web') && $status !== 'approved') {
+                return match ($status) {
+                    'suspended' => "api.Api_" . ucfirst($role) . "_Suspended",
+                    'rejected'  => "api.Api_" . ucfirst($role) . "_Rejected",
+                    default     => "api.Api_" . ucfirst($role) . "_Pending",
+                };
+            }
+        }
+
+        return null;
+    }
+
     public function scopeTraders($query)
     {
         return $query->role('trader', 'web');

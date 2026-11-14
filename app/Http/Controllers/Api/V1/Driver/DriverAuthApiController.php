@@ -103,7 +103,7 @@ class DriverAuthApiController extends Controller
                 'user_id'            => $driver->id,
                 'driver_status'      => 'pending',
                 'requires_activation' => true,
-            ], __('api.Driver_Registered_Pending_Approval'));
+            ], __('api.Registration_Code_Sent_Verify'));
 
         } catch (\Exception $ex) {
             DB::rollBack();

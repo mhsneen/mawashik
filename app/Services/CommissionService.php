@@ -133,7 +133,11 @@ class CommissionService
 
                     $net = (float) $order->trader_net_amount;
 
-                    if ($order->payment_method !== 'cash') {
+                    // الكاش مع توصيل: المندوب هو من حصّل المبلغ (ويسلّمه للمنصة)، فالتاجر لم يستلم نقداً
+                    // ويُسوّى له صافي مستحقاته من المنصة. الكاش مع استلام من التاجر: التاجر حصّل بنفسه.
+                    $traderCollectedCash = $order->payment_method === 'cash' && $order->delivery_type !== 'delivery';
+
+                    if (!$traderCollectedCash) {
                         $alreadyReleased = $order->deposit_status === 'released'
                             ? min((float) $order->deposit_amount, $net)
                             : 0.0;
