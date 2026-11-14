@@ -120,6 +120,22 @@ class ClientApiController extends Controller
                 return $this->returnError(__('api.Invalid verification code'));
             }
 
+            // التاجر/المندوب: بعد التحقق من الجوال لا يُفعَّل الحساب ولا يُصدَر توكن؛
+            // يبقى بانتظار اعتماد الإدارة ولا يدخل إلا بعد الاعتماد.
+            if ($user->approvalBlockKey() === 'api.Api_Trader_Pending'
+                || $user->approvalBlockKey() === 'api.Api_Driver_Pending') {
+                return $this->returnData('data', [
+                    'user_id'       => $user->id,
+                    'mobile'        => $user->mobile,
+                    'status'        => 'pending',
+                    'mobile_verified' => true,
+                ], __('api.Registration_Verified_Pending_Review'));
+            }
+
+            if ($blockKey = $user->approvalBlockKey()) {
+                return $this->returnError(__($blockKey));
+            }
+
             DB::beginTransaction();
 
             $user->update([

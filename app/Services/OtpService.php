@@ -80,7 +80,7 @@ class OtpService
 
         // بوضع "مباشر": التسجيل يفعّل الحساب فورًا بدون كود.
         // تسجيل الدخول بهالوضع يُعالَج من الكونترولر نفسه عبر isDirectMode() قبل ما يوصل لهون أصلاً.
-        if ($purpose === OtpCode::PURPOSE_REGISTRATION && $directMode) {
+        if ($purpose === OtpCode::PURPOSE_REGISTRATION && $directMode && !$user->approvalBlockKey()) {
             $user->update(['is_active' => 1]);
             return;
         }
