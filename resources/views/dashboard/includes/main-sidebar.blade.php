@@ -416,7 +416,7 @@
                     </ul>
                 </li>
             @endcan
-            @can('Slideshow')
+            {{-- @can('Slideshow')
                 <li class="slide">
                     <a class="side-menu__item" data-toggle="slide" href="{{ url('/' . ($page = '#')) }}"><svg
                             xmlns="http://www.w3.org/2000/svg" class="side-menu__icon" viewBox="0 0 24 24">
@@ -438,7 +438,7 @@
 
                     </ul>
                 </li>
-            @endcan
+            @endcan --}}
             @can('Contact_Us')
                 <li class="slide">
                     <a class="side-menu__item" href="{{ route('messagescontactus') }}"><svg
