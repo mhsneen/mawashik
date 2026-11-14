@@ -122,24 +122,13 @@ class SettingsApiController extends Controller
 
              $settings = Setting::whereIn(
             'key',
-            ['store_logo','showFullScreenAdvert', 'bannerLink',
+            ['store_logo',
             'store_email','store_mobile','store_whatsapp','added_tax','currentVersionNumber',
             'appStorePageLink',
             'googlePlayPageLink',
             'store_name',
-            'store_address',
-            'free_shipping_sentence',
-            'free_shipping_details',
-            'return_policy_sentence',
-            'return_policy_details',
-            'secure_payment_sentence',
-            'secure_payment_details',
-            'minimum_price_order',
-			'loyalty_points_enabled',
-'loyalty_points_earn_rate',
-'loyalty_points_redeem_value',
-'loyalty_points_min_redeem',
-'open_pickup',
+
+
 'test_mode',
 
             ]
@@ -148,8 +137,7 @@ class SettingsApiController extends Controller
         ->keyBy('key');
 
         $data = [
-            'showFullScreenAdvert' => $settings['showFullScreenAdvert']->plain_value ?? false,
-            'bannerLink' => $settings['bannerLink']->final_value ?? "",
+
             'store_logo' => $settings['store_logo']->final_value ?? "",
             'store_email' => $settings['store_email']->final_value ?? "",
             'store_mobile' => $settings['store_mobile']->final_value ?? "",
@@ -159,20 +147,7 @@ class SettingsApiController extends Controller
             'appStorePageLink' => $settings['appStorePageLink']->final_value ?? "",
             'googlePlayPageLink' => $settings['googlePlayPageLink']->final_value ?? "",
             'store_name' => $settings['store_name']->final_value ?? "",
-            'store_address' => $settings['store_address']->final_value ?? "",
-            'free_shipping_sentence' => $settings['free_shipping_sentence']->final_value ?? "",
-            'free_shipping_details' => $settings['free_shipping_details']->final_value ?? "",
-            'return_policy_sentence' => $settings['return_policy_sentence']->final_value ?? "",
-            'return_policy_details' => $settings['return_policy_details']->final_value ?? "",
-            'secure_payment_sentence' => $settings['secure_payment_sentence']->final_value ?? "",
-            'secure_payment_details' => $settings['secure_payment_details']->final_value ?? "",
-            'minimum_price_order' => $settings['minimum_price_order']->final_value ?? "",
-			'loyalty_points_enabled' => $settings['loyalty_points_enabled']->plain_value ?? false,
-            'loyalty_points_earn_rate' => $settings['loyalty_points_earn_rate']->final_value ?? "",
-            'loyalty_points_redeem_value' => $settings['loyalty_points_redeem_value']->final_value ?? "",
-            'loyalty_points_min_redeem' => $settings['loyalty_points_min_redeem']->final_value ?? "",
-            'open_pickup' => $settings['open_pickup']->plain_value ?? false,
- 'test_mode' => app(\App\Services\OtpService::class)->isTestMode($settings['test_mode']->plain_value ?? false),
+ 'test_mode' => $settings['test_mode']->plain_value ?? false,
         ];
 
             DB::commit();
