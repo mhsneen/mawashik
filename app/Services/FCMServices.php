@@ -38,7 +38,9 @@ class FCMServices
             $item = Notification::create($item_data);
             $item->save();
             DB::commit();
-            $this->sendPushNotification($device_token, $title, $msg, $data);
+            if (!empty($device_token)) {
+                $this->sendPushNotification($device_token, $title, $msg, $data);
+            }
         } catch (Exception $ex) {
             DB::rollback();
             return $ex;
@@ -50,8 +52,11 @@ class FCMServices
     {
 
         $path = storage_path('firebase/firebase_credentials.json');
-        if (!file_exists($path))
-            die("File dose not exist");
+        if (!file_exists($path)) {
+            // لا نوقف الطلب (مثلاً اعتماد التاجر)؛ الإشعار داخل التطبيق محفوظ أصلاً
+            \Illuminate\Support\Facades\Log::error('FCM credentials file missing: ' . $path);
+            return null;
+        }
 
         try {
 

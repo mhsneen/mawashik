@@ -216,6 +216,7 @@ class TradersController extends Controller
 
             // === تحديث التواريخ عند تغيير الحالة ===
             $newStatus = $data['trader_status'] ?? $trader->trader_status;
+            $justApproved = $newStatus === 'approved' && $trader->trader_status !== 'approved';
             if ($newStatus === 'approved' && $trader->trader_status !== 'approved') {
                 $data['approved_at'] = now();
                 $data['rejected_at'] = null;
@@ -229,6 +230,17 @@ class TradersController extends Controller
             }
 
             $trader->update($data);
+
+            // الاعتماد من نموذج التعديل أيضاً يرسل إشعار الاعتماد للتاجر (مثل زر "اعتماد")
+            if ($justApproved) {
+                $this->fcm->sendMsg(
+                    $trader->id,
+                    $trader->device_token,
+                    __('notifications.trader_approved_title'),
+                    __('notifications.trader_approved_message'),
+                    ['type' => 'trader_approved']
+                );
+            }
 
             DB::commit();
             return redirect()->route('traders.edit', $id)
