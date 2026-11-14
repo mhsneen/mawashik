@@ -172,7 +172,7 @@ class SettingsApiController extends Controller
             'loyalty_points_redeem_value' => $settings['loyalty_points_redeem_value']->final_value ?? "",
             'loyalty_points_min_redeem' => $settings['loyalty_points_min_redeem']->final_value ?? "",
             'open_pickup' => $settings['open_pickup']->plain_value ?? false,
- 'test_mode' => $settings['test_mode']->plain_value ?? false,
+ 'test_mode' => app(\App\Services\OtpService::class)->isTestMode($settings['test_mode']->plain_value ?? false),
         ];
 
             DB::commit();

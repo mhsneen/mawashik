@@ -221,4 +221,9 @@ return [
 // === Auth Keys ===
 'account_blocked'                       => 'This account is blocked. Please contact support.',
 'Too_many_attempts_request_new_code'    => 'Too many failed attempts. Please request a new code.',
+    'Registration_Code_Sent_Verify' => 'Your account was created. We sent a verification code to your mobile; enter it to complete registration.',
+    'Registration_Verified_Pending_Review' => 'Your mobile number was verified. Your request will be reviewed by the administration and you will be notified once approved. You cannot log in until then.',
+    'Api_Trader_Pending' => 'Your account is under review by the administration.',
+    'Api_Trader_Suspended' => 'Your account is suspended. Please contact support.',
+    'Api_Trader_Rejected' => 'Your trader registration request was rejected. Please contact support.',
 ];

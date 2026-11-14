@@ -125,7 +125,7 @@ class OrderObserver
 
                 // معالجة العربون (الدوال تتجاهل الطلب إن لم يكن عربونه مدفوعاً فعلاً)
                 $depositService = app(DepositService::class);
-                if ($order->isDepositRefundable()) {
+                if ($order->isDepositRefundable($oldStatus)) {
                     $depositService->refundToCustomer($order);
                 } else {
                     $depositService->forfeitToPlatform($order);

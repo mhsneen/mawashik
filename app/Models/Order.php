@@ -149,17 +149,20 @@ class Order extends Model
     }
 
     // هل العربون قابل للاسترداد؟ (قبل بدء التجهيز فقط — حسب الإعداد deposit_refund_before)
-    public function isDepositRefundable(): bool
+    // $atStatus: الحالة وقت الإلغاء (قبل التحويل إلى 6). داخل الـ observer تكون status_id قد صارت 6
+    // فلازم نمرّر الحالة السابقة، وإلا يُصادَر العربون دائماً.
+    public function isDepositRefundable(?int $atStatus = null): bool
     {
         if ($this->deposit_status !== 'paid') {
             return false;
         }
+        $status = $atStatus ?? (int) $this->status_id;
         $refundStage = Setting::where('key', 'deposit_refund_before')->value('plain_value') ?? 'preparing';
         return match ($refundStage) {
-            'anytime'         => in_array($this->status_id, [1, 2, 3, 4, 7]),
-            'preparing'       => in_array($this->status_id, [1, 7]),
+            'anytime'         => in_array($status, [1, 2, 3, 4, 7], true),
+            'preparing'       => in_array($status, [1, 7], true),
             'never'           => false,
-            default           => in_array($this->status_id, [1, 7]),
+            default           => in_array($status, [1, 7], true),
         };
     }
 

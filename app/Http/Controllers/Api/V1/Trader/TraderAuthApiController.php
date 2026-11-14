@@ -66,7 +66,7 @@ class TraderAuthApiController extends Controller
                 'user_id' => $trader->id,
                 'trader_status' => 'pending',
                 'requires_activation' => true,
-            ], __('api.Trader_Registered_Pending_Approval'));
+            ], __('api.Registration_Code_Sent_Verify'));
 
         } catch (\Exception $ex) {
             DB::rollBack();
