@@ -57,8 +57,12 @@ class TraderRequest extends FormRequest
             // الحالة الفعالة
             'is_active' => 'required|in:0,1',
 
-            // صورة التاجر (شعار المتجر)
+            // صورة التاجر (شعار المتجر) وبنر الحوش
             'image' => 'nullable|image|max:5120',
+            'banner_image' => 'nullable|image|max:5120',
+
+            // واتساب التاجر
+            'whatsapp_number' => 'nullable|string|max:30',
 
             // === الحقول الخاصة بالتاجر ===
             'commercial_register' => 'nullable|string|max:100',
@@ -96,6 +100,8 @@ class TraderRequest extends FormRequest
            // 'password'              => __('dashboard.Password'),
             'is_active'             => __('dashboard.Efficiency_Status'),
             'image'                 => __('dashboard.Image'),
+            'banner_image'          => __('dashboard.Banner_Image'),
+            'whatsapp_number'       => __('dashboard.WhatsApp_Number'),
             'commercial_register'  => __('dashboard.Commercial_Register'),
             'store_lat'             => __('dashboard.Store_Lat'),
             'store_lng'             => __('dashboard.Store_Lng'),

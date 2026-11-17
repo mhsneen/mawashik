@@ -4,140 +4,189 @@ namespace App\Http\Controllers\Api\V1\Trader;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Api\V1\Trader\TraderRegisterRequest;
-use App\Models\{User, OtpCode};
-use App\Services\{OtpService, FCMServices};
+use App\Http\Requests\Api\V1\Trader\TraderUpdateRequest;
+use App\Models\User;
+use App\Services\{ImageUploadService, OtpService};
 use App\Traits\ApiTrait;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Log;
 
-/**
- * TraderAuthApiController — مصادقة التاجر.
- *
- * العمليات:
- *  - register: تسجيل تاجر جديد (حساب pending بانتظار اعتماد الأدمن).
- *  - login: تسجيل دخول عبر OTP (يُعاد استخدام AuthCommonApiController).
- *  - check_active_code: تفعيل الحساب عبر OTP.
- *  - get_TraderInfo: معلومات التاجر بعد الاعتماد.
- *  - update: تحديث بيانات التاجر.
- *  - logout: تسجيل خروج.
- *
- * ملاحظة: نفس OTP service يُعاد استخدامه (مع نوع registration_trader).
- */
 class TraderAuthApiController extends Controller
 {
     use ApiTrait;
 
-    public function register(TraderRegisterRequest $request)
+    /**
+     * رفع صورة/بانر وإرجاع أسماء الملفات المحفوظة.
+     */
+    private function handleImages(Request $request, ImageUploadService $imageService): array
     {
+        $files = [];
+
+        if ($request->hasFile('image')) {
+            $files['image'] = $imageService->uploadAndProcess(
+                image: $request->file('image'),
+                folder: User::FOLDER,
+                thumbnailWidth: 128,
+                thumbnailHeight: 128
+            );
+        }
+
+        if ($request->hasFile('banner_image')) {
+            $files['banner_image'] = $imageService->uploadAndProcess(
+                image: $request->file('banner_image'),
+                folder: User::FOLDER,
+                thumbnailWidth: 500,
+                thumbnailHeight: 500
+            );
+        }
+
+        return $files;
+    }
+
+    /**
+     * حذف ملفات قديمة من السيرفر (الأصلي + thumbnail).
+     */
+    private function deleteOldFile(?string $fileName): void
+    {
+        if (!$fileName) {
+            return;
+        }
+
+        foreach ([
+            public_path('uploads/' . User::FOLDER . '/' . $fileName),
+            public_path('uploads/' . User::FOLDER . '/thumbnail/' . $fileName),
+        ] as $path) {
+            if (is_file($path)) {
+                @unlink($path);
+            }
+        }
+    }
+
+    /**
+     * شكل بيانات التاجر الموحّد (للبروفايل والتعديل).
+     */
+    private function traderResource(User $trader): array
+    {
+        $locale = app()->getLocale();
+
+        return [
+            'id'                  => $trader->id,
+            'name'                => $trader->name,
+            'mobile'              => $trader->mobile,
+            'whatsapp_number'     => $trader->whatsapp_e164,
+            'whatsapp_link'       => $trader->whatsapp_link,
+            'id_number'           => $trader->id_number,
+            'commercial_register' => $trader->commercial_register,
+            'store_lat'           => $trader->store_lat,
+            'store_lng'           => $trader->store_lng,
+            //'store_address'       => $trader->store_address,
+            'city_id'             => $trader->city_id,
+            'area_id'             => $trader->area_id,
+            'neighborhood_id'     => $trader->neighborhood_id,
+            'city'                => $trader->city?->translate($locale)?->name,
+            'area'                => $trader->area?->translate($locale)?->name,
+            'neighborhood'        => $trader->neighborhood?->translate($locale)?->name,
+            'image'               => $trader->base_image_url,   // رابط كامل للأصلية
+            'image_thumbnail'     => $trader->image_url,        // رابط كامل للمصغّرة
+            'banner'              => $trader->banner_url,       // رابط كامل أو null
+            'trader_status'       => $trader->trader_status,
+            'commission_rate'     => $trader->commission_rate,
+        ];
+    }
+
+    public function register(TraderRegisterRequest $request, ImageUploadService $imageService)
+    {
+        $uploaded = [];
+
         try {
             $data = $request->validated();
 
             DB::beginTransaction();
 
-            // إنشاء المستخدم
+            $uploaded = $this->handleImages($request, $imageService);
+
             $trader = User::create([
                 'name'                => $data['name'],
                 'mobile'              => $data['mobile'],
+                'whatsapp_number'     => $data['whatsapp_number'] ?? null,
                 'id_number'           => $data['id_number'],
                 'commercial_register' => $data['commercial_register'] ?? null,
                 'store_lat'           => $data['store_lat'],
                 'store_lng'           => $data['store_lng'],
-                'store_address'       => $data['store_address'],
+               // 'store_address'       => $data['store_address'],
                 'city_id'             => $data['city_id'],
                 'area_id'             => $data['area_id'] ?? null,
                 'neighborhood_id'     => $data['neighborhood_id'] ?? null,
+                'terms_accepted'      => true,
                 'trader_status'       => 'pending',
-                'is_active'           => 0,  // يُفعّل عند الاعتماد
-            ]);
+                'is_active'           => 0,
+            ] + $uploaded);
 
-            // تعيين دور trader
             $trader->assignRole('trader');
 
-            // توليد OTP وإرساله
-            $otpService = app(OtpService::class);
-            $otpService->generateAndSend($trader, 'registration');
+            app(OtpService::class)->generateAndSend($trader, 'registration');
 
             DB::commit();
 
             return $this->returnData('data', [
-                'user_id' => $trader->id,
-                'trader_status' => 'pending',
+                'user_id'             => $trader->id,
+                'trader_status'       => 'pending',
                 'requires_activation' => true,
             ], __('api.Registration_Code_Sent_Verify'));
 
         } catch (\Exception $ex) {
             DB::rollBack();
+
+            // تنظيف الصور لو فشل التسجيل
+            foreach ($uploaded as $file) {
+                $this->deleteOldFile($file);
+            }
+
             Log::error('Trader register: ' . $ex->getMessage());
             return $this->returnError(__('api.Api_Error_Contact_Programmer'));
         }
     }
 
-    /**
-     * معلومات التاجر الحالي.
-     */
     public function get_TraderInfo(Request $request)
     {
         try {
-            $trader = $request->user();
+            $trader = $request->user()->load(['city', 'area', 'neighborhood']);
 
-            return $this->returnData('data', [
-                'id'                  => $trader->id,
-                'name'                => $trader->name,
-                'mobile'              => $trader->mobile,
-                'whatsapp_number'     => $trader->whatsapp_e164,    // ✅ جديد
-                'whatsapp_link'       => $trader->whatsapp_link,    // ✅ جديد
-                'image'               => $trader->image_url,
-                'banner'              => $trader->banner_url,        // ✅ جديد
-                'trader_status'       => $trader->trader_status,
-                'id_number'           => $trader->id_number,
-                'commercial_register' => $trader->commercial_register,
-                'store_address'       => $trader->store_address,
-                'store_lat'           => $trader->store_lat,
-                'store_lng'           => $trader->store_lng,
-                'commission_rate'     => $trader->commission_rate,
-                'city'                => $trader->city?->translate(app()->getLocale())?->name,
-                'area'                => $trader->area?->translate(app()->getLocale())?->name,
-                'neighborhood'       => $trader->neighborhood?->translate(app()->getLocale())?->name,
-            ], __('api.Api_Return_Data'));
-
+            return $this->returnData('data', $this->traderResource($trader), __('api.Api_Return_Data'));
         } catch (\Exception $ex) {
             Log::error('get_TraderInfo: ' . $ex->getMessage());
             return $this->returnError(__('api.Api_Error_Contact_Programmer'));
         }
     }
 
-    /**
-     * تحديث بيانات التاجر (الاسم، العنوان، الموقع، رقم السجل، الواتساب).
-     */
-    public function update(Request $request)
+    public function update(TraderUpdateRequest $request, ImageUploadService $imageService)
     {
         try {
             $trader = $request->user();
 
-            $request->validate([
-                'name'                => 'sometimes|string|max:150',
-                'commercial_register' => 'nullable|string|max:100',
-                'store_lat'           => 'sometimes|numeric|between:-90,90',
-                'store_lng'           => 'sometimes|numeric|between:-180,180',
-                'store_address'       => 'sometimes|string|max:255',
-                'city_id'             => 'sometimes|exists:cities,id',
-                'area_id'             => 'nullable|exists:areas,id',
-                'neighborhood_id'     => 'nullable|exists:neighborhoods,id',
-                'image'               => 'nullable|string',
-                'whatsapp_number'     => 'sometimes|nullable|string|max:30', // ✅ جديد
-            ]);
+            $data = collect($request->validated())
+                ->except(['image', 'banner_image'])
+                ->toArray();
 
-            $trader->update($request->only([
-                'name', 'commercial_register', 'store_lat', 'store_lng',
-                'store_address', 'city_id', 'area_id', 'neighborhood_id', 'image',
-                'whatsapp_number',
-            ]));
+            $oldImage  = $trader->image;
+            $oldBanner = $trader->banner_image;
 
-            return $this->returnData('data', [
-                'id' => $trader->id,
-            ], __('api.Api_Update_Success'));
+            $uploaded = $this->handleImages($request, $imageService);
+
+            $trader->update($data + $uploaded);
+
+            // حذف القديم بعد نجاح التحديث
+            if (isset($uploaded['image'])) {
+                $this->deleteOldFile($oldImage);
+            }
+            if (isset($uploaded['banner_image'])) {
+                $this->deleteOldFile($oldBanner);
+            }
+
+            $trader->refresh()->load(['city', 'area', 'neighborhood']);
+
+            return $this->returnData('data', $this->traderResource($trader), __('api.Api_Update_Success'));
         } catch (\Exception $ex) {
             Log::error('Trader update: ' . $ex->getMessage());
             return $this->returnError(__('api.Api_Error_Contact_Programmer'));

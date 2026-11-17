@@ -1,6 +1,9 @@
 <?php
 return array(
     'Drivers' => 'Drivers',
+    'Banner_Image' => 'Barn / Store Banner',
+    'WhatsApp_Number' => 'WhatsApp Number',
+    'No_Banner' => 'No Banner Uploaded',
     'Mark_All_Read' => 'Mark All Read',
     'Driver' => 'Driver',
     'Assign_Driver' => 'Assign Driver',
@@ -1276,4 +1279,5 @@ return array(
 'Reset_To_Default' => 'Reset to default',
 'Template_Saved' => 'Template saved',
 'Template_Reset' => 'Default text restored',
+'Request_Date' => 'Request Date', // English
 );

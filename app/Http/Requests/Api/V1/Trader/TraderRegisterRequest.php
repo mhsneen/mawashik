@@ -41,11 +41,14 @@ class TraderRegisterRequest extends FormRequest
             'commercial_register'  => 'nullable|string|max:100',
             'store_lat'            => 'required|numeric|between:-90,90',
             'store_lng'            => 'required|numeric|between:-180,180',
-            'store_address'        => 'required|string|max:255',
+           // 'store_address'        => 'nullable|string|max:255',
             'city_id'              => 'required|exists:cities,id',
             'area_id'              => 'nullable|exists:areas,id',
             'neighborhood_id'      => 'nullable|exists:neighborhoods,id',
             'agreement'            => 'required|boolean|accepted',
+            'image'        => 'nullable|image|mimes:jpg,jpeg,png,webp',
+'banner_image' => 'nullable|image|mimes:jpg,jpeg,png,webp',
+'whatsapp_number'=>'nullable|string|max:30',
         ];
     }
 
@@ -73,10 +76,13 @@ class TraderRegisterRequest extends FormRequest
             'commercial_register' => __('dashboard.Commercial_Register'),
             'store_lat'           => __('dashboard.Store_Lat'),
             'store_lng'           => __('dashboard.Store_Lng'),
-            'store_address'       => __('dashboard.Store_Address'),
+            //'store_address'       => __('dashboard.Store_Address'),
             'city_id'             => __('dashboard.City'),
             'area_id'             => __('dashboard.Area'),
             'neighborhood_id'     => __('dashboard.Neighborhood'),
+             'image'     => __('dashboard.Image'),
+            'banner_image'     => __('dashboard.banner_image'),
+             'whatsapp_number'     => __('dashboard.Whatsapp'),
         ];
     }
 

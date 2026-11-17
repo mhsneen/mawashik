@@ -1,6 +1,9 @@
 <?php
 return [
     'Drivers' => 'السائقين',
+    'Banner_Image' => 'بنر الحوش / المتجر',
+    'WhatsApp_Number' => 'رقم الواتساب',
+    'No_Banner' => 'لا يوجد بنر',
     'Mark_All_Read' => 'تعيين الكل كمقروء',
     'Driver' => 'السائق',
     'Assign_Driver' => 'تعيين سائق',
@@ -1306,4 +1309,5 @@ return [
 'Reset_To_Default' => 'استعادة الافتراضي',
 'Template_Saved' => 'تم حفظ القالب',
 'Template_Reset' => 'تمت استعادة النص الافتراضي',
+'Request_Date' => 'تاريخ الطلب', // عربي
 ];

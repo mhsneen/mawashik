@@ -29,34 +29,75 @@
     <div class="row">
         <!-- بيانات التاجر -->
         <div class="col-md-4">
-            <div class="card">
-                <div class="card-header"><h6 class="mb-0">{{ __('dashboard.Trader_Info') }}</h6></div>
-                <div class="card-body">
+            <div class="card overflow-hidden">
+                {{-- بنر الحوش / المتجر --}}
+                @if($trader->banner_url)
+                    <div style="position: relative; height: 160px; overflow: hidden; background: #f4f5f8;">
+                        <a href="{{ $trader->banner_url }}" target="_blank">
+                            <img src="{{ $trader->banner_url }}" alt="{{ __('dashboard.Banner_Image') }}" style="width: 100%; height: 100%; object-fit: cover;">
+                        </a>
+                        <span class="badge badge-dark" style="position: absolute; bottom: 8px; left: 8px; opacity: 0.9;">
+                            <i class="fa fa-image"></i> {{ __('dashboard.Banner_Image') }}
+                        </span>
+                    </div>
+                @endif
+
+                <div class="card-body {{ $trader->banner_url ? 'pt-0' : '' }}">
+                    {{-- صورة التاجر الشخصية / الشعار --}}
+                    <div class="text-center {{ $trader->banner_url ? 'mb-3' : 'py-3' }}">
+                        <div class="d-inline-block shadow-sm rounded-circle p-1 bg-white" style="{{ $trader->banner_url ? 'margin-top: -45px; position: relative; z-index: 2;' : '' }}">
+                            <a href="@if(!empty($trader->image)) {{ URL::asset('uploads/users/' . $trader->image) }} @else {{ URL::asset('assets/dashboard/img/faces/person-icon.png') }} @endif" target="_blank">
+                                <img alt="{{ $trader->name }}" class="rounded-circle" style="width: 85px; height: 85px; object-fit: cover;"
+                                     src="@if(empty($trader->image)) {{ URL::asset('assets/dashboard/img/faces/person-icon.png') }} @else {{ URL::asset('uploads/users/thumbnail/' . $trader->image) }} @endif">
+                            </a>
+                        </div>
+                        <h5 class="mt-2 mb-1 font-weight-bold">{{ $trader->name }}</h5>
+                        <p class="text-muted tx-13 mb-0" style="direction: ltr">{{ $trader->mobile }}</p>
+                    </div>
+
                     <ul class="list-group list-group-flush">
-                        {{-- تم إزالة ID --}}
                         <li class="list-group-item d-flex justify-content-between">
                             <span>{{ __('dashboard.Trader_Name') }}:</span> <strong>{{ $trader->name }}</strong>
                         </li>
                         <li class="list-group-item d-flex justify-content-between">
                             <span>{{ __('dashboard.Mobile') }}:</span> <strong style="direction: ltr">{{ $trader->mobile }}</strong>
                         </li>
+                        <li class="list-group-item d-flex justify-content-between align-items-center">
+                            <span><i class="fab fa-whatsapp text-success mr-1"></i> {{ __('dashboard.WhatsApp_Number') }}:</span>
+                            <div>
+                                @if($trader->whatsapp_number)
+                                    <strong style="direction: ltr; display: inline-block;">{{ $trader->whatsapp_e164 ?? $trader->whatsapp_number }}</strong>
+                                    @if($trader->whatsapp_link)
+                                        <a href="{{ $trader->whatsapp_link }}" target="_blank" class="btn btn-sm btn-success ml-1 px-2 py-0" title="{{ __('dashboard.Whatsapp') }}">
+                                            <i class="fab fa-whatsapp"></i>
+                                        </a>
+                                    @endif
+                                @else
+                                    <span class="text-muted">—</span>
+                                @endif
+                            </div>
+                        </li>
                         <li class="list-group-item d-flex justify-content-between">
                             <span>{{ __('dashboard.ID_Number') }}:</span>
-                            <strong>{{ $trader->id_number }}</strong>
+                            <strong>{{ $trader->id_number ?: '—' }}</strong>
                         </li>
                         <li class="list-group-item d-flex justify-content-between">
                             <span>{{ __('dashboard.Commercial_Register') }}:</span>
-                            <strong>{{ $trader->commercial_register }}</strong>
+                            <strong>{{ $trader->commercial_register ?: '—' }}</strong>
                         </li>
+                        {{-- المدينة والمنطقة والحي --}}
                         <li class="list-group-item d-flex justify-content-between">
                             <span>{{ __('dashboard.City') }}:</span>
-                            <strong>{{ $trader->city?->translate(app()->getLocale())?->name }}</strong>
+                            <strong>{{ $trader->city?->translate(app()->getLocale())?->name ?: '—' }}</strong>
                         </li>
                         <li class="list-group-item d-flex justify-content-between">
-                            <span>{{ __('dashboard.Store_Address') }}:</span>
-                            <strong>{{ $trader->store_address }}</strong>
+                            <span>{{ __('dashboard.Area') }}:</span>
+                            <strong>{{ $trader->area?->translate(app()->getLocale())?->name ?: '—' }}</strong>
                         </li>
-                        {{-- تم إزالة الموقع من الجدول --}}
+                        <li class="list-group-item d-flex justify-content-between">
+                            <span>{{ __('dashboard.Neighborhood') }}:</span>
+                            <strong>{{ $trader->neighborhood?->translate(app()->getLocale())?->name ?: '—' }}</strong>
+                        </li>
                         <li class="list-group-item d-flex justify-content-between">
                             <span>{{ __('dashboard.Status') }}:</span>
                             @php
@@ -274,11 +315,11 @@
             // إضافة الدبوس (Marker)
             const marker = L.marker([lat, lng]).addTo(map);
 
-            // إضافة نافذة معلومات (Popup) تظهر اسم المتجر وعنوانه
+            // إضافة نافذة معلومات (Popup) تظهر اسم المتجر وموقعه
             const traderName = '{{ $trader->name }}';
-            const traderAddress = '{{ $trader->store_address ?? "" }}';
+            const traderLocation = '{{ implode(" - ", array_filter([$trader->city?->translate(app()->getLocale())?->name, $trader->area?->translate(app()->getLocale())?->name, $trader->neighborhood?->translate(app()->getLocale())?->name])) }}';
 
-            marker.bindPopup(`<div style="text-align: right;"><strong>${traderName}</strong><br><span>${traderAddress}</span></div>`).openPopup();
+            marker.bindPopup(`<div style="text-align: right;"><strong>${traderName}</strong><br><span>${traderLocation}</span></div>`).openPopup();
         });
     </script>
 @endsection

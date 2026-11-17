@@ -91,6 +91,7 @@ class TradersController extends Controller
                 'name'                  => $request->name,
                 'mobile'                => $request->mobile,
                 'email'                 => $request->email,
+                'whatsapp_number'       => $request->whatsapp_number,
                 'password'              => Hash::make($request->password),
                 'is_active'             => $request->is_active ?? 1,
 
@@ -122,6 +123,16 @@ class TradersController extends Controller
                     folder: 'users',
                     thumbnailWidth: 128,
                     thumbnailHeight: 128
+                );
+            }
+
+            // رفع بنر الحوش / المتجر
+            if ($request->hasFile('banner_image')) {
+                $data['banner_image'] = $imageService->uploadAndProcess(
+                    image: $request->file('banner_image'),
+                    folder: 'users',
+                    thumbnailWidth: 800,
+                    thumbnailHeight: 400
                 );
             }
 
@@ -159,9 +170,15 @@ class TradersController extends Controller
     {
         $trader = User::traders()->findOrFail($id);
         $countries = Country::with('translations')->get();
-        $cities    = City::with('translations')->get();
+        $cities    = City::active()->with('translations')->get();
+        $areas     = $trader->city_id
+            ? Area::active()->where('city_id', $trader->city_id)->with('translations')->get()
+            : collect();
+        $neighborhoods = $trader->area_id
+            ? Neighborhood::active()->where('area_id', $trader->area_id)->with('translations')->get()
+            : collect();
 
-        return view('dashboard.traders.edit', compact('trader', 'countries', 'cities'));
+        return view('dashboard.traders.edit', compact('trader', 'countries', 'cities', 'areas', 'neighborhoods'));
     }
 
     /**
@@ -178,6 +195,7 @@ class TradersController extends Controller
                 'name'                  => $request->name,
                 'mobile'                => $request->mobile,
                 'email'                 => $request->email,
+                'whatsapp_number'       => $request->whatsapp_number,
                 'is_active'             => $request->is_active ?? 1,
 
                 // === بيانات المتجر ===
@@ -201,8 +219,6 @@ class TradersController extends Controller
                 'commission_rate'       => $request->commission_rate,
             ];
 
-
-
             // رفع شعار جديد
             if ($request->hasFile('image')) {
                 $data['image'] = $imageService->uploadAndProcess(
@@ -211,6 +227,17 @@ class TradersController extends Controller
                     thumbnailWidth: 128,
                     thumbnailHeight: 128,
                     oldFilename: $trader->image
+                );
+            }
+
+            // رفع بنر الحوش الجديد
+            if ($request->hasFile('banner_image')) {
+                $data['banner_image'] = $imageService->uploadAndProcess(
+                    image: $request->file('banner_image'),
+                    folder: 'users',
+                    thumbnailWidth: 800,
+                    thumbnailHeight: 400,
+                    oldFilename: $trader->banner_image
                 );
             }
 

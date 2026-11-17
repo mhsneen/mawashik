@@ -190,7 +190,26 @@
                         </div>
 
                         <div class="row row-xs formgroup-wrapper">
-
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <div class="row">
+                                        <div class="col-md-3">
+                                            <label class="form-label pd-t-10">{{ __('dashboard.WhatsApp_Number') }} : </label>
+                                        </div>
+                                        <div class="col-md-8">
+                                            <div class="input-group">
+                                                <div class="input-group-prepend">
+                                                    <span class="input-group-text bg-success-transparent text-success"><i class="fab fa-whatsapp"></i></span>
+                                                </div>
+                                                <input class="form-control" id="whatsapp_number" name="whatsapp_number" type="text" value="{{ old('whatsapp_number', preg_replace('/^\+966/', '0', $trader->getRawOriginal('whatsapp_number') ?? '')) }}" placeholder="05XXXXXXXX">
+                                            </div>
+                                            @error('whatsapp_number')
+                                                <span class="tx-danger">{{ $message }} </span>
+                                            @enderror
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
 
                             <div class="col-md-6">
                                 <div class="form-group">
@@ -224,14 +243,15 @@
 
                         <hr />
 
-                        {{-- ===== القسم الثالث: شعار المتجر ===== --}}
+                        {{-- ===== القسم الثالث: صورة التاجر وبنر الحوش ===== --}}
                         <div class="main-content-label mg-b-5">
                             <i class="fa fa-image text-success"></i>
-                            {{ __('dashboard.Image') }}
+                            {{ __('dashboard.Image') }} & {{ __('dashboard.Banner_Image') }}
                         </div>
                         <br />
 
                         <div class="row row-xs formgroup-wrapper">
+                            {{-- صورة التاجر --}}
                             <div class="col-md-6">
                                 <div class="form-group">
                                     <div class="row">
@@ -239,7 +259,7 @@
                                             <label class="form-label pd-t-10">{{ __('dashboard.Image') }} : </label>
                                         </div>
                                         <div class="col-md-8">
-                                            <input type="file" class="dropify" data-height="200" name="image" id="image" data-max-file-size="5M"
+                                            <input type="file" class="dropify" data-height="180" name="image" id="image" data-max-file-size="5M"
                                                 data-parsley-errors-container="#slErrorContainerimage"
                                                 @if (!empty($trader->image)) data-default-file="{{ URL::asset('uploads/users/thumbnail/' . $trader->image) }}" @endif />
                                             <div id="slErrorContainerimage">
@@ -251,11 +271,32 @@
                                     </div>
                                 </div>
                             </div>
+
+                            {{-- بنر الحوش / المتجر --}}
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <div class="row">
+                                        <div class="col-md-3">
+                                            <label class="form-label pd-t-10">{{ __('dashboard.Banner_Image') }} : </label>
+                                        </div>
+                                        <div class="col-md-8">
+                                            <input type="file" class="dropify" data-height="180" name="banner_image" id="banner_image" data-max-file-size="5M"
+                                                data-parsley-errors-container="#slErrorContainerBanner"
+                                                @if (!empty($trader->banner_image)) data-default-file="{{ URL::asset('uploads/users/' . $trader->banner_image) }}" @endif />
+                                            <div id="slErrorContainerBanner">
+                                                @error('banner_image')
+                                                    <span class="tx-danger">{{ $message }} </span>
+                                                @enderror
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
 
                         <hr />
 
-                        {{-- ===== القسم الرابع: الموقع الجغرافي ===== --}}
+                        {{-- ===== القسم الرابع: الموقع الجغرافي (المدينة - المنطقة - الحي) ===== --}}
                         <div class="main-content-label mg-b-5">
                             <i class="fa fa-map-marker text-warning"></i>
                             {{ __('dashboard.Store_Location') }}
@@ -263,42 +304,57 @@
                         <br />
 
                         <div class="row row-xs formgroup-wrapper">
-                            <div class="col-md-6">
+                            {{-- المدينة --}}
+                            <div class="col-md-4">
                                 <div class="form-group">
-                                    <div class="row">
-                                        <div class="col-md-3">
-                                            <label class="form-label pd-t-10">{{ __('dashboard.City') }} : </label>
-                                        </div>
-                                        <div class="col-md-8">
-                                            <select class="form-control select2" name="city_id" id="city_id">
-                                                <option value="">{{ __('dashboard.Choose') }}</option>
-                                                @foreach ($cities as $city)
-                                                    <option value="{{ $city->id }}" @if (old('city_id', $trader->city_id) == $city->id) selected @endif>
-                                                        {{ $city->translate(app()->getLocale())?->name }}
-                                                    </option>
-                                                @endforeach
-                                            </select>
-                                            @error('city_id')
-                                                <span class="tx-danger">{{ $message }} </span>
-                                            @enderror
-                                        </div>
-                                    </div>
+                                    <label class="form-label">{{ __('dashboard.City') }} : </label>
+                                    <select class="form-control select2" name="city_id" id="city_id">
+                                        <option value="">{{ __('dashboard.Choose') }}</option>
+                                        @foreach ($cities as $city)
+                                            <option value="{{ $city->id }}" @if (old('city_id', $trader->city_id) == $city->id) selected @endif>
+                                                {{ $city->translate(app()->getLocale())?->name }}
+                                            </option>
+                                        @endforeach
+                                    </select>
+                                    @error('city_id')
+                                        <span class="tx-danger">{{ $message }} </span>
+                                    @enderror
                                 </div>
                             </div>
 
-                            <div class="col-md-6">
+                            {{-- المنطقة --}}
+                            <div class="col-md-4">
                                 <div class="form-group">
-                                    <div class="row">
-                                        <div class="col-md-3">
-                                            <label class="form-label pd-t-10">{{ __('dashboard.Store_Address') }} : </label>
-                                        </div>
-                                        <div class="col-md-8">
-                                            <input class="form-control" id="store_address" name="store_address" type="text" value="{{ old('store_address', $trader->store_address) }}">
-                                            @error('store_address')
-                                                <span class="tx-danger">{{ $message }} </span>
-                                            @enderror
-                                        </div>
-                                    </div>
+                                    <label class="form-label">{{ __('dashboard.Area') }} : </label>
+                                    <select class="form-control select2" name="area_id" id="area_id">
+                                        <option value="">{{ __('dashboard.Choose') }}</option>
+                                        @foreach ($areas as $area)
+                                            <option value="{{ $area->id }}" @if (old('area_id', $trader->area_id) == $area->id) selected @endif>
+                                                {{ $area->translate(app()->getLocale())?->name }}
+                                            </option>
+                                        @endforeach
+                                    </select>
+                                    @error('area_id')
+                                        <span class="tx-danger">{{ $message }} </span>
+                                    @enderror
+                                </div>
+                            </div>
+
+                            {{-- الحي --}}
+                            <div class="col-md-4">
+                                <div class="form-group">
+                                    <label class="form-label">{{ __('dashboard.Neighborhood') }} : </label>
+                                    <select class="form-control select2" name="neighborhood_id" id="neighborhood_id">
+                                        <option value="">{{ __('dashboard.Choose') }}</option>
+                                        @foreach ($neighborhoods as $neighborhood)
+                                            <option value="{{ $neighborhood->id }}" @if (old('neighborhood_id', $trader->neighborhood_id) == $neighborhood->id) selected @endif>
+                                                {{ $neighborhood->translate(app()->getLocale())?->name }}
+                                            </option>
+                                        @endforeach
+                                    </select>
+                                    @error('neighborhood_id')
+                                        <span class="tx-danger">{{ $message }} </span>
+                                    @enderror
                                 </div>
                             </div>
                         </div>
@@ -522,6 +578,50 @@
                 'replace': '{{ __('dashboard.Click_or_drag_to_replace') }}',
                 'remove':  '{{ __('dashboard.Remove') }}',
                 'error':   '{{ __('dashboard.File_too_large') }}'
+            }
+        });
+
+        // ربط ديناميكي للمدينة والمنطقة والحي
+        $('#city_id').on('change', function () {
+            var cityId = $(this).val();
+            var $area = $('#area_id');
+            var $neighborhood = $('#neighborhood_id');
+
+            $area.empty().append('<option value="">{{ __('dashboard.Choose') }}</option>');
+            $neighborhood.empty().append('<option value="">{{ __('dashboard.Choose') }}</option>');
+
+            if (cityId) {
+                $.get('{{ url("api/v1/get_Areas") }}', { city_id: cityId }, function (res) {
+                    if (res && res.data) {
+                        $.each(res.data, function (i, item) {
+                            $area.append('<option value="' + item.id + '">' + item.name + '</option>');
+                        });
+                        $area.trigger('change.select2');
+                    }
+                });
+            } else {
+                $area.trigger('change.select2');
+                $neighborhood.trigger('change.select2');
+            }
+        });
+
+        $('#area_id').on('change', function () {
+            var areaId = $(this).val();
+            var $neighborhood = $('#neighborhood_id');
+
+            $neighborhood.empty().append('<option value="">{{ __('dashboard.Choose') }}</option>');
+
+            if (areaId) {
+                $.get('{{ url("api/v1/get_Neighborhoods") }}', { area_id: areaId }, function (res) {
+                    if (res && res.data) {
+                        $.each(res.data, function (i, item) {
+                            $neighborhood.append('<option value="' + item.id + '">' + item.name + '</option>');
+                        });
+                        $neighborhood.trigger('change.select2');
+                    }
+                });
+            } else {
+                $neighborhood.trigger('change.select2');
             }
         });
     </script>

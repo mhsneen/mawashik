@@ -26,7 +26,6 @@
                                     <th>#</th>
                                     <th>{{ __('dashboard.Trader_Name') }}</th>
                                     <th>{{ __('dashboard.Mobile') }}</th>
-                                    <th>{{ __('dashboard.Store_Address') }}</th>
                                     <th>{{ __('dashboard.City') }}</th>
                                     <th>{{ __('dashboard.Commercial_Register') }}</th>
                                     <th>{{ __('dashboard.Request_Date') }}</th>
@@ -39,7 +38,6 @@
                                     <td>{{ $trader->id }}</td>
                                     <td>{{ $trader->name }}</td>
                                     <td>{{ $trader->mobile }}</td>
-                                    <td>{{ $trader->store_address }}</td>
                                     <td>{{ $trader->city?->translate(app()->getLocale())?->name }}</td>
                                     <td>{{ $trader->commercial_register }}</td>
                                     <td>{{ $trader->created_at?->format('Y-m-d H:i') }}</td>
